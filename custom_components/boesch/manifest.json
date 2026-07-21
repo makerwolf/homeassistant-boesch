@@ -1,12 +1,12 @@
 {
   "domain": "boesch",
   "name": "Bösch",
-  "codeowners": ["@wlienbacher"],
+  "codeowners": ["@makerwolf"],
   "config_flow": true,
-  "documentation": "https://github.com/wlienbacher/homeassistant-boesch",
+  "documentation": "https://github.com/makerwolf/homeassistant-boesch",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/wlienbacher/homeassistant-boesch/issues",
+  "issue_tracker": "https://github.com/makerwolf/homeassistant-boesch/issues",
   "requirements": ["pymodbus>=3.6.0"],
   "version": "0.1.0"
 }

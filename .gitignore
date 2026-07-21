@@ -8,3 +8,6 @@ config/
 
 # Lokale Claude-Settings
 .claude/settings.local.json
+
+# Proprietäre Bösch-Referenzunterlagen (nicht ins Repo)
+Reference/
