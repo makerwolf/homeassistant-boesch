@@ -45,16 +45,26 @@ kopieren.
 **Setup:** IP (Default `192.168.0.202`), Port (`502`), Modbus-Adresse WANDA
 (`40`) und Hydrobox (`50`). Vor dem Anlegen wird die Verbindung getestet.
 
-**Optionen** (nachträglich änderbar):
+**Optionen** (über *Konfigurieren* → Menü, nachträglich änderbar):
+
+*Allgemein:*
 
 | Option | Default | Wirkung |
 |---|---|---|
-| Heizkreis 2 vorhanden | ein | Blendet die HK2-Entities ein/aus |
-| Externer Wärmeerzeuger vorhanden | ein | Blendet die WEZ-Entities ein/aus |
+| Zweiter Heizkreis vorhanden | aus | Blendet die HK2-Entities ein/aus |
+| Externer Wärmeerzeuger vorhanden | aus | Blendet die WEZ-Entities ein/aus |
 | Intervall Live-Werte | 15 s | Vorlauf/Rücklauf, COP, Leistungen, WP-Status |
 | Intervall Standard | 30 s | Temperaturen, Speicher, Außentemperatur |
-| Intervall Sollwerte | 60 s | Sollwerte, Betriebsarten, Fühler-Rohwerte |
+| Intervall Sollwerte | 60 s | Sollwerte, Betriebsarten |
 | Intervall Betriebsstunden | 300 s | Zählerstände |
+
+HK2 und WEZ sind **Opt-in** (Basisanlage: 1 Heizkreis, kein externer WEZ) —
+bei Bedarf hier aktivieren.
+
+*Fühlereingänge (AI1–AI8):* Die frei belegbaren Analogeingänge der Hydrobox
+sind anlagenspezifisch verdrahtet und daher **standardmäßig ausgeblendet**. Pro
+Eingang einen Namen eingeben aktiviert und benennt ihn; leer lassen blendet ihn
+aus. Beispiel: `AI1 → Heizspeicher-Temperatur`, `AI8 → Außentemperatur`.
 
 ## Architektur
 

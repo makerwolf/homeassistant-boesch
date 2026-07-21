@@ -24,13 +24,35 @@
     "step": {
       "init": {
         "title": "Bösch – Optionen",
+        "menu_options": {
+          "general": "Allgemein (Heizkreise, Intervalle)",
+          "inputs": "Fühlereingänge (AI1–AI8)"
+        }
+      },
+      "general": {
+        "title": "Allgemein",
         "data": {
-          "enable_hk2": "Heizkreis 2 vorhanden",
+          "enable_hk2": "Zweiter Heizkreis vorhanden",
           "enable_wez": "Externer Wärmeerzeuger vorhanden",
           "scan_live": "Intervall Live-Werte (s)",
           "scan_default": "Intervall Standard (s)",
           "scan_setpoint": "Intervall Sollwerte (s)",
           "scan_hours": "Intervall Betriebsstunden (s)"
+        }
+      },
+      "inputs": {
+        "title": "Fühlereingänge",
+        "description": "Belegung ist anlagenspezifisch. Name eingeben aktiviert den Eingang und benennt ihn; leer lassen blendet ihn aus.",
+        "data": {
+          "boesch_hb_ai1": "AI1 (CN6)",
+          "boesch_hb_ai2": "AI2 (CN6)",
+          "boesch_hb_ai3": "AI3 (CN47)",
+          "boesch_hb_ai4": "AI4 (CN47)",
+          "boesch_hb_t1": "T1 (CN10)",
+          "boesch_hb_ai6": "AI6 (CN13)",
+          "boesch_hb_ai7": "AI7 (CN15)",
+          "boesch_hb_ai8": "AI8 (CN13)",
+          "boesch_hb_tw_ibh": "Tw (IBH)"
         }
       }
     }

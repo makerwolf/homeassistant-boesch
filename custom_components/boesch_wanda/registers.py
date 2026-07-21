@@ -126,6 +126,8 @@ class Reg:
     feature: str | None = None       # None | FEATURE_HK2 | FEATURE_WEZ
     icon: str | None = None
     entity_category: str | None = None
+    configurable: bool = False       # frei belegbarer Eingang: im Options-Flow
+                                     # aktivier- und benennbar (siehe CONF_AI_INPUTS)
 
 
 # Kürzel-Helfer für die häufigsten Muster ------------------------------------
@@ -329,23 +331,27 @@ REGISTERS: list[Reg] = [
             WEZ_BETRIEBSART, icon="mdi:fire-circle", feature=FEATURE_WEZ),
 ]
 
-# ---- Rohe Fühlereingänge (BEWUSST OHNE min/max) ----
-# Nicht belegte Eingänge sollen sichtbar unsinnig bleiben statt gekappt zu werden.
-for _key, _name, _addr in [
-    ("boesch_hb_ai1", "HB AI1 (CN6) Temperatur", 250),
-    ("boesch_hb_ai2", "HB AI2 (CN6) Temperatur", 251),
-    ("boesch_hb_ai3", "HB AI3 (CN47) Temperatur", 252),
-    ("boesch_hb_ai4", "HB AI4 (CN47) Temperatur", 253),
-    ("boesch_hb_t1", "HB T1 (CN10) Temperatur", 254),
-    ("boesch_hb_ai6", "HB AI6 (CN13) Temperatur", 255),
-    ("boesch_hb_ai7", "HB AI7 (CN15) Temperatur", 256),
-    ("boesch_hb_ai8", "HB AI8 (CN13) Temperatur", 257),
-    ("boesch_hb_tw_ibh", "HB Tw (IBH) Temperatur", 258),
-]:
+# ---- Frei belegbare Fühlereingänge (BEWUSST OHNE min/max) ----
+# Belegung ist anlagenspezifisch (vom Techniker verdrahtet), daher configurable:
+# im Options-Flow einzeln aktivier- und benennbar. Standard = deaktiviert.
+# Ohne min/max, damit ein unbelegter Eingang sichtbar unsinnig bleibt.
+AI_INPUTS: list[tuple[str, str, int]] = [
+    ("boesch_hb_ai1", "AI1 (CN6)", 250),
+    ("boesch_hb_ai2", "AI2 (CN6)", 251),
+    ("boesch_hb_ai3", "AI3 (CN47)", 252),
+    ("boesch_hb_ai4", "AI4 (CN47)", 253),
+    ("boesch_hb_t1", "T1 (CN10)", 254),
+    ("boesch_hb_ai6", "AI6 (CN13)", 255),
+    ("boesch_hb_ai7", "AI7 (CN15)", 256),
+    ("boesch_hb_ai8", "AI8 (CN13)", 257),
+    ("boesch_hb_tw_ibh", "Tw (IBH)", 258),
+]
+for _key, _name, _addr in AI_INPUTS:
     REGISTERS.append(Reg(
-        key=_key, name=_name, device=H, address=_addr, poll_group=POLL_SETPOINT,
-        data_type="int16", scale=0.1, precision=1, unit="°C",
-        device_class="temperature", state_class="measurement",
+        key=_key, name=f"HB {_name} Temperatur", device=H, address=_addr,
+        poll_group=POLL_SETPOINT, data_type="int16", scale=0.1, precision=1,
+        unit="°C", device_class="temperature", state_class="measurement",
+        configurable=True,
     ))
 
 REGISTERS += [

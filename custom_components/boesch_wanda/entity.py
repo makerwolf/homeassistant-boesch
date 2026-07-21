@@ -31,12 +31,16 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
     _attr_has_entity_name = False
 
     def __init__(
-        self, coordinator: BoeschCoordinator, reg: Reg, entry: ConfigEntry
+        self,
+        coordinator: BoeschCoordinator,
+        reg: Reg,
+        entry: ConfigEntry,
+        name: str | None = None,
     ) -> None:
         super().__init__(coordinator)
         self._reg = reg
         self._attr_unique_id = reg.key
-        self._attr_name = reg.name
+        self._attr_name = name or reg.name
         if reg.icon:
             self._attr_icon = reg.icon
         self._attr_device_info = DeviceInfo(

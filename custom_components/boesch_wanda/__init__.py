@@ -15,6 +15,8 @@ from .const import (
     CONF_ENABLE_WEZ,
     CONF_HYDROBOX_ADDRESS,
     CONF_WANDA_ADDRESS,
+    DEFAULT_ENABLE_HK2,
+    DEFAULT_ENABLE_WEZ,
     DEFAULT_HYDROBOX_ADDRESS,
     DEFAULT_WANDA_ADDRESS,
     SCAN_DEFAULT_BY_GROUP,
@@ -63,8 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bo
         ),
     }
 
-    enable_hk2 = entry.options.get(CONF_ENABLE_HK2, True)
-    enable_wez = entry.options.get(CONF_ENABLE_WEZ, True)
+    enable_hk2 = entry.options.get(CONF_ENABLE_HK2, DEFAULT_ENABLE_HK2)
+    enable_wez = entry.options.get(CONF_ENABLE_WEZ, DEFAULT_ENABLE_WEZ)
     regs = registers_for(enable_hk2, enable_wez)
 
     # Ein Coordinator pro Poll-Gruppe, jeweils mit eigenem Intervall.

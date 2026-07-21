@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
+from .const import CONF_AI_INPUTS
 from .entity import BoeschEntity
 from .registers import Kind, Reg
 
@@ -26,11 +27,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Sensor-Entities aus dem Registermodell erzeugen."""
+    ai_names: dict[str, str] = entry.options.get(CONF_AI_INPUTS, {})
     entities: list[BoeschEntity] = []
     for coordinator in entry.runtime_data.coordinators.values():
         for reg in coordinator.regs:
             if reg.kind is Kind.SENSOR:
-                entities.append(BoeschSensor(coordinator, reg, entry))
+                if reg.configurable:
+                    # Frei belegbarer Eingang: nur anlegen, wenn benannt/aktiviert.
+                    name = ai_names.get(reg.key)
+                    if not name:
+                        continue
+                    entities.append(BoeschSensor(coordinator, reg, entry, name=name))
+                else:
+                    entities.append(BoeschSensor(coordinator, reg, entry))
             elif reg.kind is Kind.ENUM:
                 entities.append(BoeschEnumSensor(coordinator, reg, entry))
     async_add_entities(entities)
@@ -39,8 +48,8 @@ async def async_setup_entry(
 class BoeschSensor(BoeschEntity, SensorEntity):
     """Numerischer Messwert."""
 
-    def __init__(self, coordinator, reg: Reg, entry) -> None:
-        super().__init__(coordinator, reg, entry)
+    def __init__(self, coordinator, reg: Reg, entry, name: str | None = None) -> None:
+        super().__init__(coordinator, reg, entry, name=name)
         self._attr_native_unit_of_measurement = reg.unit
         if reg.device_class:
             self._attr_device_class = SensorDeviceClass(reg.device_class)

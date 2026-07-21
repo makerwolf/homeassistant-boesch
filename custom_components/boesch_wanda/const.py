@@ -15,6 +15,9 @@ CONF_WANDA_ADDRESS: Final = "wanda_address"
 CONF_HYDROBOX_ADDRESS: Final = "hydrobox_address"
 CONF_ENABLE_HK2: Final = "enable_hk2"
 CONF_ENABLE_WEZ: Final = "enable_wez"
+# Dict reg.key -> Anzeigename der frei belegbaren Fühlereingänge (AI1..Tw).
+# Name gesetzt = Eingang aktiviert; leer/fehlend = ausgeblendet.
+CONF_AI_INPUTS: Final = "ai_inputs"
 
 CONF_SCAN_LIVE: Final = "scan_live"
 CONF_SCAN_DEFAULT: Final = "scan_default"
@@ -26,6 +29,9 @@ DEFAULT_HOST: Final = "192.168.0.202"
 DEFAULT_PORT: Final = 502
 DEFAULT_WANDA_ADDRESS: Final = 40
 DEFAULT_HYDROBOX_ADDRESS: Final = 50
+# Optionale Hardware -> Opt-in (Basisanlage: 1 Heizkreis, kein externer WEZ).
+DEFAULT_ENABLE_HK2: Final = False
+DEFAULT_ENABLE_WEZ: Final = False
 
 # Poll-Gruppen -> Default-Intervall in Sekunden.
 # Bilden die scan_interval-Klassen der ursprünglichen boesch.yaml ab.
