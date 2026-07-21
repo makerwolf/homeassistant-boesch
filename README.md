@@ -31,6 +31,9 @@ TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
   externen Wärmeerzeuger, Poll-Intervalle und frei belegbare Fühlereingänge.
 - **Effizientes Polling**: ein `DataUpdateCoordinator` je Intervall-Klasse
   (15/30/60/300 s), zusammenhängende Register werden als Block gelesen.
+- **Energie & Effizienz**: aus den Leistungen berechnete kWh-Zähler (Strom &
+  Wärmemenge, gesamt + je Modus) fürs Energy Dashboard, plus laufende
+  Jahresarbeitszahl (JAZ/SCOP).
 
 ## Installation (HACS)
 
@@ -74,6 +77,35 @@ lassen blendet ihn aus. Beispiel: `AI1 → Heizspeicher-Temperatur`,
 Zwei Geräte im Device-Registry: **Bösch WANDA** und **Bösch Hydrobox**. Die
 `unique_id`s folgen dem Schema `boesch_wp_*` (WANDA) bzw. `boesch_hb_*`
 (Hydrobox).
+
+## Energie & Effizienz (Energy Dashboard)
+
+Aus den momentanen Leistungen (kW) werden per trapezförmiger Zeit-Integration
+kumulative **kWh-Zähler** gebildet (`total_increasing`, neustartfest):
+
+- **Strom**: `WP Stromverbrauch gesamt` + je Modus (Heizen / TWE / Kühlen)
+- **Wärmemenge**: `WP Wärmemenge gesamt` + je Modus
+
+Der Gesamt-Stromzähler kommt direkt ins **Energy Dashboard** (unter *Einzelne
+Geräte*). **Nicht** täglich resetten — das Dashboard periodisiert selbst aus dem
+kumulativen Wert.
+
+Aus Wärmemenge ÷ Stromenergie ergibt sich die laufende **Jahresarbeitszahl**
+(JAZ/SCOP): `WP Jahresarbeitszahl` gesamt sowie je Modus.
+
+**Tages-/Monatswerte** (optional, ohne die Basiszähler anzutasten) via
+`utility_meter`-Helper:
+
+```yaml
+# configuration.yaml
+utility_meter:
+  wp_strom_taeglich:
+    source: sensor.wp_stromverbrauch_gesamt
+    cycle: daily
+  wp_strom_monatlich:
+    source: sensor.wp_stromverbrauch_gesamt
+    cycle: monthly
+```
 
 ## Architektur
 

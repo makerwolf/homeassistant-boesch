@@ -10,10 +10,16 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from homeassistant.components.sensor import SensorEntity
+
 from . import BoeschConfigEntry
 from .const import CONF_AI_INPUTS
+from .energy import build_energy_entities
 from .entity import BoeschEntity
 from .registers import Kind, Reg
+
+# Quellregister, an dem der LIVE-Coordinator für die Energiezähler erkannt wird.
+_ENERGY_SOURCE_KEY = "boesch_wp_el_leistung"
 
 _STATE_CLASS = {
     "measurement": SensorStateClass.MEASUREMENT,
@@ -28,7 +34,7 @@ async def async_setup_entry(
 ) -> None:
     """Sensor-Entities aus dem Registermodell erzeugen."""
     ai_names: dict[str, str] = entry.options.get(CONF_AI_INPUTS, {})
-    entities: list[BoeschEntity] = []
+    entities: list[SensorEntity] = []
     for coordinator in entry.runtime_data.coordinators.values():
         for reg in coordinator.regs:
             if reg.kind is Kind.SENSOR:
@@ -42,6 +48,13 @@ async def async_setup_entry(
                     entities.append(BoeschSensor(coordinator, reg, entry))
             elif reg.kind is Kind.ENUM:
                 entities.append(BoeschEnumSensor(coordinator, reg, entry))
+
+    # Abgeleitete Energie- + JAZ-Sensoren an den Coordinator mit den Leistungen.
+    for coordinator in entry.runtime_data.coordinators.values():
+        if any(r.key == _ENERGY_SOURCE_KEY for r in coordinator.regs):
+            entities.extend(build_energy_entities(coordinator, entry))
+            break
+
     async_add_entities(entities)
 
 

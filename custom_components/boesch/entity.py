@@ -21,6 +21,17 @@ _DEVICE_NAME = {
 }
 
 
+def build_device_info(entry: ConfigEntry, device: DeviceKey) -> DeviceInfo:
+    """DeviceInfo für WANDA bzw. Hydrobox (auch für nicht-register-gebundene
+    Entities wie die abgeleiteten Energie-/Effizienzzähler)."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{entry.entry_id}_{device.value}")},
+        name=_DEVICE_NAME[device],
+        manufacturer=MANUFACTURER,
+        model=_MODEL_BY_DEVICE[device],
+    )
+
+
 class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
     """Basis für alle Bösch-Entities.
 
@@ -43,12 +54,7 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
         self._attr_name = name or reg.name
         if reg.icon:
             self._attr_icon = reg.icon
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{reg.device.value}")},
-            name=_DEVICE_NAME[reg.device],
-            manufacturer=MANUFACTURER,
-            model=_MODEL_BY_DEVICE[reg.device],
-        )
+        self._attr_device_info = build_device_info(entry, reg.device)
 
     @property
     def _value(self) -> float | int | None:
