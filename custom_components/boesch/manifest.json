@@ -1,5 +1,5 @@
 {
-  "domain": "boesch_wanda",
+  "domain": "boesch",
   "name": "Bösch",
   "codeowners": ["@wlienbacher"],
   "config_flow": true,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
-DOMAIN: Final = "boesch_wanda"
+DOMAIN: Final = "boesch"
 
 MANUFACTURER: Final = "Bösch"
 MODEL_WANDA: Final = "WANDA 10"

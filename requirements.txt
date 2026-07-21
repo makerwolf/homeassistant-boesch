@@ -1,5 +1,5 @@
 # Dev-Abhängigkeiten für den Devcontainer (nicht Teil der Integration selbst –
-# deren Laufzeit-Requirements stehen in custom_components/boesch_wanda/manifest.json).
+# deren Laufzeit-Requirements stehen in custom_components/boesch/manifest.json).
 colorlog
 homeassistant
 pymodbus>=3.6.0

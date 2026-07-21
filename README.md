@@ -37,7 +37,7 @@ wird über Energiemodus + Parallelverschiebung.
 3. „Bösch WANDA" installieren, Home Assistant neu starten.
 4. *Einstellungen → Geräte & Dienste → Integration hinzufügen → Bösch WANDA*.
 
-Alternativ den Ordner `custom_components/boesch_wanda/` manuell in die HA-Konfig
+Alternativ den Ordner `custom_components/boesch/` manuell in die HA-Konfig
 kopieren.
 
 ## Konfiguration

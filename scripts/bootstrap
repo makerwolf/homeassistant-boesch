@@ -32,13 +32,13 @@ logbook:
 logger:
   default: info
   logs:
-    custom_components.boesch_wanda: debug
+    custom_components.boesch: debug
 YAML
 fi
 
 # 2. Integration per Symlink einhängen (idempotent)
 mkdir -p "${PWD}/config/custom_components"
-ln -sfn "${PWD}/custom_components/boesch_wanda" \
-        "${PWD}/config/custom_components/boesch_wanda"
+ln -sfn "${PWD}/custom_components/boesch" \
+        "${PWD}/config/custom_components/boesch"
 
-echo "Bootstrap fertig: config/custom_components/boesch_wanda -> $(readlink config/custom_components/boesch_wanda)"
+echo "Bootstrap fertig: config/custom_components/boesch -> $(readlink config/custom_components/boesch)"
