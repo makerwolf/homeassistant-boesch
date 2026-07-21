@@ -18,6 +18,10 @@ jobs:
   hacs:
     name: HACS
     runs-on: ubuntu-latest
+    # Die HACS-Action liest hacs.json/manifest.json per GitHub-API; das
+    # funktioniert nur bei öffentlichen Repos. Solange privat, überspringen –
+    # läuft automatisch, sobald das Repo öffentlich ist.
+    if: ${{ !github.event.repository.private }}
     steps:
       - uses: actions/checkout@v4
       - uses: hacs/action@main
