@@ -18,16 +18,17 @@ dokumentierten Register sind jetzt beschreibbar:
   Schwellen, PV-Leistung/-Solltemperaturen, TWE-Sollwerte
 - **`select`** (8) – Modi: HK1/HK2 Betriebsart · Energiemodus · Saison, WEZ
   Betriebsart Heizen/TWE
-- **`switch`** (1) – TWE Einmalladung
+- **`water_heater`** (1) – Trinkwassererwärmung: Ist-Temperatur (100),
+  Zieltemperatur (konst. Sollwert 102), Betriebsmodus Normal/Einmalladung (103)
+- **`number`** – zusätzlich: TWE-Sollwert Einmalladung (104)
 
 Geschrieben wird per FC 0x06; nach jedem Write folgt ein sofortiger Refresh, der
 den bestätigten Gerätewert zurückliest.
 
-**Noch offen:** `water_heater` für die TWE (Schritt 2) und optionale dünne
-`climate`-Hülle für die Heizkreise (Schritt 3). Die Heizkreise haben bewusst
-**keine** `climate`-Entity mit Zieltemperatur — ihr Solltemperatur-Register ist
-read-only (von der Heizkurve berechnet); gesteuert wird über Energiemodus +
-Parallelverschiebung.
+**Noch offen:** optionale dünne `climate`-Hülle für die Heizkreise (Schritt 3).
+Die Heizkreise haben bewusst **keine** `climate`-Entity mit Zieltemperatur — ihr
+Solltemperatur-Register ist read-only (von der Heizkurve berechnet); gesteuert
+wird über Energiemodus + Parallelverschiebung.
 
 ## Installation (HACS)
 

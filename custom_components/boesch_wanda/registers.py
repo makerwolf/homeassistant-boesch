@@ -56,6 +56,7 @@ class Kind(str, Enum):
     NUMBER = "number"          # schreibbarer numerischer Sollwert (R/W)
     SELECT = "select"          # schreibbarer Enum/Modus (R/W)
     SWITCH = "switch"          # schreibbares 0/1-Flag (R/W)
+    WATER_HEATER = "water_heater"  # von der water_heater-Entity bedient (nicht standalone)
 
 
 # --------------------------------------------------------------------------
@@ -256,9 +257,16 @@ REGISTERS: list[Reg] = [
     _temp("boesch_hb_kuehlspeicher_soll", "HB Kuehlspeicher Soll", H, 51),
     _temp("boesch_hb_twe_ist", "HB TWE Ist", H, 100),
     _temp("boesch_hb_twe_soll", "HB TWE Soll", H, 101),
-    _tnum("boesch_hb_twe_konst_soll", "HB TWE konstanter Sollwert", H, 102, 0.0, 85.0),
-    _switch("boesch_hb_twe_einmalladung", "HB TWE Einmalladung", H, 103,
-            icon="mdi:water-boiler"),
+    # TWE-Sollwert (102) + Einmalladung (103) werden von der water_heater-Entity
+    # bedient (Kind.WATER_HEATER -> kein eigenes number/switch). Beide im DEFAULT-
+    # Poll, damit sie mit dem Ist-Wert (100) in EINEM Coordinator liegen.
+    Reg("boesch_hb_twe_konst_soll", "HB TWE konstanter Sollwert", H, 102,
+        kind=Kind.WATER_HEATER, poll_group=POLL_DEFAULT, scale=0.1, precision=1,
+        unit="°C", device_class="temperature", min_value=0.0, max_value=85.0,
+        writable=True),
+    Reg("boesch_hb_twe_einmalladung", "HB TWE Einmalladung", H, 103,
+        kind=Kind.WATER_HEATER, poll_group=POLL_DEFAULT,
+        min_value=0.0, max_value=1.0, writable=True),
     _tnum("boesch_hb_twe_soll_einmal", "HB TWE Sollwert Einmalladung", H, 104, 30.0, 60.0),
 
     # ---- Heizkreis 1 ----
