@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Home Assistant",
+      "type": "shell",
+      "command": "scripts/develop",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Bootstrap HA config",
+      "type": "shell",
+      "command": "scripts/bootstrap",
+      "problemMatcher": []
+    }
+  ]
+}

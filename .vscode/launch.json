@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Home Assistant (Debugger)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "homeassistant",
+      "args": ["--config", "${workspaceFolder}/config", "--debug"],
+      "preLaunchTask": "Bootstrap HA config",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ]
+}

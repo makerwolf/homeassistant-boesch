@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Startet Home Assistant im Devcontainer mit unserer Integration eingehängt.
+# Nach dem Start: http://localhost:8123 -> Einstellungen -> Geräte & Dienste
+# -> Integration hinzufügen -> "Bösch WANDA".
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Config vorbereiten + Integration einhängen
+scripts/bootstrap
+
+# Home Assistant starten
+hass --config "${PWD}/config" --debug

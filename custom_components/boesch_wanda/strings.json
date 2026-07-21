@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Bösch verbinden",
+        "description": "Modbus-TCP-Verbindung zu WANDA und Hydrobox.",
+        "data": {
+          "host": "IP-Adresse",
+          "port": "Port",
+          "wanda_address": "Modbus-Adresse WANDA",
+          "hydrobox_address": "Modbus-Adresse Hydrobox"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen. IP, Port und Modbus-Adresse prüfen.",
+      "unknown": "Unerwarteter Fehler."
+    },
+    "abort": {
+      "already_configured": "Dieser Host ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Bösch – Optionen",
+        "data": {
+          "enable_hk2": "Heizkreis 2 vorhanden",
+          "enable_wez": "Externer Wärmeerzeuger vorhanden",
+          "scan_live": "Intervall Live-Werte (s)",
+          "scan_default": "Intervall Standard (s)",
+          "scan_setpoint": "Intervall Sollwerte (s)",
+          "scan_hours": "Intervall Betriebsstunden (s)"
+        }
+      }
+    }
+  }
+}

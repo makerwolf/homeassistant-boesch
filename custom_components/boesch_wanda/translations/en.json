@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Bösch",
+        "description": "Modbus TCP connection to WANDA and Hydrobox.",
+        "data": {
+          "host": "IP address",
+          "port": "Port",
+          "wanda_address": "WANDA Modbus address",
+          "hydrobox_address": "Hydrobox Modbus address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connection failed. Check IP, port and Modbus address.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This host is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Bösch – Options",
+        "data": {
+          "enable_hk2": "Heating circuit 2 present",
+          "enable_wez": "External heat generator present",
+          "scan_live": "Live values interval (s)",
+          "scan_default": "Default interval (s)",
+          "scan_setpoint": "Setpoints interval (s)",
+          "scan_hours": "Operating hours interval (s)"
+        }
+      }
+    }
+  }
+}

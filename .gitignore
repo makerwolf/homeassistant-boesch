@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Devcontainer / HA runtime
+config/
+.venv/
+
+# Lokale Claude-Settings
+.claude/settings.local.json

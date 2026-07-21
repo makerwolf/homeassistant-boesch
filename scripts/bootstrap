@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Bereitet ein HA-Config-Verzeichnis unter ./config vor und hängt unsere
+# Integration per Symlink ein – idempotent, alle Pfade CONTAINER-INTERN.
+#
+# Genau das ist der Punkt, an dem der Host-Symlink aus dem home-assistant/core-
+# Container scheiterte: hier zeigt der Symlink auf ${PWD}/custom_components, das
+# im Container existiert (unser Repo IST die Workspace).
+set -e
+
+cd "$(dirname "$0")/.."
+
+mkdir -p "${PWD}/config"
+
+# 1. Schlanke Dev-Konfiguration schreiben (nur beim ersten Mal, damit eigene
+#    Änderungen erhalten bleiben).
+#
+#    BEWUSST OHNE `default_config:` — das zöge im schlanken Python-Devcontainer-
+#    Image Kamera/Bluetooth/Matter/go2rtc nach und produziert die bekannten
+#    Fehler (ffmpeg/turbojpeg/go2rtc/libpcap fehlen als System-Binaries). Für
+#    das Testen unserer Modbus-Integration brauchen wir davon nichts. Die
+#    aufgeführten Domänen reichen, um über die UI Integrationen hinzuzufügen,
+#    Entities zu sehen und Verläufe aufzuzeichnen.
+if [[ ! -f "${PWD}/config/configuration.yaml" ]]; then
+    cat > "${PWD}/config/configuration.yaml" <<'YAML'
+# Schlanke HA-Dev-Konfiguration für die Bösch-WANDA-Integration.
+frontend:
+config:
+recorder:
+history:
+logbook:
+
+logger:
+  default: info
+  logs:
+    custom_components.boesch_wanda: debug
+YAML
+fi
+
+# 2. Integration per Symlink einhängen (idempotent)
+mkdir -p "${PWD}/config/custom_components"
+ln -sfn "${PWD}/custom_components/boesch_wanda" \
+        "${PWD}/config/custom_components/boesch_wanda"
+
+echo "Bootstrap fertig: config/custom_components/boesch_wanda -> $(readlink config/custom_components/boesch_wanda)"
