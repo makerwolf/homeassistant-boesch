@@ -10,12 +10,24 @@ einzigen TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
 
 ## Status
 
-**Phase 1 – read-only.** Alle 77 Register werden als `sensor`- bzw.
-`binary_sensor`-Entities bereitgestellt, inkl. Klartext für Status-/Enum-Register
-(ersetzt die 16 Template-Sensoren). Die als **R/W** dokumentierten Register sind
-im Registermodell bereits mit `writable=True` markiert, werden aber noch **nicht**
-beschreibbar ausgespielt. Der Schreibpfad (`number`/`select`/`switch`/`climate`)
-folgt in einer späteren Phase — dann nur „Plattform aktivieren", kein Umbau.
+**Phase 2 (in Arbeit) – Schreibzugriff.** Read-only-Register erscheinen als
+`sensor`/`binary_sensor` (inkl. Klartext für Status-Enums). Die 24 als **R/W**
+dokumentierten Register sind jetzt beschreibbar:
+
+- **`number`** (15) – Sollwerte: Parallelverschiebung, Sommer/Winter/Kühl-
+  Schwellen, PV-Leistung/-Solltemperaturen, TWE-Sollwerte
+- **`select`** (8) – Modi: HK1/HK2 Betriebsart · Energiemodus · Saison, WEZ
+  Betriebsart Heizen/TWE
+- **`switch`** (1) – TWE Einmalladung
+
+Geschrieben wird per FC 0x06; nach jedem Write folgt ein sofortiger Refresh, der
+den bestätigten Gerätewert zurückliest.
+
+**Noch offen:** `water_heater` für die TWE (Schritt 2) und optionale dünne
+`climate`-Hülle für die Heizkreise (Schritt 3). Die Heizkreise haben bewusst
+**keine** `climate`-Entity mit Zieltemperatur — ihr Solltemperatur-Register ist
+read-only (von der Heizkurve berechnet); gesteuert wird über Energiemodus +
+Parallelverschiebung.
 
 ## Installation (HACS)
 

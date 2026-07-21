@@ -80,3 +80,27 @@ class BoeschModbusClient:
                 f"Read-Fehler @unit {unit} addr {address}+{count}: {result}"
             )
         return list(result.registers)
+
+    async def _write_single(self, address: int, value: int, unit: int):
+        """write_register (FC 0x06) – kompatibel über pymodbus 3.6..3.8+."""
+        try:
+            return await self._client.write_register(
+                address, value, device_id=unit
+            )
+        except TypeError:
+            return await self._client.write_register(address, value, slave=unit)
+
+    async def write_register(self, address: int, value: int, unit: int) -> None:
+        """Einen 16-Bit-Rohwert in ein Holding-Register schreiben (FC 0x06)."""
+        async with self._lock:
+            if not self._client.connected:
+                if not await self._client.connect():
+                    raise ModbusError(
+                        f"Verbindung zu {self._host}:{self._port} fehlgeschlagen"
+                    )
+            result = await self._write_single(address, value, unit)
+
+        if result is None or result.isError():
+            raise ModbusError(
+                f"Write-Fehler @unit {unit} addr {address} = {value}: {result}"
+            )

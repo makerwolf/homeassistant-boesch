@@ -26,7 +26,13 @@ from .registers import DeviceKey, registers_for
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SWITCH,
+]
 
 type BoeschConfigEntry = ConfigEntry[BoeschRuntimeData]
 

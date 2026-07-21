@@ -50,9 +50,12 @@ DEFAULT_ADDRESS_BY_DEVICE = {
 class Kind(str, Enum):
     """Entity-Typ, der aus dem Register erzeugt wird."""
 
-    SENSOR = "sensor"          # numerischer Messwert
+    SENSOR = "sensor"          # numerischer Messwert (read-only)
     ENUM = "enum"              # numerischer Code -> Klartext (sensor, device_class enum)
     BINARY = "binary"          # 0/1-Flag -> binary_sensor (is_on = value > on_threshold)
+    NUMBER = "number"          # schreibbarer numerischer Sollwert (R/W)
+    SELECT = "select"          # schreibbarer Enum/Modus (R/W)
+    SWITCH = "switch"          # schreibbares 0/1-Flag (R/W)
 
 
 # --------------------------------------------------------------------------
@@ -161,6 +164,39 @@ def _binary(key, name, dev, addr, group=POLL_SETPOINT, *, threshold=0.0,
                icon=icon, feature=feature)
 
 
+# --- Schreibbare Register (R/W) ---------------------------------------------
+# min_value/max_value dienen bei number/select doppelt: als Lese-Kappung UND als
+# Eingabegrenze der Entity. Der Schreib-Rohwert wird in coordinator.py aus scale
+# zurückgerechnet.
+
+def _number(key, name, dev, addr, group=POLL_SETPOINT, *, data_type="int16",
+            scale=1.0, precision=None, unit=None, device_class=None,
+            mn=None, mx=None, icon=None, feature=None):
+    return Reg(key=key, name=name, device=dev, address=addr, kind=Kind.NUMBER,
+               poll_group=group, data_type=data_type, scale=scale, precision=precision,
+               unit=unit, device_class=device_class, min_value=mn, max_value=mx,
+               writable=True, icon=icon, feature=feature)
+
+
+def _tnum(key, name, dev, addr, mn, mx, group=POLL_SETPOINT, *, feature=None):
+    """Schreibbarer Temperatur-Sollwert (°C, scale 0.1)."""
+    return _number(key, name, dev, addr, group, scale=0.1, precision=1, unit="°C",
+                   device_class="temperature", mn=mn, mx=mx, feature=feature)
+
+
+def _select(key, name, dev, addr, options, group=POLL_SETPOINT, *,
+            icon=None, feature=None):
+    return Reg(key=key, name=name, device=dev, address=addr, kind=Kind.SELECT,
+               poll_group=group, options=options, min_value=min(options),
+               max_value=max(options), writable=True, icon=icon, feature=feature)
+
+
+def _switch(key, name, dev, addr, group=POLL_SETPOINT, *, icon=None, feature=None):
+    return Reg(key=key, name=name, device=dev, address=addr, kind=Kind.SWITCH,
+               poll_group=group, min_value=0.0, max_value=1.0, writable=True,
+               icon=icon, feature=feature)
+
+
 W = DeviceKey.WANDA
 H = DeviceKey.HYDROBOX
 
@@ -206,14 +242,11 @@ REGISTERS: list[Reg] = [
     # ---- PV Modulation ----
     _binary("boesch_wp_pv_modulation", "WP PV Modulation", W, 300, POLL_DEFAULT,
             icon="mdi:solar-power"),
-    Reg("boesch_wp_pv_leistung", "WP PV Modulation Leistung", W, 301,
-        poll_group=POLL_DEFAULT, data_type="uint16", scale=0.1, precision=1,
-        unit="W", device_class="power", state_class="measurement",
-        min_value=0.0, writable=True),
-    _temp("boesch_wp_pv_soll_heizen", "WP PV Solltemp Heizen", W, 302, POLL_SETPOINT,
-          mn=0.0, mx=100.0, writable=True),
-    _temp("boesch_wp_pv_soll_twe", "WP PV Solltemp TWE", W, 303, POLL_SETPOINT,
-          mn=0.0, mx=100.0, writable=True),
+    _number("boesch_wp_pv_leistung", "WP PV Modulation Leistung", W, 301, POLL_DEFAULT,
+            data_type="uint16", scale=0.1, precision=1, unit="W",
+            device_class="power", mn=0.0, mx=6553.0),
+    _tnum("boesch_wp_pv_soll_heizen", "WP PV Solltemp Heizen", W, 302, 0.0, 100.0),
+    _tnum("boesch_wp_pv_soll_twe", "WP PV Solltemp TWE", W, 303, 0.0, 100.0),
 
     # =================  HYDROBOX (device 50)  =================
     # ---- Speicher Heizen / Kühlen / TWE ----
@@ -223,12 +256,10 @@ REGISTERS: list[Reg] = [
     _temp("boesch_hb_kuehlspeicher_soll", "HB Kuehlspeicher Soll", H, 51),
     _temp("boesch_hb_twe_ist", "HB TWE Ist", H, 100),
     _temp("boesch_hb_twe_soll", "HB TWE Soll", H, 101),
-    _temp("boesch_hb_twe_konst_soll", "HB TWE konstanter Sollwert", H, 102, POLL_SETPOINT,
-          mn=0.0, mx=85.0, writable=True),
-    _enum("boesch_hb_twe_einmalladung", "HB TWE Einmalladung", H, 103, EINMALLADUNG,
-          POLL_SETPOINT, writable=True, icon="mdi:water-boiler"),
-    _temp("boesch_hb_twe_soll_einmal", "HB TWE Sollwert Einmalladung", H, 104, POLL_SETPOINT,
-          mn=30.0, mx=60.0, writable=True),
+    _tnum("boesch_hb_twe_konst_soll", "HB TWE konstanter Sollwert", H, 102, 0.0, 85.0),
+    _switch("boesch_hb_twe_einmalladung", "HB TWE Einmalladung", H, 103,
+            icon="mdi:water-boiler"),
+    _tnum("boesch_hb_twe_soll_einmal", "HB TWE Sollwert Einmalladung", H, 104, 30.0, 60.0),
 
     # ---- Heizkreis 1 ----
     _enum("boesch_hb_hk1_status", "HB HK1 Status", H, 150, HK_STATUS, icon="mdi:radiator"),
@@ -236,23 +267,18 @@ REGISTERS: list[Reg] = [
     _temp("boesch_hb_hk1_soll", "HB HK1 Solltemperatur", H, 152),
     _enum("boesch_hb_hk1_betriebsmodus", "HB HK1 Betriebsmodus", H, 153, BETRIEBSMODUS,
           icon="mdi:sun-snowflake-variant"),
-    _enum("boesch_hb_hk1_betriebsart", "HB HK1 Betriebsart", H, 154, BETRIEBSART,
-          POLL_SETPOINT, writable=True, icon="mdi:toggle-switch"),
-    _enum("boesch_hb_hk1_energiemodus", "HB HK1 Energiemodus", H, 155, ENERGIEMODUS,
-          POLL_SETPOINT, writable=True, icon="mdi:leaf"),
-    Reg("boesch_hb_hk1_parallel", "HB HK1 Parallelverschiebung Kurve", H, 156,
-        poll_group=POLL_SETPOINT, state_class="measurement",
-        min_value=-5.0, max_value=5.0, writable=True),
-    _enum("boesch_hb_hk1_saison", "HB HK1 Manuelle Saisonauswahl", H, 157, SAISON,
-          POLL_SETPOINT, writable=True, icon="mdi:calendar-sync"),
-    _temp("boesch_hb_hk1_sommer_aus", "HB HK1 Sommerbetrieb Heizen Aus", H, 158,
-          POLL_SETPOINT, mn=0.0, mx=50.0, writable=True),
-    _temp("boesch_hb_hk1_winter_ein", "HB HK1 Winterbetrieb Heizen Ein", H, 159,
-          POLL_SETPOINT, mn=0.0, mx=50.0, writable=True),
-    _temp("boesch_hb_hk1_kuehl_ein", "HB HK1 Kuehlbetrieb Ein", H, 160,
-          POLL_SETPOINT, mn=0.0, mx=50.0, writable=True),
-    _temp("boesch_hb_hk1_kuehl_aus", "HB HK1 Kuehlbetrieb Aus", H, 161,
-          POLL_SETPOINT, mn=0.0, mx=50.0, writable=True),
+    _select("boesch_hb_hk1_betriebsart", "HB HK1 Betriebsart", H, 154, BETRIEBSART,
+            icon="mdi:toggle-switch"),
+    _select("boesch_hb_hk1_energiemodus", "HB HK1 Energiemodus", H, 155, ENERGIEMODUS,
+            icon="mdi:leaf"),
+    _number("boesch_hb_hk1_parallel", "HB HK1 Parallelverschiebung Kurve", H, 156,
+            mn=-5.0, mx=5.0, icon="mdi:tune-vertical"),
+    _select("boesch_hb_hk1_saison", "HB HK1 Manuelle Saisonauswahl", H, 157, SAISON,
+            icon="mdi:calendar-sync"),
+    _tnum("boesch_hb_hk1_sommer_aus", "HB HK1 Sommerbetrieb Heizen Aus", H, 158, 0.0, 50.0),
+    _tnum("boesch_hb_hk1_winter_ein", "HB HK1 Winterbetrieb Heizen Ein", H, 159, 0.0, 50.0),
+    _tnum("boesch_hb_hk1_kuehl_ein", "HB HK1 Kuehlbetrieb Ein", H, 160, 0.0, 50.0),
+    _tnum("boesch_hb_hk1_kuehl_aus", "HB HK1 Kuehlbetrieb Aus", H, 161, 0.0, 50.0),
     _binary("boesch_hb_hk1_sommer", "HB HK1 Sommerbetrieb", H, 162, icon="mdi:weather-sunny"),
     _binary("boesch_hb_hk1_kuehl", "HB HK1 Kuehlbetrieb", H, 163, icon="mdi:snowflake"),
 
@@ -263,23 +289,22 @@ REGISTERS: list[Reg] = [
     _temp("boesch_hb_hk2_soll", "HB HK2 Solltemperatur", H, 177, feature=FEATURE_HK2),
     _enum("boesch_hb_hk2_betriebsmodus", "HB HK2 Betriebsmodus", H, 178, BETRIEBSMODUS,
           icon="mdi:sun-snowflake-variant", feature=FEATURE_HK2),
-    _enum("boesch_hb_hk2_betriebsart", "HB HK2 Betriebsart", H, 179, BETRIEBSART,
-          POLL_SETPOINT, writable=True, icon="mdi:toggle-switch", feature=FEATURE_HK2),
-    _enum("boesch_hb_hk2_energiemodus", "HB HK2 Energiemodus", H, 180, ENERGIEMODUS,
-          POLL_SETPOINT, writable=True, icon="mdi:leaf", feature=FEATURE_HK2),
-    Reg("boesch_hb_hk2_parallel", "HB HK2 Parallelverschiebung Kurve", H, 181,
-        poll_group=POLL_SETPOINT, state_class="measurement",
-        min_value=-5.0, max_value=5.0, writable=True, feature=FEATURE_HK2),
-    _enum("boesch_hb_hk2_saison", "HB HK2 Manuelle Saisonauswahl", H, 182, SAISON,
-          POLL_SETPOINT, writable=True, icon="mdi:calendar-sync", feature=FEATURE_HK2),
-    _temp("boesch_hb_hk2_sommer_aus", "HB HK2 Sommerbetrieb Heizen Aus", H, 183,
-          POLL_SETPOINT, mn=0.0, mx=50.0, writable=True, feature=FEATURE_HK2),
-    _temp("boesch_hb_hk2_winter_ein", "HB HK2 Winterbetrieb Heizen Ein", H, 184,
-          POLL_SETPOINT, mn=0.0, mx=50.0, writable=True, feature=FEATURE_HK2),
-    _temp("boesch_hb_hk2_kuehl_ein", "HB HK2 Kuehlbetrieb Ein", H, 185,
-          POLL_SETPOINT, mn=0.0, mx=50.0, writable=True, feature=FEATURE_HK2),
-    _temp("boesch_hb_hk2_kuehl_aus", "HB HK2 Kuehlbetrieb Aus", H, 186,
-          POLL_SETPOINT, mn=0.0, mx=50.0, writable=True, feature=FEATURE_HK2),
+    _select("boesch_hb_hk2_betriebsart", "HB HK2 Betriebsart", H, 179, BETRIEBSART,
+            icon="mdi:toggle-switch", feature=FEATURE_HK2),
+    _select("boesch_hb_hk2_energiemodus", "HB HK2 Energiemodus", H, 180, ENERGIEMODUS,
+            icon="mdi:leaf", feature=FEATURE_HK2),
+    _number("boesch_hb_hk2_parallel", "HB HK2 Parallelverschiebung Kurve", H, 181,
+            mn=-5.0, mx=5.0, icon="mdi:tune-vertical", feature=FEATURE_HK2),
+    _select("boesch_hb_hk2_saison", "HB HK2 Manuelle Saisonauswahl", H, 182, SAISON,
+            icon="mdi:calendar-sync", feature=FEATURE_HK2),
+    _tnum("boesch_hb_hk2_sommer_aus", "HB HK2 Sommerbetrieb Heizen Aus", H, 183, 0.0, 50.0,
+          feature=FEATURE_HK2),
+    _tnum("boesch_hb_hk2_winter_ein", "HB HK2 Winterbetrieb Heizen Ein", H, 184, 0.0, 50.0,
+          feature=FEATURE_HK2),
+    _tnum("boesch_hb_hk2_kuehl_ein", "HB HK2 Kuehlbetrieb Ein", H, 185, 0.0, 50.0,
+          feature=FEATURE_HK2),
+    _tnum("boesch_hb_hk2_kuehl_aus", "HB HK2 Kuehlbetrieb Aus", H, 186, 0.0, 50.0,
+          feature=FEATURE_HK2),
     _binary("boesch_hb_hk2_sommer", "HB HK2 Sommerbetrieb", H, 187,
             icon="mdi:weather-sunny", feature=FEATURE_HK2),
     _binary("boesch_hb_hk2_kuehl", "HB HK2 Kuehlbetrieb", H, 188,
@@ -288,12 +313,12 @@ REGISTERS: list[Reg] = [
     # ---- Externer Wärmeerzeuger (optional) ----
     _enum("boesch_hb_wez_heizen_status", "HB ext. WEZ Heizen Status", H, 200, WEZ_STATUS,
           POLL_SETPOINT, icon="mdi:fire", feature=FEATURE_WEZ),
-    _enum("boesch_hb_wez_heizen_art", "HB ext. WEZ Heizen Betriebsart", H, 201, WEZ_BETRIEBSART,
-          POLL_SETPOINT, writable=True, icon="mdi:fire-circle", feature=FEATURE_WEZ),
+    _select("boesch_hb_wez_heizen_art", "HB ext. WEZ Heizen Betriebsart", H, 201,
+            WEZ_BETRIEBSART, icon="mdi:fire-circle", feature=FEATURE_WEZ),
     _enum("boesch_hb_wez_twe_status", "HB ext. WEZ TWE Status", H, 202, WEZ_STATUS,
           POLL_SETPOINT, icon="mdi:fire", feature=FEATURE_WEZ),
-    _enum("boesch_hb_wez_twe_art", "HB ext. WEZ TWE Betriebsart", H, 203, WEZ_BETRIEBSART,
-          POLL_SETPOINT, writable=True, icon="mdi:fire-circle", feature=FEATURE_WEZ),
+    _select("boesch_hb_wez_twe_art", "HB ext. WEZ TWE Betriebsart", H, 203,
+            WEZ_BETRIEBSART, icon="mdi:fire-circle", feature=FEATURE_WEZ),
 ]
 
 # ---- Rohe Fühlereingänge (BEWUSST OHNE min/max) ----

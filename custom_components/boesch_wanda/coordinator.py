@@ -109,3 +109,15 @@ class BoeschCoordinator(DataUpdateCoordinator[dict[str, float | int | None]]):
         except ModbusError as err:
             raise UpdateFailed(str(err)) from err
         return data
+
+    async def async_write(self, reg: Reg, value: float) -> None:
+        """Einen skalaren Wert in ein schreibbares Register schreiben.
+
+        Kehrt die Dekodierung um: value/scale -> ganzzahliger Rohwert, negative
+        int16-Werte als Zweierkomplement. Danach sofortiger Refresh, damit die
+        Entity den bestätigten Gerätewert zeigt.
+        """
+        raw = int(round(value / reg.scale)) & 0xFFFF
+        unit = self._unit_by_device[reg.device]
+        await self._client.write_register(reg.address, raw, unit)
+        await self.async_request_refresh()
