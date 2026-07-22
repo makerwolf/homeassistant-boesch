@@ -57,7 +57,7 @@ async def _test_connection(host: str, port: int, wanda_unit: int) -> None:
 class BoeschConfigFlow(ConfigFlow, domain=DOMAIN):
     """Setup-Flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

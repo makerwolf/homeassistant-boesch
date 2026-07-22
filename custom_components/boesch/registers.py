@@ -207,27 +207,27 @@ H = DeviceKey.HYDROBOX
 REGISTERS: list[Reg] = [
     # =================  WANDA (device 40)  =================
     # ---- Energiequelle / Ladekreis ----
-    _temp("boesch_wp_b15_quelle_eintritt", "WP Energiequellen Eintrittstemperatur B15", W, 2, POLL_DEFAULT),
-    _temp("boesch_wp_b16_vorlauf", "WP Vorlauftemperatur B16", W, 50, POLL_LIVE),
-    _temp("boesch_wp_b17_ruecklauf", "WP Ruecklauftemperatur B17", W, 51, POLL_LIVE),
-    Reg("boesch_wp_p13_durchfluss", "WP Durchfluss P13", W, 52, poll_group=POLL_LIVE,
+    _temp("boesch_wanda_b15_quelle_eintritt", "WP Energiequellen Eintrittstemperatur B15", W, 2, POLL_DEFAULT),
+    _temp("boesch_wanda_b16_vorlauf", "WP Vorlauftemperatur B16", W, 50, POLL_LIVE),
+    _temp("boesch_wanda_b17_ruecklauf", "WP Ruecklauftemperatur B17", W, 51, POLL_LIVE),
+    Reg("boesch_wanda_p13_durchfluss", "WP Durchfluss P13", W, 52, poll_group=POLL_LIVE,
         data_type="int16", scale=0.1, precision=1, unit="L/min",
         device_class="volume_flow_rate", state_class="measurement",
         min_value=0.0, max_value=200.0),
 
     # ---- Leistung / Effizienz ----
-    _cop("boesch_wp_cop", "WP COP aktuell", W, 100),
-    _cop("boesch_wp_cop_heizen", "WP COP Heizen", W, 101),
-    _cop("boesch_wp_cop_twe", "WP COP TWE", W, 102),
-    _cop("boesch_wp_cop_kuehlen", "WP COP Kuehlen", W, 103),
-    _power("boesch_wp_leistung", "WP Leistung aktuell", W, 104),
-    _power("boesch_wp_leistung_heizen", "WP Leistung Heizen", W, 105),
-    _power("boesch_wp_leistung_twe", "WP Leistung TWE", W, 106),
-    _power("boesch_wp_leistung_kuehlen", "WP Leistung Kuehlen", W, 107),
-    _power("boesch_wp_el_leistung", "WP elektr. Leistung aktuell", W, 108),
-    _power("boesch_wp_el_leistung_heizen", "WP elektr. Leistung Heizen", W, 109),
-    _power("boesch_wp_el_leistung_twe", "WP elektr. Leistung TWE", W, 110),
-    _power("boesch_wp_el_leistung_kuehlen", "WP elektr. Leistung Kuehlen", W, 111),
+    _cop("boesch_wanda_cop", "WP COP aktuell", W, 100),
+    _cop("boesch_wanda_cop_heizen", "WP COP Heizen", W, 101),
+    _cop("boesch_wanda_cop_twe", "WP COP TWE", W, 102),
+    _cop("boesch_wanda_cop_kuehlen", "WP COP Kuehlen", W, 103),
+    _power("boesch_wanda_leistung", "WP Leistung aktuell", W, 104),
+    _power("boesch_wanda_leistung_heizen", "WP Leistung Heizen", W, 105),
+    _power("boesch_wanda_leistung_twe", "WP Leistung TWE", W, 106),
+    _power("boesch_wanda_leistung_kuehlen", "WP Leistung Kuehlen", W, 107),
+    _power("boesch_wanda_el_leistung", "WP elektr. Leistung aktuell", W, 108),
+    _power("boesch_wanda_el_leistung_heizen", "WP elektr. Leistung Heizen", W, 109),
+    _power("boesch_wanda_el_leistung_twe", "WP elektr. Leistung TWE", W, 110),
+    _power("boesch_wanda_el_leistung_kuehlen", "WP elektr. Leistung Kuehlen", W, 111),
 
     # ---- Verdichter-Status ----
     # "Verdichter laeuft" wird aus der el. Leistung (108 > 0) abgeleitet
@@ -235,22 +235,22 @@ REGISTERS: list[Reg] = [
     # TWE-Betrieb auf 0, obwohl der Verdichter laeuft). Per Live-Modbus als
     # einzelnes 16-Bit-Register verifiziert (kein 32-Bit/Float; 153 existiert
     # nicht). Bedeutung unklar -> als Rohwert-Diagnosesensor eingebunden.
-    Reg("boesch_wp_reg152_debug", "WP Register 152 (Debug)", W, 152,
+    Reg("boesch_wanda_reg152_debug", "WP Register 152 (Debug)", W, 152,
         poll_group=POLL_DEFAULT, entity_category="diagnostic"),
 
     # ---- Status / Alarm ----
-    _enum("boesch_wp_status", "WP Status", W, 200, WP_STATUS, POLL_LIVE, icon="mdi:heat-pump"),
-    Reg("boesch_wp_alarmcode", "WP AlarmCode", W, 250, poll_group=POLL_DEFAULT,
+    _enum("boesch_wanda_status", "WP Status", W, 200, WP_STATUS, POLL_LIVE, icon="mdi:heat-pump"),
+    Reg("boesch_wanda_alarmcode", "WP AlarmCode", W, 250, poll_group=POLL_DEFAULT,
         min_value=0.0),
 
     # ---- PV Modulation ----
-    _binary("boesch_wp_pv_modulation", "WP PV Modulation", W, 300, POLL_DEFAULT,
+    _binary("boesch_wanda_pv_modulation", "WP PV Modulation", W, 300, POLL_DEFAULT,
             icon="mdi:solar-power"),
-    _number("boesch_wp_pv_leistung", "WP PV Modulation Leistung", W, 301, POLL_DEFAULT,
+    _number("boesch_wanda_pv_leistung", "WP PV Modulation Leistung", W, 301, POLL_DEFAULT,
             data_type="uint16", scale=0.1, precision=1, unit="W",
             device_class="power", mn=0.0, mx=6553.0),
-    _tnum("boesch_wp_pv_soll_heizen", "WP PV Solltemp Heizen", W, 302, 0.0, 100.0),
-    _tnum("boesch_wp_pv_soll_twe", "WP PV Solltemp TWE", W, 303, 0.0, 100.0),
+    _tnum("boesch_wanda_pv_soll_heizen", "WP PV Solltemp Heizen", W, 302, 0.0, 100.0),
+    _tnum("boesch_wanda_pv_soll_twe", "WP PV Solltemp TWE", W, 303, 0.0, 100.0),
 
     # =================  HYDROBOX (device 50)  =================
     # ---- Speicher Heizen / Kühlen / TWE ----

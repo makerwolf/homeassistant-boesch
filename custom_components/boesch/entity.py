@@ -22,6 +22,18 @@ _DEVICE_NAME = {
 }
 
 
+def assign_entity_ids(entities, platform: str) -> None:
+    """entity_id = <platform>.<unique_id> setzen.
+
+    Damit erhalten NEUE Installationen direkt das kompakte boesch_-Schema
+    (z. B. sensor.boesch_wanda_b16_vorlauf) statt der aus dem Namen erzeugten
+    Standard-ID. Für bereits registrierte Entities gewinnt ohnehin die Registry
+    (deren IDs werden per async_migrate_entry umgezogen)."""
+    for entity in entities:
+        if entity.unique_id:
+            entity.entity_id = f"{platform}.{entity.unique_id}"
+
+
 def build_device_info(entry: ConfigEntry, device: DeviceKey) -> DeviceInfo:
     """DeviceInfo für WANDA bzw. Hydrobox (auch für nicht-register-gebundene
     Entities wie die abgeleiteten Energie-/Effizienzzähler)."""

@@ -15,11 +15,11 @@ from homeassistant.components.sensor import SensorEntity
 from . import BoeschConfigEntry
 from .const import CONF_AI_INPUTS
 from .energy import build_energy_entities
-from .entity import BoeschEntity
+from .entity import BoeschEntity, assign_entity_ids
 from .registers import Kind, Reg
 
 # Quellregister, an dem der LIVE-Coordinator für die Energiezähler erkannt wird.
-_ENERGY_SOURCE_KEY = "boesch_wp_el_leistung"
+_ENERGY_SOURCE_KEY = "boesch_wanda_el_leistung"
 
 _STATE_CLASS = {
     "measurement": SensorStateClass.MEASUREMENT,
@@ -55,6 +55,7 @@ async def async_setup_entry(
             entities.extend(build_energy_entities(coordinator, entry))
             break
 
+    assign_entity_ids(entities, "sensor")
     async_add_entities(entities)
 
 

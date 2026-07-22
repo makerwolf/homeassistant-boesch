@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
-from .entity import BoeschEntity
+from .entity import BoeschEntity, assign_entity_ids
 from .registers import Kind, Reg
 
 
@@ -24,6 +24,7 @@ async def async_setup_entry(
         for reg in coordinator.regs:
             if reg.kind is Kind.SWITCH:
                 entities.append(BoeschSwitch(coordinator, reg, entry))
+    assign_entity_ids(entities, "switch")
     async_add_entities(entities)
 
 

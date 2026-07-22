@@ -14,14 +14,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
-from .entity import BoeschEntity
+from .entity import BoeschEntity, assign_entity_ids
 from .registers import Kind, Reg
 
 # Abgeleitete Binaries teilen sich den Read eines bestehenden Sensor-Registers.
-_ALARM_SOURCE_KEY = "boesch_wp_alarmcode"
+_ALARM_SOURCE_KEY = "boesch_wanda_alarmcode"
 # "Verdichter läuft" aus el. Leistung: Register 152 ist als Flag unbrauchbar
 # (steht im TWE-Betrieb auf 0). el. Leistung > 0 gilt über alle Betriebsarten.
-_COMPRESSOR_SOURCE_KEY = "boesch_wp_el_leistung"
+_COMPRESSOR_SOURCE_KEY = "boesch_wanda_el_leistung"
 _COMPRESSOR_ON_KW = 0.1
 
 
@@ -40,6 +40,7 @@ async def async_setup_entry(
                 entities.append(BoeschAlarmBinarySensor(coordinator, reg, entry))
             if reg.key == _COMPRESSOR_SOURCE_KEY:
                 entities.append(BoeschCompressorBinarySensor(coordinator, reg, entry))
+    assign_entity_ids(entities, "binary_sensor")
     async_add_entities(entities)
 
 
@@ -68,7 +69,7 @@ class BoeschAlarmBinarySensor(BoeschEntity, BinarySensorEntity):
     def __init__(self, coordinator, reg: Reg, entry) -> None:
         super().__init__(coordinator, reg, entry)
         # Eigene unique_id/Name, nicht die des Quell-Sensors.
-        self._attr_unique_id = "boesch_wp_alarm_bs"
+        self._attr_unique_id = "boesch_wanda_alarm_bs"
         self._attr_name = "WP Alarm"
 
     @property
@@ -88,7 +89,7 @@ class BoeschCompressorBinarySensor(BoeschEntity, BinarySensorEntity):
     def __init__(self, coordinator, reg: Reg, entry) -> None:
         super().__init__(coordinator, reg, entry)
         # Eigene unique_id/Name, nicht die des Quell-Sensors (el. Leistung).
-        self._attr_unique_id = "boesch_wp_verdichter_laeuft"
+        self._attr_unique_id = "boesch_wanda_verdichter_laeuft"
         self._attr_name = "WP Verdichter läuft"
 
     @property

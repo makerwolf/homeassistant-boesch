@@ -30,23 +30,23 @@ from .registers import DeviceKey
 
 # (Zähler-key, Name, Quell-Leistungsregister-key)
 ELECTRICAL_ENERGY: list[tuple[str, str, str]] = [
-    ("boesch_wp_energie_el_gesamt", "WP Stromverbrauch gesamt", "boesch_wp_el_leistung"),
-    ("boesch_wp_energie_el_heizen", "WP Stromverbrauch Heizen", "boesch_wp_el_leistung_heizen"),
-    ("boesch_wp_energie_el_twe", "WP Stromverbrauch TWE", "boesch_wp_el_leistung_twe"),
-    ("boesch_wp_energie_el_kuehlen", "WP Stromverbrauch Kühlen", "boesch_wp_el_leistung_kuehlen"),
+    ("boesch_wanda_energie_el_gesamt", "WP Stromverbrauch gesamt", "boesch_wanda_el_leistung"),
+    ("boesch_wanda_energie_el_heizen", "WP Stromverbrauch Heizen", "boesch_wanda_el_leistung_heizen"),
+    ("boesch_wanda_energie_el_twe", "WP Stromverbrauch TWE", "boesch_wanda_el_leistung_twe"),
+    ("boesch_wanda_energie_el_kuehlen", "WP Stromverbrauch Kühlen", "boesch_wanda_el_leistung_kuehlen"),
 ]
 THERMAL_ENERGY: list[tuple[str, str, str]] = [
-    ("boesch_wp_energie_th_gesamt", "WP Wärmemenge gesamt", "boesch_wp_leistung"),
-    ("boesch_wp_energie_th_heizen", "WP Wärmemenge Heizen", "boesch_wp_leistung_heizen"),
-    ("boesch_wp_energie_th_twe", "WP Wärmemenge TWE", "boesch_wp_leistung_twe"),
-    ("boesch_wp_energie_th_kuehlen", "WP Wärmemenge Kühlen", "boesch_wp_leistung_kuehlen"),
+    ("boesch_wanda_energie_th_gesamt", "WP Wärmemenge gesamt", "boesch_wanda_leistung"),
+    ("boesch_wanda_energie_th_heizen", "WP Wärmemenge Heizen", "boesch_wanda_leistung_heizen"),
+    ("boesch_wanda_energie_th_twe", "WP Wärmemenge TWE", "boesch_wanda_leistung_twe"),
+    ("boesch_wanda_energie_th_kuehlen", "WP Wärmemenge Kühlen", "boesch_wanda_leistung_kuehlen"),
 ]
 # (JAZ-key, Name, Wärmemenge-key, Stromenergie-key)
 SCOP: list[tuple[str, str, str, str]] = [
-    ("boesch_wp_jaz_gesamt", "WP Jahresarbeitszahl", "boesch_wp_energie_th_gesamt", "boesch_wp_energie_el_gesamt"),
-    ("boesch_wp_jaz_heizen", "WP Arbeitszahl Heizen", "boesch_wp_energie_th_heizen", "boesch_wp_energie_el_heizen"),
-    ("boesch_wp_jaz_twe", "WP Arbeitszahl TWE", "boesch_wp_energie_th_twe", "boesch_wp_energie_el_twe"),
-    ("boesch_wp_jaz_kuehlen", "WP Arbeitszahl Kühlen", "boesch_wp_energie_th_kuehlen", "boesch_wp_energie_el_kuehlen"),
+    ("boesch_wanda_jaz_gesamt", "WP Jahresarbeitszahl", "boesch_wanda_energie_th_gesamt", "boesch_wanda_energie_el_gesamt"),
+    ("boesch_wanda_jaz_heizen", "WP Arbeitszahl Heizen", "boesch_wanda_energie_th_heizen", "boesch_wanda_energie_el_heizen"),
+    ("boesch_wanda_jaz_twe", "WP Arbeitszahl TWE", "boesch_wanda_energie_th_twe", "boesch_wanda_energie_el_twe"),
+    ("boesch_wanda_jaz_kuehlen", "WP Arbeitszahl Kühlen", "boesch_wanda_energie_th_kuehlen", "boesch_wanda_energie_el_kuehlen"),
 ]
 
 # Ab dieser Stromenergie liefern die JAZ-Sensoren einen Wert (genug Datenbasis).

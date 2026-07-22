@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
-from .entity import BoeschEntity
+from .entity import BoeschEntity, assign_entity_ids
 
 # Register-Keys, die die water_heater-Entity bündelt.
 KEY_CURRENT = "boesch_hb_twe_ist"          # 100
@@ -41,9 +41,9 @@ async def async_setup_entry(
     for coordinator in entry.runtime_data.coordinators.values():
         regs_by_key = {r.key: r for r in coordinator.regs}
         if KEY_TARGET in regs_by_key:
-            async_add_entities(
-                [BoeschWaterHeater(coordinator, regs_by_key[KEY_TARGET], entry)]
-            )
+            entities = [BoeschWaterHeater(coordinator, regs_by_key[KEY_TARGET], entry)]
+            assign_entity_ids(entities, "water_heater")
+            async_add_entities(entities)
             return
 
 

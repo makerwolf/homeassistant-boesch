@@ -75,8 +75,11 @@ lassen blendet ihn aus. Beispiel: `AI1 → Heizspeicher-Temperatur`,
 ## Geräte & Entities
 
 Zwei Geräte im Device-Registry: **Bösch WANDA** und **Bösch Hydrobox**. Die
-`unique_id`s folgen dem Schema `boesch_wp_*` (WANDA) bzw. `boesch_hb_*`
-(Hydrobox).
+`unique_id`s (und darauf abgebildet die `entity_id`s) folgen dem Schema
+`boesch_wanda_*` (WANDA) bzw. `boesch_hb_*` (Hydrobox) — z. B.
+`sensor.boesch_wanda_b16_vorlauf`. Ein Upgrade von einer älteren Version
+benennt bestehende Entities per Migration einmalig um; Historie und
+Langzeitstatistik bleiben dabei erhalten.
 
 ## Energie & Effizienz (Energy Dashboard)
 
