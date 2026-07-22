@@ -17,9 +17,12 @@ from . import BoeschConfigEntry
 from .entity import BoeschEntity
 from .registers import Kind, Reg
 
-# Aus dem AlarmCode-Register abgeleitete Problem-Binary. Kein eigenes Register:
-# liest denselben Schlüssel wie der AlarmCode-Sensor.
+# Abgeleitete Binaries teilen sich den Read eines bestehenden Sensor-Registers.
 _ALARM_SOURCE_KEY = "boesch_wp_alarmcode"
+# "Verdichter läuft" aus el. Leistung: Register 152 ist als Flag unbrauchbar
+# (steht im TWE-Betrieb auf 0). el. Leistung > 0 gilt über alle Betriebsarten.
+_COMPRESSOR_SOURCE_KEY = "boesch_wp_el_leistung"
+_COMPRESSOR_ON_KW = 0.1
 
 
 async def async_setup_entry(
@@ -35,6 +38,8 @@ async def async_setup_entry(
                 entities.append(BoeschBinarySensor(coordinator, reg, entry))
             if reg.key == _ALARM_SOURCE_KEY:
                 entities.append(BoeschAlarmBinarySensor(coordinator, reg, entry))
+            if reg.key == _COMPRESSOR_SOURCE_KEY:
+                entities.append(BoeschCompressorBinarySensor(coordinator, reg, entry))
     async_add_entities(entities)
 
 
@@ -72,3 +77,23 @@ class BoeschAlarmBinarySensor(BoeschEntity, BinarySensorEntity):
         if value is None:
             return None
         return value > 0
+
+
+class BoeschCompressorBinarySensor(BoeschEntity, BinarySensorEntity):
+    """Verdichter läuft, abgeleitet aus der el. Leistung (>0)."""
+
+    _attr_device_class = BinarySensorDeviceClass.RUNNING
+    _attr_icon = "mdi:heat-pump"
+
+    def __init__(self, coordinator, reg: Reg, entry) -> None:
+        super().__init__(coordinator, reg, entry)
+        # Eigene unique_id/Name, nicht die des Quell-Sensors (el. Leistung).
+        self._attr_unique_id = "boesch_wp_verdichter_laeuft"
+        self._attr_name = "WP Verdichter läuft"
+
+    @property
+    def is_on(self) -> bool | None:
+        value = self._value  # el. Leistung akt (kW)
+        if value is None:
+            return None
+        return value > _COMPRESSOR_ON_KW

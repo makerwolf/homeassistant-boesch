@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -54,6 +55,8 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
         self._attr_name = name or reg.name
         if reg.icon:
             self._attr_icon = reg.icon
+        if reg.entity_category:
+            self._attr_entity_category = EntityCategory(reg.entity_category)
         self._attr_device_info = build_device_info(entry, reg.device)
 
     @property

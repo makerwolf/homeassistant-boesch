@@ -230,12 +230,13 @@ REGISTERS: list[Reg] = [
     _power("boesch_wp_el_leistung_kuehlen", "WP elektr. Leistung Kuehlen", W, 111),
 
     # ---- Verdichter-Status ----
-    # Register 152 ist KEIN Betriebsstundenzaehler: per Verlauf (history-17.csv)
-    # verifiziert wechselt der Wert 0<->nonzero synchron zur el. Leistung und
-    # faellt beim Stopp auf 0 zurueck -> binaeres "Verdichter laeuft"-Flag, nicht
-    # kumulativ. Das echte Laufzeit-Register ist unbekannt (bei Boesch nachfragen).
-    _binary("boesch_wp_verdichter_laeuft", "WP Verdichter läuft", W, 152,
-            POLL_DEFAULT, device_class="running", icon="mdi:heat-pump"),
+    # "Verdichter laeuft" wird aus der el. Leistung (108 > 0) abgeleitet
+    # (binary_sensor.py) -- Register 152 ist dafuer unbrauchbar (steht im
+    # TWE-Betrieb auf 0, obwohl der Verdichter laeuft). Per Live-Modbus als
+    # einzelnes 16-Bit-Register verifiziert (kein 32-Bit/Float; 153 existiert
+    # nicht). Bedeutung unklar -> als Rohwert-Diagnosesensor eingebunden.
+    Reg("boesch_wp_reg152_debug", "WP Register 152 (Debug)", W, 152,
+        poll_group=POLL_DEFAULT, entity_category="diagnostic"),
 
     # ---- Status / Alarm ----
     _enum("boesch_wp_status", "WP Status", W, 200, WP_STATUS, POLL_LIVE, icon="mdi:heat-pump"),

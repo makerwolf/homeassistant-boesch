@@ -129,8 +129,9 @@ Korrekt ist **`int16` + `scale 0.1`** (bei nie-negativen Größen mit Bereich
 
 Zwei weitere per Verlauf verifizierte Abweichungen von der Doku:
 
-- **Register 152** ist **kein** Betriebsstundenzähler, sondern ein binäres
-  „Verdichter läuft"-Flag (Wert fällt beim Stopp auf 0 zurück).
+- **Register 152** ist als Statusquelle unbrauchbar (steht im TWE-Betrieb auf 0,
+  obwohl der Verdichter läuft) — der Binärsensor „Verdichter läuft" wird daher
+  aus der **elektrischen Leistung** (> 0) abgeleitet.
 - **Heizkreispumpen-Laufzeit** (300/301) ist in **Minuten**, nicht Stunden.
 
 ## Offene Punkte
