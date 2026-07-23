@@ -43,7 +43,7 @@ THERMAL_ENERGY: list[tuple[str, str, str]] = [
 ]
 # (JAZ-key, Name, Wärmemenge-key, Stromenergie-key)
 SCOP: list[tuple[str, str, str, str]] = [
-    ("boesch_wanda_jaz_gesamt", "WP Jahresarbeitszahl", "boesch_wanda_energie_th_gesamt", "boesch_wanda_energie_el_gesamt"),
+    ("boesch_wanda_jaz_gesamt", "WP Arbeitszahl gesamt", "boesch_wanda_energie_th_gesamt", "boesch_wanda_energie_el_gesamt"),
     ("boesch_wanda_jaz_heizen", "WP Arbeitszahl Heizen", "boesch_wanda_energie_th_heizen", "boesch_wanda_energie_el_heizen"),
     ("boesch_wanda_jaz_twe", "WP Arbeitszahl TWE", "boesch_wanda_energie_th_twe", "boesch_wanda_energie_el_twe"),
     ("boesch_wanda_jaz_kuehlen", "WP Arbeitszahl Kühlen", "boesch_wanda_energie_th_kuehlen", "boesch_wanda_energie_el_kuehlen"),

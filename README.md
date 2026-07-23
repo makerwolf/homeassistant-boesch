@@ -93,22 +93,74 @@ Der Gesamt-Stromzähler kommt direkt ins **Energy Dashboard** (unter *Einzelne
 Geräte*). **Nicht** täglich resetten — das Dashboard periodisiert selbst aus dem
 kumulativen Wert.
 
-Aus Wärmemenge ÷ Stromenergie ergibt sich die laufende **Jahresarbeitszahl**
-(JAZ/SCOP): `WP Jahresarbeitszahl` gesamt sowie je Modus.
+Aus Wärmemenge ÷ Stromenergie ergibt sich die laufende **Arbeitszahl** (SCOP
+*seit Installation*): `WP Arbeitszahl gesamt` sowie je Modus (Heizen / TWE /
+Kühlen). Das ist ein Lebensdauer-Mittel — es stabilisiert sich, je mehr Energie
+zusammenkommt (anfangs schwankt es noch stark).
 
 **Tages-/Monatswerte** (optional, ohne die Basiszähler anzutasten) via
 `utility_meter`-Helper:
 
 ```yaml
-# configuration.yaml
 utility_meter:
   wp_strom_taeglich:
-    source: sensor.wp_stromverbrauch_gesamt
+    source: sensor.boesch_wanda_energie_el_gesamt
     cycle: daily
   wp_strom_monatlich:
-    source: sensor.wp_stromverbrauch_gesamt
+    source: sensor.boesch_wanda_energie_el_gesamt
     cycle: monthly
 ```
+
+### Jahresarbeitszahl (JAZ) pro Jahr
+
+Die Integration liefert bewusst nur die *Lebensdauer*-Arbeitszahl. Eine **Jahres**-
+JAZ mit frei wählbarem Stichtag ist Verrechnungslogik (Nutzer-Politik, kein
+Gerätefakt) und wird daher aus den kumulativen Zählern mit HA-Bordmitteln
+zusammengesetzt — das hält die Integration schlank und die Reset-Regel flexibel.
+
+Empfehlung: ein **Wärmepumpenjahr** (Reset im Sommer, z. B. 1. Juli), damit jede
+Heizsaison in *einem* Zeitraum liegt statt über den Jahreswechsel zerschnitten zu
+werden. Am einfachsten über die HA-Helfer-UI (*Einstellungen → Geräte & Dienste →
+Helfer*: zwei **Verbrauchszähler** ohne Zyklus + ein **Template**-Sensor) plus
+eine Reset-Automatisierung. Als YAML:
+
+```yaml
+utility_meter:
+  wp_waerme_wpjahr:
+    source: sensor.boesch_wanda_energie_th_gesamt
+    cycle: none          # kein Auto-Reset — Reset per Automation am 1. Juli
+  wp_strom_wpjahr:
+    source: sensor.boesch_wanda_energie_el_gesamt
+    cycle: none
+
+template:
+  - sensor:
+      - name: "WP Jahresarbeitszahl"
+        state: >
+          {% set el = states('sensor.wp_strom_wpjahr') | float(0) %}
+          {% set th = states('sensor.wp_waerme_wpjahr') | float(0) %}
+          {{ (th / el) | round(2) if el > 0.5 else 'unknown' }}
+        state_class: measurement
+
+automation:
+  - alias: "WP-Jahr zurücksetzen (1. Juli)"
+    triggers:
+      - trigger: time
+        at: "00:00:00"
+    conditions:
+      - "{{ now().month == 7 and now().day == 1 }}"
+    actions:
+      - action: utility_meter.calibrate
+        target:
+          entity_id: [sensor.wp_waerme_wpjahr, sensor.wp_strom_wpjahr]
+        data:
+          value: 0
+```
+
+Für striktes **Kalenderjahr** stattdessen an beiden `utility_meter` `cycle: yearly`
+setzen und die Automation weglassen. Über die UI angelegte Helfer bekommen
+entity_ids aus ihrem Namen (Umlaute → `ae/oe`→`a/o`) — die Referenzen im
+Template-Sensor entsprechend anpassen.
 
 ## Architektur
 
