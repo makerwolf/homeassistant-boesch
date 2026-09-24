@@ -59,39 +59,83 @@ class BoeschConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @staticmethod
+    def _schema(defaults: dict[str, Any]) -> vol.Schema:
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOST, default=defaults.get(CONF_HOST, DEFAULT_HOST)
+                ): str,
+                vol.Required(
+                    CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)
+                ): int,
+                vol.Required(
+                    CONF_WANDA_ADDRESS,
+                    default=defaults.get(CONF_WANDA_ADDRESS, DEFAULT_WANDA_ADDRESS),
+                ): int,
+                vol.Required(
+                    CONF_HYDROBOX_ADDRESS,
+                    default=defaults.get(
+                        CONF_HYDROBOX_ADDRESS, DEFAULT_HYDROBOX_ADDRESS
+                    ),
+                ): int,
+            }
+        )
+
+    async def _validate(self, user_input: dict[str, Any]) -> str | None:
+        """Verbindung testen; liefert Fehlerschlüssel oder None."""
+        try:
+            await _test_connection(
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                user_input[CONF_WANDA_ADDRESS],
+            )
+        except ModbusError:
+            return "cannot_connect"
+        except Exception:  # noqa: BLE001
+            return "unknown"
+        return None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            try:
-                await _test_connection(
-                    user_input[CONF_HOST],
-                    user_input[CONF_PORT],
-                    user_input[CONF_WANDA_ADDRESS],
-                )
-            except ModbusError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                errors["base"] = "unknown"
+            if error := await self._validate(user_input):
+                errors["base"] = error
             else:
                 return self.async_create_entry(title="Bösch", data=user_input)
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                vol.Required(
-                    CONF_WANDA_ADDRESS, default=DEFAULT_WANDA_ADDRESS
-                ): int,
-                vol.Required(
-                    CONF_HYDROBOX_ADDRESS, default=DEFAULT_HYDROBOX_ADDRESS
-                ): int,
-            }
-        )
         return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors
+            step_id="user",
+            data_schema=self._schema(user_input or {}),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Verbindungsdaten (IP, Port, Modbus-Adressen) nachträglich ändern.
+
+        Modbus TCP kennt keine Authentifizierung, daher gibt es kein Passwort.
+        """
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if error := await self._validate(user_input):
+                errors["base"] = error
+            else:
+                # Der Update-Listener in __init__ lädt den Entry neu.
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, **user_input}
+                )
+                return self.async_abort(reason="reconfigure_successful")
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self._schema(user_input or entry.data),
+            errors=errors,
         )
 
     @staticmethod

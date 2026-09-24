@@ -10,6 +10,16 @@
           "wanda_address": "Modbus-Adresse WANDA",
           "hydrobox_address": "Modbus-Adresse Hydrobox"
         }
+      },
+      "reconfigure": {
+        "title": "Bösch – Verbindung ändern",
+        "description": "Neue IP-Adresse oder Modbus-Einstellungen der Wärmepumpe. Modbus TCP hat keine Authentifizierung, es ist kein Passwort nötig.",
+        "data": {
+          "host": "IP-Adresse",
+          "port": "Port",
+          "wanda_address": "Modbus-Adresse WANDA",
+          "hydrobox_address": "Modbus-Adresse Hydrobox"
+        }
       }
     },
     "error": {
@@ -17,7 +27,8 @@
       "unknown": "Unerwarteter Fehler."
     },
     "abort": {
-      "already_configured": "Dieser Host ist bereits eingerichtet."
+      "already_configured": "Dieser Host ist bereits eingerichtet.",
+      "reconfigure_successful": "Verbindungsdaten aktualisiert, Integration wird neu geladen."
     }
   },
   "options": {
