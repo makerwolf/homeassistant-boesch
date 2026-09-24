@@ -229,14 +229,16 @@ REGISTERS: list[Reg] = [
     _power("boesch_wanda_el_leistung_twe", "WP elektr. Leistung TWE", W, 110),
     _power("boesch_wanda_el_leistung_kuehlen", "WP elektr. Leistung Kuehlen", W, 111),
 
-    # ---- Verdichter-Status ----
-    # "Verdichter laeuft" wird aus der el. Leistung (108 > 0) abgeleitet
-    # (binary_sensor.py) -- Register 152 ist dafuer unbrauchbar (steht im
-    # TWE-Betrieb auf 0, obwohl der Verdichter laeuft). Per Live-Modbus als
-    # einzelnes 16-Bit-Register verifiziert (kein 32-Bit/Float; 153 existiert
-    # nicht). Bedeutung unklar -> als Rohwert-Diagnosesensor eingebunden.
-    Reg("boesch_wanda_reg152_debug", "WP Register 152 (Debug)", W, 152,
-        poll_group=POLL_DEFAULT, entity_category="diagnostic"),
+    # ---- Verdichter-Laufzeit seit Start ----
+    # Register 152 = Stunden, die der Verdichter seit dem letzten Start
+    # durchlaeuft (Zehntelstunden; per Verlauf history-20.csv verifiziert:
+    # +10 roh pro Stunde Echtzeit, Reset auf 0 beim Abschalten). Kein Status-Flag
+    # -> "Verdichter laeuft" kommt aus der el. Leistung (binary_sensor.py).
+    # Per Live-Modbus als einzelnes 16-Bit-Register verifiziert (153 existiert nicht).
+    Reg("boesch_wanda_laufzeit_seit_start", "WP Laufzeit seit Start", W, 152,
+        poll_group=POLL_DEFAULT, data_type="uint16", scale=0.1, precision=1,
+        unit="h", device_class="duration", state_class="measurement",
+        min_value=0.0, icon="mdi:timer-outline"),
 
     # ---- Status / Alarm ----
     _enum("boesch_wanda_status", "WP Status", W, 200, WP_STATUS, POLL_LIVE, icon="mdi:heat-pump"),

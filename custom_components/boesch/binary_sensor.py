@@ -19,8 +19,8 @@ from .registers import Kind, Reg
 
 # Abgeleitete Binaries teilen sich den Read eines bestehenden Sensor-Registers.
 _ALARM_SOURCE_KEY = "boesch_wanda_alarmcode"
-# "Verdichter läuft" aus el. Leistung: Register 152 ist als Flag unbrauchbar
-# (steht im TWE-Betrieb auf 0). el. Leistung > 0 gilt über alle Betriebsarten.
+# "Verdichter läuft" aus el. Leistung: Register 152 ist die Laufzeit seit Start,
+# kein Flag (steht im TWE-Betrieb auf 0). el. Leistung > 0 gilt über alle Betriebsarten.
 _COMPRESSOR_SOURCE_KEY = "boesch_wanda_el_leistung"
 _COMPRESSOR_ON_KW = 0.1
 

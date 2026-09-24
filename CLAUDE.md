@@ -120,8 +120,8 @@ Betriebsstunden, PV-Modulation, Heizkreis 2, externer Wärmeerzeuger).
 4. **Register 301 Hydrobox** ist in der Bösch-Doku *dreifach* vergeben
    (Heizkreispumpe 2, Ext. WEZ 1-1, Ext. WEZ 1-2). Vermutlich 302/303.
    Bei Bösch nachfragen.
-5. **Verdichter-Betriebsstunden (WANDA 152)**: `uint16 × 0.1` deckt nur
-   ~6553 h ab. Bei Überlauf ist das Register vermutlich breiter.
+5. **WANDA 152 = Laufzeit seit letztem Start** (geklärt 2026-09-24, kein Gesamtzähler):
+   Zehntelstunden, Reset auf 0 beim Abschalten; max. ~6553 h, also kein Überlaufproblem.
 6. **R/W-Register sind aktuell nur lesend** eingebunden. Für echte Steuerung
    (Parallelverschiebung, TWE-Einmalladung, Sollwerte) fehlen noch
    `number`/`select`/`climate`-Entities. In `boesch.yaml` steht am Ende ein

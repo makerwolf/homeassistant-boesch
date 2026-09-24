@@ -184,9 +184,10 @@ Korrekt ist **`int16` + `scale 0.1`** (bei nie-negativen Größen mit Bereich
 
 Zwei weitere per Verlauf verifizierte Abweichungen von der Doku:
 
-- **Register 152** ist als Statusquelle unbrauchbar (steht im TWE-Betrieb auf 0,
-  obwohl der Verdichter läuft) — der Binärsensor „Verdichter läuft" wird daher
-  aus der **elektrischen Leistung** (> 0) abgeleitet.
+- **Register 152** ist die **Laufzeit seit dem letzten Start** in Zehntelstunden
+  (`uint16` × 0,1 → h; springt beim Abschalten auf 0), kein Statusflag — der
+  Binärsensor „Verdichter läuft" wird daher aus der **elektrischen Leistung**
+  (> 0) abgeleitet.
 - **Heizkreispumpen-Laufzeit** (300/301) ist in **Minuten**, nicht Stunden.
 
 ## Offene Punkte
