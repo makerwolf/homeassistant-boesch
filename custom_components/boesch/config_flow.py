@@ -13,6 +13,8 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_AI_INPUTS,
@@ -57,6 +59,8 @@ class BoeschConfigFlow(ConfigFlow, domain=DOMAIN):
     """Setup-Flow."""
 
     VERSION = 2
+
+    _discovered_host: str | None = None
 
     @staticmethod
     def _schema(defaults: dict[str, Any]) -> vol.Schema:
@@ -108,11 +112,39 @@ class BoeschConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title="Bösch", data=user_input)
 
+        # Nach DHCP-Discovery die gefundene IP vorbelegen.
+        defaults = user_input or {CONF_HOST: self._discovered_host}
         return self.async_show_form(
             step_id="user",
-            data_schema=self._schema(user_input or {}),
+            data_schema=self._schema(defaults),
             errors=errors,
         )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Kermi x-center (Hostname xcenter*) per DHCP gefunden.
+
+        Bekanntes Gerät (gleiche MAC): neue IP übernehmen, Entry neu laden.
+        Sonst Setup-Formular mit vorbelegter IP anzeigen.
+        """
+        host = discovery_info.ip
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        # Manuell angelegte Entries haben keine MAC: über die IP erkennen und
+        # die MAC nachtragen, damit spätere IP-Wechsel erkannt werden.
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data.get(CONF_HOST) == host:
+                if entry.unique_id is None:
+                    self.hass.config_entries.async_update_entry(
+                        entry, unique_id=self.unique_id
+                    )
+                return self.async_abort(reason="already_configured")
+
+        self._discovered_host = host
+        self.context["title_placeholders"] = {"host": host}
+        return await self.async_step_user()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

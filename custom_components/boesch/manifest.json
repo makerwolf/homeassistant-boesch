@@ -3,6 +3,7 @@
   "name": "Bösch",
   "codeowners": ["@makerwolf"],
   "config_flow": true,
+  "dhcp": [{ "hostname": "xcenter*" }],
   "documentation": "https://github.com/makerwolf/homeassistant-boesch",
   "integration_type": "hub",
   "iot_class": "local_polling",
