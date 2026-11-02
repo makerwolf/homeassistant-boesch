@@ -27,6 +27,10 @@ TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
   - `select` – Modi (HK1/HK2 Betriebsart · Energiemodus · Saison, externer WEZ)
   - `water_heater` – Trinkwassererwärmung mit Ist-/Zieltemperatur und
     Einmalladungs-Modus
+- **Webinterface (optional)**: Einstellungen, die per Modbus fehlen, über das
+  Webinterface der Wärmepumpe (Kermi x-center): Heizmodus HK1
+  (Außentemperaturkurve / Festwert / Aus), Festwert Heizen und Kühlen sowie die
+  9 Stützpunkte der Heizkurve.
 - **UI-Konfiguration**: Verbindungstest im Setup, Options-Menü für Heizkreis 2,
   externen Wärmeerzeuger, Poll-Intervalle und frei belegbare Fühlereingänge.
 - **Effizientes Polling**: ein `DataUpdateCoordinator` je Intervall-Klasse
@@ -50,6 +54,9 @@ Alternativ den Ordner `custom_components/boesch/` manuell nach
 
 **Setup:** IP-Adresse der Wärmepumpe (Pflichtfeld, kein Default), Port (`502`), Modbus-Adresse WANDA (`40`) und
 Hydrobox (`50`). Vor dem Anlegen wird die Verbindung getestet.
+Optional das **Web-Passwort** (wie beim Browser-Login am Webinterface), um die
+Webinterface-Entities zu aktivieren; später unter *Konfigurieren →
+Webinterface* änderbar, leer lassen schaltet sie ab.
 
 **Auto-Erkennung:** Das Kermi x-center meldet sich per DHCP mit dem Hostnamen
 `xcenter`. Home Assistant schlägt die Wärmepumpe dann unter *Entdeckt* vor,
@@ -85,6 +92,18 @@ Zwei Geräte im Device-Registry: **Bösch WANDA** und **Bösch Hydrobox**. Die
 `sensor.boesch_wanda_b16_vorlauf`. Ein Upgrade von einer älteren Version
 benennt bestehende Entities per Migration einmalig um; Historie und
 Langzeitstatistik bleiben dabei erhalten.
+
+Mit Web-Passwort kommen an der Hydrobox dazu:
+
+| Entity | Inhalt |
+|---|---|
+| `select.boesch_hb_hk1_heizmodus` | Heizmodus HK1: Außentemperaturkurve / Festwert / Aus |
+| `number.boesch_hb_hk1_festwert` | Konstanter Vorlauf-Sollwert Heizen (0–100 °C) |
+| `number.boesch_hb_hk1_festwert_kuehlen` | Konstanter Sollwert Kühlen (5–30 °C) |
+| `number.boesch_hb_hk1_heizkurve_m20` … `_p20` | Vorlauf-Sollwert bei −20 … +20 °C Außentemperatur (9 Stützpunkte) |
+
+Die Web-API ist inoffiziell (aus der Web-Oberfläche abgeleitet) und kann sich
+mit Firmware-Updates ändern.
 
 ## Energie & Effizienz (Energy Dashboard)
 
