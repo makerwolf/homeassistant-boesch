@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "Bösch ({host})",
     "step": {
       "user": {
         "title": "Connect Bösch",
@@ -12,6 +13,7 @@
           "web_password": "Web password (optional)"
         },
         "data_description": {
+          "host": "IP address of the heat pump on the local network, e.g. from your router's device list.",
           "web_password": "Only needed for heating mode, fixed setpoints and heating curve via the web interface. Can be changed later in the options."
         }
       },

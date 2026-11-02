@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "Bösch ({host})",
     "step": {
       "user": {
         "title": "Bösch verbinden",
@@ -12,6 +13,7 @@
           "web_password": "Web-Passwort (optional)"
         },
         "data_description": {
+          "host": "IP-Adresse der Wärmepumpe im lokalen Netz, z. B. aus der Geräteliste des Routers.",
           "web_password": "Nur nötig für Heizmodus, Festwerte und Heizkurve über das Webinterface. Später in den Optionen änderbar."
         }
       },

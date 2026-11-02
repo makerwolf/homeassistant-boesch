@@ -48,8 +48,13 @@ Alternativ den Ordner `custom_components/boesch/` manuell nach
 
 ## Konfiguration
 
-**Setup:** IP-Adresse, Port (`502`), Modbus-Adresse WANDA (`40`) und
+**Setup:** IP-Adresse der Wärmepumpe (Pflichtfeld, kein Default), Port (`502`), Modbus-Adresse WANDA (`40`) und
 Hydrobox (`50`). Vor dem Anlegen wird die Verbindung getestet.
+
+**Auto-Erkennung:** Das Kermi x-center meldet sich per DHCP mit dem Hostnamen
+`xcenter`. Home Assistant schlägt die Wärmepumpe dann unter *Entdeckt* vor,
+die IP ist vorbelegt. Wechselt die IP später, übernimmt die Integration die
+neue Adresse automatisch (Erkennung über die MAC-Adresse).
 
 **Optionen** (über *Konfigurieren* → Menü, jederzeit änderbar):
 

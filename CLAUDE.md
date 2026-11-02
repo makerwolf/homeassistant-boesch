@@ -8,7 +8,7 @@ Kontext-Übergabe für Claude Code. Stand: 2026-07-21.
 |---|---|
 | Wärmepumpe | Bösch WANDA 10 (Heizbösch / boesch.at) |
 | Zusatzmodul | Hydrobox |
-| IP | `192.168.0.202`, Modbus TCP Port `502` |
+| IP | `192.168.0.18` (diese Anlage, Stand 2026-11 — in der Integration kein Default), Modbus TCP Port `502` |
 | WANDA | `device_address: 40` |
 | Hydrobox | `device_address: 50` |
 | Function Code | `0x03` (holding register) für alle Datenpunkte |
