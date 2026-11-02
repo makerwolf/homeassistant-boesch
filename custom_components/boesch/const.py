@@ -25,7 +25,6 @@ CONF_SCAN_SETPOINT: Final = "scan_setpoint"
 CONF_SCAN_HOURS: Final = "scan_hours"
 
 # --- Defaults ---
-DEFAULT_HOST: Final = "192.168.0.202"
 DEFAULT_PORT: Final = 502
 DEFAULT_WANDA_ADDRESS: Final = 40
 DEFAULT_HYDROBOX_ADDRESS: Final = 50

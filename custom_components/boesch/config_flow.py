@@ -26,7 +26,6 @@ from .const import (
     CONF_WANDA_ADDRESS,
     DEFAULT_ENABLE_HK2,
     DEFAULT_ENABLE_WEZ,
-    DEFAULT_HOST,
     DEFAULT_HYDROBOX_ADDRESS,
     DEFAULT_PORT,
     DEFAULT_SCAN_DEFAULT,
@@ -63,8 +62,10 @@ class BoeschConfigFlow(ConfigFlow, domain=DOMAIN):
     def _schema(defaults: dict[str, Any]) -> vol.Schema:
         return vol.Schema(
             {
+                # Kein Default: die IP ist in jedem Netz eine andere.
                 vol.Required(
-                    CONF_HOST, default=defaults.get(CONF_HOST, DEFAULT_HOST)
+                    CONF_HOST,
+                    description={"suggested_value": defaults.get(CONF_HOST)},
                 ): str,
                 vol.Required(
                     CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)

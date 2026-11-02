@@ -9,6 +9,9 @@
           "port": "Port",
           "wanda_address": "WANDA Modbus address",
           "hydrobox_address": "Hydrobox Modbus address"
+        },
+        "data_description": {
+          "host": "IP address of the heat pump on the local network, e.g. from your router's device list."
         }
       },
       "reconfigure": {
