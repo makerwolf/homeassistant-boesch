@@ -13,6 +13,12 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     CONF_AI_INPUTS,
@@ -24,6 +30,7 @@ from .const import (
     CONF_SCAN_LIVE,
     CONF_SCAN_SETPOINT,
     CONF_WANDA_ADDRESS,
+    CONF_WEB_PASSWORD,
     DEFAULT_ENABLE_HK2,
     DEFAULT_ENABLE_WEZ,
     DEFAULT_HOST,
@@ -38,6 +45,7 @@ from .const import (
 )
 from .modbus_client import BoeschModbusClient, ModbusError
 from .registers import AI_INPUTS
+from .web_client import BoeschWebClient, WebAuthError, WebError
 
 # WANDA-Statusregister — dient als Verbindungs-/Erreichbarkeitstest.
 _TEST_ADDRESS = 200
@@ -52,6 +60,28 @@ async def _test_connection(host: str, port: int, wanda_unit: int) -> None:
         await client.read_block(_TEST_ADDRESS, 1, wanda_unit)
     finally:
         await client.async_close()
+
+
+async def _test_web(hass, host: str, hydrobox_unit: int, password: str) -> str | None:
+    """Webinterface-Login + Hydrobox-Suche testen; liefert Fehlerschlüssel oder None."""
+    client = BoeschWebClient(async_get_clientsession(hass), host, password)
+    try:
+        await client.async_login()
+        await client.async_get_device_id(hydrobox_unit)
+    except WebAuthError:
+        return "invalid_auth"
+    except WebError:
+        return "web_cannot_connect"
+    return None
+
+
+def _web_password_field(current: str | None) -> dict:
+    """Optionales Passwortfeld für das Webinterface (leer = aus)."""
+    return {
+        vol.Optional(
+            CONF_WEB_PASSWORD, description={"suggested_value": current}
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+    }
 
 
 class BoeschConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -99,17 +129,33 @@ class BoeschConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Ersteinrichtung. Das Web-Passwort ist optional und landet in den
+        Optionen (dort später änderbar), nicht in den Verbindungsdaten."""
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            if error := await self._validate(user_input):
+            data = {k: v for k, v in user_input.items() if k != CONF_WEB_PASSWORD}
+            password = (user_input.get(CONF_WEB_PASSWORD) or "").strip()
+            error = await self._validate(data)
+            if not error and password:
+                error = await _test_web(
+                    self.hass, data[CONF_HOST], data[CONF_HYDROBOX_ADDRESS], password
+                )
+            if error:
                 errors["base"] = error
             else:
-                return self.async_create_entry(title="Bösch", data=user_input)
+                return self.async_create_entry(
+                    title="Bösch",
+                    data=data,
+                    options={CONF_WEB_PASSWORD: password} if password else {},
+                )
 
+        defaults = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=self._schema(user_input or {}),
+            data_schema=self._schema(defaults).extend(
+                _web_password_field(defaults.get(CONF_WEB_PASSWORD))
+            ),
             errors=errors,
         )
 
@@ -151,7 +197,7 @@ class BoeschOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         return self.async_show_menu(
-            step_id="init", menu_options=["general", "inputs"]
+            step_id="init", menu_options=["general", "inputs", "web"]
         )
 
     async def async_step_general(
@@ -218,3 +264,34 @@ class BoeschOptionsFlow(OptionsFlow):
             }
         )
         return self.async_show_form(step_id="inputs", data_schema=schema)
+
+    async def async_step_web(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Webinterface (Kermi x-center): Passwort setzen = Web-Entities aktiv.
+
+        Leer lassen schaltet die Web-Entities ab. Host ist derselbe wie für Modbus.
+        """
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            password = (user_input.get(CONF_WEB_PASSWORD) or "").strip()
+            entry = self.config_entry
+            if password and (
+                error := await _test_web(
+                    self.hass,
+                    entry.data[CONF_HOST],
+                    entry.data.get(CONF_HYDROBOX_ADDRESS, DEFAULT_HYDROBOX_ADDRESS),
+                    password,
+                )
+            ):
+                errors["base"] = error
+            else:
+                return self.async_create_entry(
+                    title="",
+                    data={**entry.options, CONF_WEB_PASSWORD: password},
+                )
+
+        schema = vol.Schema(
+            _web_password_field(self.config_entry.options.get(CONF_WEB_PASSWORD))
+        )
+        return self.async_show_form(step_id="web", data_schema=schema, errors=errors)

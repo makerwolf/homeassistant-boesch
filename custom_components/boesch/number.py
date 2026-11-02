@@ -3,12 +3,22 @@
 from __future__ import annotations
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
-from .entity import BoeschEntity, assign_entity_ids
+from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
 from .registers import Kind, Reg
+from .web_client import (
+    DP_HK1_FIXED_SETPOINT_COOLING,
+    DP_HK1_FIXED_SETPOINT_HEATING,
+    DP_HK1_HEATING_CURVE,
+    TYPE_SINGLE,
+)
+
+# Außentemperaturen der Heizkurven-Stützpunkte (fest in der Kermi-Firmware).
+CURVE_X = (-20, -15, -10, -5, 0, 5, 10, 15, 20)
 
 
 async def async_setup_entry(
@@ -17,11 +27,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Number-Entities aus dem Registermodell erzeugen."""
-    entities: list[BoeschNumber] = []
+    entities: list[NumberEntity] = []
     for coordinator in entry.runtime_data.coordinators.values():
         for reg in coordinator.regs:
             if reg.kind is Kind.NUMBER:
                 entities.append(BoeschNumber(coordinator, reg, entry))
+    if web := entry.runtime_data.web:
+        entities.append(
+            BoeschWebFixedSetpoint(
+                web, entry, "boesch_hb_hk1_festwert", "HB HK1 Festwert Heizen",
+                DP_HK1_FIXED_SETPOINT_HEATING, 0.0, 100.0, "mdi:thermometer-lines",
+            )
+        )
+        entities.append(
+            BoeschWebFixedSetpoint(
+                web, entry, "boesch_hb_hk1_festwert_kuehlen", "HB HK1 Festwert Kühlen",
+                DP_HK1_FIXED_SETPOINT_COOLING, 5.0, 30.0, "mdi:snowflake-thermometer",
+            )
+        )
+        entities.extend(BoeschWebCurvePoint(web, entry, x) for x in CURVE_X)
     assign_entity_ids(entities, "number")
     async_add_entities(entities)
 
@@ -49,3 +73,66 @@ class BoeschNumber(BoeschEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         await self.coordinator.async_write(self._reg, value)
+
+
+class BoeschWebFixedSetpoint(BoeschWebEntity, NumberEntity):
+    """Konstanter Vorlauf-Sollwert HK1 Heizen/Kühlen (wirkt bei Heizmodus "Festwert")."""
+
+    _attr_mode = NumberMode.BOX
+    _attr_device_class = NumberDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_native_step = 0.5
+
+    def __init__(
+        self, coordinator, entry, key: str, name: str, config_id: str,
+        min_value: float, max_value: float, icon: str,
+    ) -> None:
+        super().__init__(coordinator, entry, key, name, config_id)
+        # Grenzen wie in der Web-Oberfläche.
+        self._attr_native_min_value = min_value
+        self._attr_native_max_value = max_value
+        self._attr_icon = icon
+
+    @property
+    def native_value(self) -> float | None:
+        return self._value
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.coordinator.async_write(self._config_id, TYPE_SINGLE, value)
+
+
+class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
+    """Ein Stützpunkt der Heizkurve HK1: Vorlauf-Sollwert bei Außentemperatur x."""
+
+    _attr_mode = NumberMode.BOX
+    _attr_device_class = NumberDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    # Die Firmware gibt für die Kurve keine Grenzen vor -> wie beim Festwert.
+    _attr_native_min_value = 0.0
+    _attr_native_max_value = 100.0
+    _attr_native_step = 0.5
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:chart-bell-curve-cumulative"
+
+    def __init__(self, coordinator, entry, x: int) -> None:
+        suffix = f"m{-x}" if x < 0 else f"p{x}" if x > 0 else "0"
+        super().__init__(
+            coordinator,
+            entry,
+            f"boesch_hb_hk1_heizkurve_{suffix}",
+            f"HB HK1 Heizkurve bei {x} °C",
+            DP_HK1_HEATING_CURVE,
+        )
+        self._x = x
+
+    @property
+    def native_value(self) -> float | None:
+        points = (self._value or {}).get("CurveValues") or []
+        return next((p["YValue"] for p in points if p.get("XValue") == self._x), None)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.native_value is not None
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.coordinator.async_write_curve_point(self._x, value)

@@ -11,16 +11,35 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MAX_BLOCK_GAP, MAX_BLOCK_SIZE
 from .modbus_client import BoeschModbusClient, ModbusError
 from .registers import DeviceKey, Reg
+from .web_client import (
+    DP_HK1_FIXED_SETPOINT_COOLING,
+    DP_HK1_FIXED_SETPOINT_HEATING,
+    DP_HK1_HEATING_CURVE,
+    DP_HK1_HEATING_WATER_MODE,
+    TYPE_CURVE,
+    BoeschWebClient,
+    WebError,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+# Vom Web-Coordinator gepollte Datenpunkte (nur was Modbus nicht bietet).
+WEB_DATAPOINTS = [
+    DP_HK1_HEATING_WATER_MODE,
+    DP_HK1_FIXED_SETPOINT_HEATING,
+    DP_HK1_FIXED_SETPOINT_COOLING,
+    DP_HK1_HEATING_CURVE,
+]
 
 
 def _decode(reg: Reg, raw: int) -> float | int:
@@ -121,3 +140,75 @@ class BoeschCoordinator(DataUpdateCoordinator[dict[str, float | int | None]]):
         unit = self._unit_by_device[reg.device]
         await self._client.write_register(reg.address, raw, unit)
         await self.async_request_refresh()
+
+
+class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator für die Webinterface-Datenpunkte der Hydrobox.
+
+    Daten: {DatapointConfigId: Value}. Die DeviceId der Hydrobox wird beim
+    ersten Poll über ihre Modbus-Adresse nachgeschlagen.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        client: BoeschWebClient,
+        interval: int,
+        hydrobox_unit: int,
+    ) -> None:
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_web",
+            update_interval=timedelta(seconds=interval),
+            config_entry=entry,
+        )
+        self._client = client
+        self._hydrobox_unit = hydrobox_unit
+        self._device_id: str | None = None
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        try:
+            if self._device_id is None:
+                self._device_id = await self._client.async_get_device_id(
+                    self._hydrobox_unit
+                )
+            return await self._client.async_read(self._device_id, WEB_DATAPOINTS)
+        except WebError as err:
+            raise UpdateFailed(str(err)) from err
+
+    async def async_write(self, config_id: str, value_type: str, value: Any) -> None:
+        """Datenpunkt schreiben, danach sofortiger Refresh."""
+        if self._device_id is None:
+            raise HomeAssistantError("Webinterface nicht verbunden")
+        try:
+            await self._client.async_write(
+                self._device_id, config_id, value_type, value
+            )
+        except WebError as err:
+            raise HomeAssistantError(str(err)) from err
+        await self.async_request_refresh()
+
+    async def async_write_curve_point(self, x: float, y: float) -> None:
+        """Einen Stützpunkt der Heizkurve HK1 ändern.
+
+        Die Kurve wird nur als Ganzes geschrieben. Deshalb vorher frisch lesen,
+        damit eine zwischenzeitliche Änderung in der Web-Oberfläche nicht mit
+        dem Stand des letzten Polls überschrieben wird.
+        """
+        if self._device_id is None:
+            raise HomeAssistantError("Webinterface nicht verbunden")
+        try:
+            values = await self._client.async_read(
+                self._device_id, [DP_HK1_HEATING_CURVE]
+            )
+        except WebError as err:
+            raise HomeAssistantError(str(err)) from err
+        curve = values.get(DP_HK1_HEATING_CURVE)
+        points = (curve or {}).get("CurveValues") or []
+        point = next((p for p in points if p.get("XValue") == x), None)
+        if point is None:
+            raise HomeAssistantError(f"Heizkurve hat keinen Stützpunkt bei {x:g} °C")
+        point["YValue"] = y
+        await self.async_write(DP_HK1_HEATING_CURVE, TYPE_CURVE, curve)

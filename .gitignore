@@ -11,3 +11,6 @@ config/
 
 # Proprietäre Bösch-Referenzunterlagen (nicht ins Repo)
 Reference/
+
+# Webinterface-Mitschnitte (HAR) – enthalten Gerätedaten, nicht ins Repo
+captures/

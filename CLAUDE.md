@@ -127,6 +127,44 @@ Betriebsstunden, PV-Modulation, Heizkreis 2, externer Wärmeerzeuger).
    `number`/`select`/`climate`-Entities. In `boesch.yaml` steht am Ende ein
    auskommentiertes `climate`-Beispiel für den TWE-Sollwert.
 
+## Webinterface (Kermi x-center)
+
+Das Bösch-Webinterface ist ein **Kermi x-center** („Wärmepumpenmanager
+RW60“, Firmware IFM 1.6.5.44), ausgewertet per HAR-Mitschnitt (`captures/`,
+gitignored; Aufnahme mit `har-capture get <ip> --patterns network-device`).
+Optional per Web-Passwort im Setup oder später unter Optionen → „Webinterface“
+(gespeichert in den Optionen); Client in
+`web_client.py`, read-only Test ohne HA: `scripts/web_probe.py --host <ip>`.
+
+- Login `POST /api/Security/Login` → Cookie `XCenter`, manuell mitgeschickt
+  (aiohttp verwirft Cookies von IP-Hosts). Session abgelaufen → HTML statt JSON.
+- `Device/GetAllDevices`: Feld `Address` = Modbus-Adresse (40/50) → DeviceId.
+- `DatapointConfigId`s sind Firmware-Konstanten (Kermi-Frontend:
+  `wellknown-datapoints.js`), daher fest in `web_client.py`.
+- Schreiben wie die Web-UI: `$type` (.NET-Typ) zuerst, `Single` als String.
+- Die Heizkurve (`Curve2d`, 9 Stützpunkte −20…+20 °C, Feld `Info` unbekannt)
+  wird nur als Ganzes geschrieben → vorher frisch lesen.
+
+Eingebunden (nur was Modbus nicht hat): Heizmodus HK1 (Kurve/Festwert/Aus),
+Festwert Heizen und Kühlen HK1, Heizkurve HK1.
+
+**Für später (nur per Web, Benutzerlevel 10):**
+
+- Kühlkurve HK1 (`HeatingCircuit_CoolingCurve`)
+- Offsets Eco/Normal/Komfort/Benutzerdefiniert, je Heizen + Kühlen
+  (`HeatingCircuit_Offset*`, −10…+10 K)
+- TWE aktivieren (`EcoIDU_TweEnableUser`), Störsollwert TWE
+  (`EcoIDU_ErrorSetpointTwe`)
+- Wärmeübertrager HK1 (`HeatingCircuit_HeatExchangeType`), Heizkreisname
+- Anwesenheit am Wärmepumpenmanager (`System_IsPresent`)
+- HK2-Pendants (Heizmodus, Festwert, Heizkurve; IDs stehen in
+  `wellknown-datapoints.js`), wenn HK2 aktiviert ist
+- Szenen (z. B. „Trinkwassererwärmung“ ausführen/zurücksetzen), aktuelle Alarme
+
+Schon per Modbus da und deshalb nicht übers Web: Betriebsart, Energiemodus,
+Parallelverschiebung, Saisonauswahl, Sommer-/Winter-/Kühlschwellen,
+TWE-Sollwert, Einmalladung + deren Sollwert.
+
 ## Nebenbefund
 
 Die `scan_interval < 5 s`-Warnungen im HA-Log stammen alle vom bestehenden

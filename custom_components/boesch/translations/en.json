@@ -8,12 +8,16 @@
           "host": "IP address",
           "port": "Port",
           "wanda_address": "WANDA Modbus address",
-          "hydrobox_address": "Hydrobox Modbus address"
+          "hydrobox_address": "Hydrobox Modbus address",
+          "web_password": "Web password (optional)"
+        },
+        "data_description": {
+          "web_password": "Only needed for heating mode, fixed setpoints and heating curve via the web interface. Can be changed later in the options."
         }
       },
       "reconfigure": {
         "title": "Bösch – change connection",
-        "description": "New IP address or Modbus settings of the heat pump. Modbus TCP has no authentication, so no password is needed.",
+        "description": "New IP address or Modbus settings of the heat pump. Modbus TCP has no authentication, so no password is needed. The web password is changed in the options.",
         "data": {
           "host": "IP address",
           "port": "Port",
@@ -24,7 +28,9 @@
     },
     "error": {
       "cannot_connect": "Connection failed. Check IP, port and Modbus address.",
-      "unknown": "Unexpected error."
+      "unknown": "Unexpected error.",
+      "invalid_auth": "Web password rejected.",
+      "web_cannot_connect": "Web interface unreachable or Hydrobox not found."
     },
     "abort": {
       "already_configured": "This host is already configured.",
@@ -37,7 +43,8 @@
         "title": "Bösch – Options",
         "menu_options": {
           "general": "General (heating circuits, intervals)",
-          "inputs": "Sensor inputs (AI1–AI8)"
+          "inputs": "Sensor inputs (AI1–AI8)",
+          "web": "Web interface (heating mode, heating curve)"
         }
       },
       "general": {
@@ -65,7 +72,18 @@
           "boesch_hb_ai8": "AI8 (CN13)",
           "boesch_hb_tw_ibh": "Tw (IBH)"
         }
+      },
+      "web": {
+        "title": "Web interface",
+        "description": "Settings not available via Modbus (heating mode, fixed setpoints and heating curve HC1), via the heat pump's web interface. Password as used for the browser login; leave empty to disable these features.",
+        "data": {
+          "web_password": "Web password"
+        }
       }
+    },
+    "error": {
+      "invalid_auth": "Web password rejected.",
+      "web_cannot_connect": "Web interface unreachable or Hydrobox not found."
     }
   }
 }

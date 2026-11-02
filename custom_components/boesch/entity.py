@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL_HYDROBOX, MODEL_WANDA
-from .coordinator import BoeschCoordinator
+from .coordinator import BoeschCoordinator, BoeschWebCoordinator
 from .registers import DeviceKey, Reg
 
 _MODEL_BY_DEVICE = {
@@ -82,3 +82,32 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
             super().available
             and self.coordinator.data.get(self._reg.key) is not None
         )
+
+
+class BoeschWebEntity(CoordinatorEntity[BoeschWebCoordinator]):
+    """Basis für Entities aus dem Webinterface (hängen an der Hydrobox)."""
+
+    _attr_has_entity_name = False
+
+    def __init__(
+        self,
+        coordinator: BoeschWebCoordinator,
+        entry: ConfigEntry,
+        key: str,
+        name: str,
+        config_id: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self._config_id = config_id
+        self._attr_unique_id = key
+        self._attr_name = name
+        self._attr_device_info = build_device_info(entry, DeviceKey.HYDROBOX)
+
+    @property
+    def _value(self):
+        """Aktueller Rohwert des Datenpunkts (oder None)."""
+        return (self.coordinator.data or {}).get(self._config_id)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self._value is not None

@@ -10,22 +10,27 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_ENABLE_HK2,
     CONF_ENABLE_WEZ,
     CONF_HYDROBOX_ADDRESS,
+    CONF_SCAN_SETPOINT,
     CONF_WANDA_ADDRESS,
+    CONF_WEB_PASSWORD,
     DEFAULT_ENABLE_HK2,
     DEFAULT_ENABLE_WEZ,
     DEFAULT_HYDROBOX_ADDRESS,
+    DEFAULT_SCAN_SETPOINT,
     DEFAULT_WANDA_ADDRESS,
     SCAN_DEFAULT_BY_GROUP,
     SCAN_OPTION_BY_GROUP,
 )
-from .coordinator import BoeschCoordinator
+from .coordinator import BoeschCoordinator, BoeschWebCoordinator
 from .modbus_client import BoeschModbusClient
 from .registers import DeviceKey, registers_for
+from .web_client import BoeschWebClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +53,8 @@ class BoeschRuntimeData:
     client: BoeschModbusClient
     coordinators: dict[str, BoeschCoordinator]
     unit_by_device: dict[DeviceKey, int]
+    # Nur gesetzt, wenn im Options-Flow ein Web-Passwort hinterlegt ist.
+    web: BoeschWebCoordinator | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bool:
@@ -89,7 +96,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bo
         await coordinator.async_config_entry_first_refresh()
         coordinators[group] = coordinator
 
-    entry.runtime_data = BoeschRuntimeData(client, coordinators, unit_by_device)
+    # Optional: Webinterface (Kermi x-center) für Einstellungen ohne Modbus-Register.
+    # Fehler hier blockieren das Setup nicht; die Web-Entities sind dann nur
+    # nicht verfügbar, bis ein späterer Poll klappt.
+    web: BoeschWebCoordinator | None = None
+    if password := entry.options.get(CONF_WEB_PASSWORD):
+        web = BoeschWebCoordinator(
+            hass,
+            entry,
+            BoeschWebClient(async_get_clientsession(hass), host, password),
+            entry.options.get(CONF_SCAN_SETPOINT, DEFAULT_SCAN_SETPOINT),
+            unit_by_device[DeviceKey.HYDROBOX],
+        )
+        await web.async_refresh()
+
+    entry.runtime_data = BoeschRuntimeData(
+        client, coordinators, unit_by_device, web
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True

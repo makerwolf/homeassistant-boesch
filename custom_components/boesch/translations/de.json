@@ -8,12 +8,16 @@
           "host": "IP-Adresse",
           "port": "Port",
           "wanda_address": "Modbus-Adresse WANDA",
-          "hydrobox_address": "Modbus-Adresse Hydrobox"
+          "hydrobox_address": "Modbus-Adresse Hydrobox",
+          "web_password": "Web-Passwort (optional)"
+        },
+        "data_description": {
+          "web_password": "Nur nötig für Heizmodus, Festwerte und Heizkurve über das Webinterface. Später in den Optionen änderbar."
         }
       },
       "reconfigure": {
         "title": "Bösch – Verbindung ändern",
-        "description": "Neue IP-Adresse oder Modbus-Einstellungen der Wärmepumpe. Modbus TCP hat keine Authentifizierung, es ist kein Passwort nötig.",
+        "description": "Neue IP-Adresse oder Modbus-Einstellungen der Wärmepumpe. Modbus TCP hat keine Authentifizierung, es ist kein Passwort nötig. Das Web-Passwort wird in den Optionen geändert.",
         "data": {
           "host": "IP-Adresse",
           "port": "Port",
@@ -24,7 +28,9 @@
     },
     "error": {
       "cannot_connect": "Verbindung fehlgeschlagen. IP, Port und Modbus-Adresse prüfen.",
-      "unknown": "Unerwarteter Fehler."
+      "unknown": "Unerwarteter Fehler.",
+      "invalid_auth": "Web-Passwort abgelehnt.",
+      "web_cannot_connect": "Webinterface nicht erreichbar oder Hydrobox nicht gefunden."
     },
     "abort": {
       "already_configured": "Dieser Host ist bereits eingerichtet.",
@@ -37,7 +43,8 @@
         "title": "Bösch – Optionen",
         "menu_options": {
           "general": "Allgemein (Heizkreise, Intervalle)",
-          "inputs": "Fühlereingänge (AI1–AI8)"
+          "inputs": "Fühlereingänge (AI1–AI8)",
+          "web": "Webinterface (Heizmodus, Heizkurve)"
         }
       },
       "general": {
@@ -65,7 +72,18 @@
           "boesch_hb_ai8": "AI8 (CN13)",
           "boesch_hb_tw_ibh": "Tw (IBH)"
         }
+      },
+      "web": {
+        "title": "Webinterface",
+        "description": "Einstellungen, die per Modbus fehlen (Heizmodus, Festwerte und Heizkurve HK1), über das Webinterface der Wärmepumpe. Passwort wie im Browser-Login; leer lassen schaltet diese Funktionen ab.",
+        "data": {
+          "web_password": "Web-Passwort"
+        }
       }
+    },
+    "error": {
+      "invalid_auth": "Web-Passwort abgelehnt.",
+      "web_cannot_connect": "Webinterface nicht erreichbar oder Hydrobox nicht gefunden."
     }
   }
 }

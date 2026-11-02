@@ -19,6 +19,9 @@ CONF_ENABLE_WEZ: Final = "enable_wez"
 # Name gesetzt = Eingang aktiviert; leer/fehlend = ausgeblendet.
 CONF_AI_INPUTS: Final = "ai_inputs"
 
+# Passwort des Webinterfaces (Kermi x-center). Gesetzt = Web-Entities aktiv.
+CONF_WEB_PASSWORD: Final = "web_password"
+
 CONF_SCAN_LIVE: Final = "scan_live"
 CONF_SCAN_DEFAULT: Final = "scan_default"
 CONF_SCAN_SETPOINT: Final = "scan_setpoint"
