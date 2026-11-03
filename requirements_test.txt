@@ -1,3 +1,5 @@
 # Test-Abhängigkeiten. pytest-homeassistant-custom-component pinnt die passende
-# homeassistant-Version selbst mit.
+# homeassistant-Version selbst mit; pymodbus ist das Laufzeit-Requirement aus
+# manifest.json (HA installiert es sonst erst beim Laden der Integration).
 pytest-homeassistant-custom-component
+pymodbus>=3.6.0
