@@ -191,7 +191,11 @@ class BoeschCoordinator(DataUpdateCoordinator[dict[str, float | int | None]]):
                         if 0 <= idx < len(raw):
                             data[reg.key] = _decode(reg, raw[idx])
         except ModbusError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="modbus_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         if self._web_power is not None:
             await self._apply_web_power(data)
         return data
@@ -223,7 +227,11 @@ class BoeschCoordinator(DataUpdateCoordinator[dict[str, float | int | None]]):
         try:
             await self._client.write_register(reg.address, raw, unit)
         except ModbusError as err:
-            raise HomeAssistantError(str(err)) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="modbus_write_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         await self.async_request_refresh()
 
 
@@ -269,9 +277,15 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         except WebAuthError as err:
             # Passwort geändert: HA startet daraufhin den Reauth-Flow.
-            raise ConfigEntryAuthFailed(str(err)) from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="web_auth_failed"
+            ) from err
         except WebError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="web_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         return data
 
     async def _async_load_devices(self) -> None:
@@ -301,14 +315,20 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_write(self, config_id: str, value_type: str, value: Any) -> None:
         """Datenpunkt schreiben, danach sofortiger Refresh."""
         if self._device_id is None:
-            raise HomeAssistantError("Webinterface nicht verbunden")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="web_not_connected"
+            )
         device_id = (
             MANAGER_DEVICE_ID if config_id in WEB_DATAPOINTS_MANAGER else self._device_id
         )
         try:
             await self._client.async_write(device_id, config_id, value_type, value)
         except WebError as err:
-            raise HomeAssistantError(str(err)) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="web_write_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         await self.async_request_refresh()
 
     async def async_write_curve_point(self, config_id: str, x: float, y: float) -> None:
@@ -319,15 +339,25 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         dem Stand des letzten Polls überschrieben wird.
         """
         if self._device_id is None:
-            raise HomeAssistantError("Webinterface nicht verbunden")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="web_not_connected"
+            )
         try:
             values = await self._client.async_read(self._device_id, [config_id])
         except WebError as err:
-            raise HomeAssistantError(str(err)) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="web_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         curve = values.get(config_id)
         points = (curve or {}).get("CurveValues") or []
         point = next((p for p in points if p.get("XValue") == x), None)
         if point is None:
-            raise HomeAssistantError(f"Kurve hat keinen Stützpunkt bei {x:g} °C")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="curve_point_missing",
+                translation_placeholders={"temperature": f"{x:g}"},
+            )
         point["YValue"] = y
         await self.async_write(config_id, TYPE_CURVE, curve)

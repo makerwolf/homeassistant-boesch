@@ -57,14 +57,11 @@ class BoeschSwitch(BoeschEntity, SwitchEntity):
 class BoeschWebPresence(BoeschWebEntity, SwitchEntity):
     """Anwesenheitsstatus des Wärmepumpenmanagers (an = anwesend)."""
 
-    _attr_icon = "mdi:home-account"
-
     def __init__(self, coordinator, entry) -> None:
         super().__init__(
             coordinator,
             entry,
             "boesch_wpm_anwesenheit",
-            "WPM Anwesenheit",
             DP_SYSTEM_IS_PRESENT,
             DeviceKey.MANAGER,
         )

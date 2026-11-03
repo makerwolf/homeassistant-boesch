@@ -68,13 +68,12 @@ class BoeschAlarmBinarySensor(BoeschEntity, BinarySensorEntity):
     """Problem-Binary, abgeleitet aus dem AlarmCode (>0 = Alarm)."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
-    _attr_icon = "mdi:alert"
 
     def __init__(self, coordinator, reg: Reg, entry) -> None:
         super().__init__(coordinator, reg, entry)
         # Eigene unique_id/Name, nicht die des Quell-Sensors.
         self._attr_unique_id = "boesch_wanda_alarm_bs"
-        self._attr_name = "Alarm"
+        self._attr_translation_key = "wanda_alarm_bs"
 
     @property
     def is_on(self) -> bool | None:
@@ -88,13 +87,12 @@ class BoeschCompressorBinarySensor(BoeschEntity, BinarySensorEntity):
     """Verdichter läuft, abgeleitet aus der el. Leistung (>0)."""
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
-    _attr_icon = "mdi:heat-pump"
 
     def __init__(self, coordinator, reg: Reg, entry) -> None:
         super().__init__(coordinator, reg, entry)
         # Eigene unique_id/Name, nicht die des Quell-Sensors (el. Leistung).
         self._attr_unique_id = "boesch_wanda_verdichter_laeuft"
-        self._attr_name = "Verdichter läuft"
+        self._attr_translation_key = "wanda_verdichter_laeuft"
 
     @property
     def is_on(self) -> bool | None:

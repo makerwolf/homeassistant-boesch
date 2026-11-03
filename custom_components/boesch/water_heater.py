@@ -3,7 +3,7 @@
 Bündelt die TWE-Register zu einer Entity:
 - current_temperature  = TWE Ist (100)
 - target_temperature   = TWE konstanter Sollwert (102, schreibbar 0-85 °C)
-- operation mode       = Einmalladung (103): "Normal" / "Einmalladung"
+- operation mode       = Einmalladung (103): "normal" / "one_time_charge"
 
 Der Einmalladungs-Zielwert (104) bleibt eine separate number-Entity daneben.
 """
@@ -28,8 +28,8 @@ KEY_CURRENT = "boesch_hb_twe_ist"          # 100
 KEY_TARGET = "boesch_hb_twe_konst_soll"    # 102 (Anker)
 KEY_BOOST = "boesch_hb_twe_einmalladung"   # 103
 
-OP_NORMAL = "Normal"
-OP_BOOST = "Einmalladung"
+OP_NORMAL = "normal"
+OP_BOOST = "one_time_charge"
 
 
 # Schreibzugriffe nacheinander (eine gemeinsame Modbus-/Web-Verbindung).
@@ -60,13 +60,12 @@ class BoeschWaterHeater(BoeschEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
     _attr_operation_list: ClassVar[list[str]] = [OP_NORMAL, OP_BOOST]
-    _attr_icon = "mdi:water-boiler"
 
     def __init__(self, coordinator, target_reg, entry) -> None:
         # Anker = Zielwert-Register (102) — liefert device_info + Verfügbarkeit.
         super().__init__(coordinator, target_reg, entry)
         self._attr_unique_id = "boesch_hb_twe"
-        self._attr_name = "Trinkwasser"
+        self._attr_translation_key = "hb_twe"
         self._target_reg = target_reg
         self._boost_reg = {r.key: r for r in coordinator.regs}[KEY_BOOST]
         self._attr_min_temp = target_reg.min_value

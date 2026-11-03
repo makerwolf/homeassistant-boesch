@@ -35,7 +35,7 @@ def coordinator() -> MagicMock:
 
 
 def _sensor(coordinator: MagicMock) -> BoeschEnergySensor:
-    sensor = BoeschEnergySensor(coordinator, MagicMock(entry_id="e"), "k", "n", "p")
+    sensor = BoeschEnergySensor(coordinator, MagicMock(entry_id="e"), "k", "p")
     sensor.async_write_ha_state = lambda: None
     return sensor
 
@@ -87,7 +87,7 @@ def test_unavailable_source_skips_gap(clock, coordinator) -> None:
 def test_scop(coordinator) -> None:
     thermal = _sensor(coordinator)
     electrical = _sensor(coordinator)
-    scop = BoeschSCOPSensor(coordinator, MagicMock(entry_id="e"), "j", "n", thermal, electrical)
+    scop = BoeschSCOPSensor(coordinator, MagicMock(entry_id="e"), "j", thermal, electrical)
     electrical._energy = 0.01  # unter der Mindest-Datenbasis
     thermal._energy = 0.04
     assert scop.native_value is None

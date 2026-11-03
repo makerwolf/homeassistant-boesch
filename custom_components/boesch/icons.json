@@ -1,0 +1,148 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "hb_hk1_kuehl": {
+        "default": "mdi:snowflake"
+      },
+      "hb_hk1_sommer": {
+        "default": "mdi:weather-sunny"
+      },
+      "hb_hk2_kuehl": {
+        "default": "mdi:snowflake"
+      },
+      "hb_hk2_sommer": {
+        "default": "mdi:weather-sunny"
+      },
+      "wanda_pv_modulation": {
+        "default": "mdi:solar-power"
+      },
+      "wanda_verdichter_laeuft": {
+        "default": "mdi:heat-pump"
+      }
+    },
+    "number": {
+      "hb_hk1_festwert": {
+        "default": "mdi:thermometer-lines"
+      },
+      "hb_hk1_festwert_kuehlen": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "hb_hk1_heizkurve": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "hb_hk1_kuehlkurve": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "hb_hk1_parallel": {
+        "default": "mdi:tune-vertical"
+      },
+      "hb_hk2_parallel": {
+        "default": "mdi:tune-vertical"
+      }
+    },
+    "select": {
+      "hb_hk1_betriebsart": {
+        "default": "mdi:toggle-switch"
+      },
+      "hb_hk1_energiemodus": {
+        "default": "mdi:leaf"
+      },
+      "hb_hk1_heizmodus": {
+        "default": "mdi:home-thermometer"
+      },
+      "hb_hk1_saison": {
+        "default": "mdi:calendar-sync"
+      },
+      "hb_hk2_betriebsart": {
+        "default": "mdi:toggle-switch"
+      },
+      "hb_hk2_energiemodus": {
+        "default": "mdi:leaf"
+      },
+      "hb_hk2_saison": {
+        "default": "mdi:calendar-sync"
+      },
+      "hb_wez_heizen_art": {
+        "default": "mdi:fire-circle"
+      },
+      "hb_wez_twe_art": {
+        "default": "mdi:fire-circle"
+      }
+    },
+    "sensor": {
+      "hb_hk1_betriebsmodus": {
+        "default": "mdi:sun-snowflake-variant"
+      },
+      "hb_hk1_mischer": {
+        "default": "mdi:valve"
+      },
+      "hb_hk1_status": {
+        "default": "mdi:radiator"
+      },
+      "hb_hk2_betriebsmodus": {
+        "default": "mdi:sun-snowflake-variant"
+      },
+      "hb_hk2_status": {
+        "default": "mdi:radiator"
+      },
+      "hb_wez_heizen_status": {
+        "default": "mdi:fire"
+      },
+      "hb_wez_twe_status": {
+        "default": "mdi:fire"
+      },
+      "wanda_energie_el_gesamt": {
+        "default": "mdi:counter"
+      },
+      "wanda_energie_el_heizen": {
+        "default": "mdi:counter"
+      },
+      "wanda_energie_el_kuehlen": {
+        "default": "mdi:counter"
+      },
+      "wanda_energie_el_twe": {
+        "default": "mdi:counter"
+      },
+      "wanda_energie_th_gesamt": {
+        "default": "mdi:counter"
+      },
+      "wanda_energie_th_heizen": {
+        "default": "mdi:counter"
+      },
+      "wanda_energie_th_kuehlen": {
+        "default": "mdi:counter"
+      },
+      "wanda_energie_th_twe": {
+        "default": "mdi:counter"
+      },
+      "wanda_jaz_gesamt": {
+        "default": "mdi:gauge"
+      },
+      "wanda_jaz_heizen": {
+        "default": "mdi:gauge"
+      },
+      "wanda_jaz_kuehlen": {
+        "default": "mdi:gauge"
+      },
+      "wanda_jaz_twe": {
+        "default": "mdi:gauge"
+      },
+      "wanda_laufzeit_seit_start": {
+        "default": "mdi:timer-outline"
+      },
+      "wanda_status": {
+        "default": "mdi:heat-pump"
+      }
+    },
+    "switch": {
+      "wpm_anwesenheit": {
+        "default": "mdi:home-account"
+      }
+    },
+    "water_heater": {
+      "hb_twe": {
+        "default": "mdi:water-boiler"
+      }
+    }
+  }
+}

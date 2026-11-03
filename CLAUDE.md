@@ -88,10 +88,16 @@ deshalb immer darüber anlegen, sonst werden sie beim nächsten Start gelöscht)
 Bewusst ausgenommen: `dynamic-devices` (feste Hardware), `repair-issues`
 (einziger vom Nutzer behebbarer Fall = Passwort, deckt Reauth ab).
 
-Für Gold offen (Phase 2): Übersetzungen für Entity-Namen, Icons
-(`icons.json`) und Fehlermeldungen. **Entschieden (2026-11-03):** alles
-übersetzen, auch Enum-/Select-Zustände (Breaking Change für Automationen auf
-Klartext-Zustände; in Kauf genommen, da praktisch keine weiteren Nutzer).
+Übersetzungen (Gold komplett): `translation_key` = unique_id ohne „boesch_“
+(`entity.translation_key`), Ausnahmen: Kurven-Stützpunkte teilen sich
+`hb_hk1_heizkurve`/`hb_hk1_kuehlkurve` mit Platzhalter `{temperature}`; frei
+benannte Fühlereingänge behalten `_attr_name`. Namen/Zustände in
+`strings.json` = `translations/de.json` + `translations/en.json`, Icons in
+`icons.json`, Fehler unter `exceptions`. Enum-/Select-Zustände und
+water_heater-Modi sind englische Schlüssel (Breaking Change, bewusst in Kauf
+genommen 2026-11-03). `tests/test_translations.py` prüft, dass jede Entity und
+jeder Zustand in beiden Sprachen steht – neue Entity = Eintrag in allen drei
+JSON-Dateien.
 Platin offen: `mypy --strict` (Stand 2026-11-03: 124 Fehler) plus CI-Schritt.
 
 ## Release-Ablauf

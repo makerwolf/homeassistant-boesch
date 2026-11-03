@@ -25,28 +25,28 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .coordinator import BoeschCoordinator
-from .entity import build_device_info, short_name
+from .entity import build_device_info, translation_key
 from .registers import DeviceKey
 
-# (Zähler-key, Name, Quell-Leistungsregister-key)
-ELECTRICAL_ENERGY: list[tuple[str, str, str]] = [
-    ("boesch_wanda_energie_el_gesamt", "WP Stromverbrauch gesamt", "boesch_wanda_el_leistung"),
-    ("boesch_wanda_energie_el_heizen", "WP Stromverbrauch Heizen", "boesch_wanda_el_leistung_heizen"),
-    ("boesch_wanda_energie_el_twe", "WP Stromverbrauch TWE", "boesch_wanda_el_leistung_twe"),
-    ("boesch_wanda_energie_el_kuehlen", "WP Stromverbrauch Kühlen", "boesch_wanda_el_leistung_kuehlen"),
+# (Zähler-key, Quell-Leistungsregister-key)
+ELECTRICAL_ENERGY: list[tuple[str, str]] = [
+    ("boesch_wanda_energie_el_gesamt", "boesch_wanda_el_leistung"),
+    ("boesch_wanda_energie_el_heizen", "boesch_wanda_el_leistung_heizen"),
+    ("boesch_wanda_energie_el_twe", "boesch_wanda_el_leistung_twe"),
+    ("boesch_wanda_energie_el_kuehlen", "boesch_wanda_el_leistung_kuehlen"),
 ]
-THERMAL_ENERGY: list[tuple[str, str, str]] = [
-    ("boesch_wanda_energie_th_gesamt", "WP Wärmemenge gesamt", "boesch_wanda_leistung"),
-    ("boesch_wanda_energie_th_heizen", "WP Wärmemenge Heizen", "boesch_wanda_leistung_heizen"),
-    ("boesch_wanda_energie_th_twe", "WP Wärmemenge TWE", "boesch_wanda_leistung_twe"),
-    ("boesch_wanda_energie_th_kuehlen", "WP Wärmemenge Kühlen", "boesch_wanda_leistung_kuehlen"),
+THERMAL_ENERGY: list[tuple[str, str]] = [
+    ("boesch_wanda_energie_th_gesamt", "boesch_wanda_leistung"),
+    ("boesch_wanda_energie_th_heizen", "boesch_wanda_leistung_heizen"),
+    ("boesch_wanda_energie_th_twe", "boesch_wanda_leistung_twe"),
+    ("boesch_wanda_energie_th_kuehlen", "boesch_wanda_leistung_kuehlen"),
 ]
-# (JAZ-key, Name, Wärmemenge-key, Stromenergie-key)
-SCOP: list[tuple[str, str, str, str]] = [
-    ("boesch_wanda_jaz_gesamt", "WP Arbeitszahl gesamt", "boesch_wanda_energie_th_gesamt", "boesch_wanda_energie_el_gesamt"),
-    ("boesch_wanda_jaz_heizen", "WP Arbeitszahl Heizen", "boesch_wanda_energie_th_heizen", "boesch_wanda_energie_el_heizen"),
-    ("boesch_wanda_jaz_twe", "WP Arbeitszahl TWE", "boesch_wanda_energie_th_twe", "boesch_wanda_energie_el_twe"),
-    ("boesch_wanda_jaz_kuehlen", "WP Arbeitszahl Kühlen", "boesch_wanda_energie_th_kuehlen", "boesch_wanda_energie_el_kuehlen"),
+# (JAZ-key, Wärmemenge-key, Stromenergie-key)
+SCOP: list[tuple[str, str, str]] = [
+    ("boesch_wanda_jaz_gesamt", "boesch_wanda_energie_th_gesamt", "boesch_wanda_energie_el_gesamt"),
+    ("boesch_wanda_jaz_heizen", "boesch_wanda_energie_th_heizen", "boesch_wanda_energie_el_heizen"),
+    ("boesch_wanda_jaz_twe", "boesch_wanda_energie_th_twe", "boesch_wanda_energie_el_twe"),
+    ("boesch_wanda_jaz_kuehlen", "boesch_wanda_energie_th_kuehlen", "boesch_wanda_energie_el_kuehlen"),
 ]
 
 # Ab dieser Stromenergie liefern die JAZ-Sensoren einen Wert (genug Datenbasis).
@@ -61,20 +61,18 @@ class BoeschEnergySensor(CoordinatorEntity[BoeschCoordinator], RestoreSensor):
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_suggested_display_precision = 2
     _attr_has_entity_name = True
-    _attr_icon = "mdi:counter"
 
     def __init__(
         self,
         coordinator: BoeschCoordinator,
         entry: ConfigEntry,
         key: str,
-        name: str,
         source_key: str,
     ) -> None:
         super().__init__(coordinator)
         self._source_key = source_key
         self._attr_unique_id = key
-        self._attr_name = short_name(name)
+        self._attr_translation_key = translation_key(key)
         self._attr_device_info = build_device_info(entry, DeviceKey.WANDA)
         self._energy: float = 0.0
         self._last_power: float | None = None
@@ -132,20 +130,18 @@ class BoeschSCOPSensor(CoordinatorEntity[BoeschCoordinator], SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 2
     _attr_has_entity_name = True
-    _attr_icon = "mdi:gauge"
 
     def __init__(
         self,
         coordinator: BoeschCoordinator,
         entry: ConfigEntry,
         key: str,
-        name: str,
         thermal: BoeschEnergySensor,
         electrical: BoeschEnergySensor,
     ) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = key
-        self._attr_name = short_name(name)
+        self._attr_translation_key = translation_key(key)
         self._attr_device_info = build_device_info(entry, DeviceKey.WANDA)
         self._thermal = thermal
         self._electrical = electrical
@@ -164,14 +160,14 @@ def build_energy_entities(
     """Energiezähler + JAZ-Sensoren erzeugen (an den LIVE-Coordinator gebunden)."""
     entities: list[SensorEntity] = []
     by_key: dict[str, BoeschEnergySensor] = {}
-    for key, name, source_key in ELECTRICAL_ENERGY + THERMAL_ENERGY:
-        sensor = BoeschEnergySensor(coordinator, entry, key, name, source_key)
+    for key, source_key in ELECTRICAL_ENERGY + THERMAL_ENERGY:
+        sensor = BoeschEnergySensor(coordinator, entry, key, source_key)
         by_key[key] = sensor
         entities.append(sensor)
-    for key, name, thermal_key, electrical_key in SCOP:
+    for key, thermal_key, electrical_key in SCOP:
         entities.append(
             BoeschSCOPSensor(
-                coordinator, entry, key, name, by_key[thermal_key], by_key[electrical_key]
+                coordinator, entry, key, by_key[thermal_key], by_key[electrical_key]
             )
         )
     return entities

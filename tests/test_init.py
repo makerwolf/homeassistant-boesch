@@ -30,20 +30,20 @@ async def test_setup_decodes_values(hass, fake_modbus, config_entry) -> None:
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.boesch_wanda_b16_vorlauf").state == "35.2"
     assert hass.states.get("sensor.boesch_hb_aussentemperatur").state == "-5.0"
-    assert hass.states.get("sensor.boesch_wanda_status").state == "Heizen"
+    assert hass.states.get("sensor.boesch_wanda_status").state == "heating"
     # Energiezähler sind angelegt (an den LIVE-Coordinator gebunden).
     assert hass.states.get("sensor.boesch_wanda_energie_el_gesamt") is not None
 
 
 async def test_entity_names(hass, fake_modbus, config_entry) -> None:
-    """has_entity_name: Gerätename + Name ohne WP/HB-Kürzel; Entity-ID bleibt."""
+    """Übersetzte Namen (Tests laufen auf Englisch); Entity-ID bleibt."""
     await _setup(hass, config_entry)
     names = {
-        "sensor.boesch_wanda_b16_vorlauf": "Bösch WANDA Vorlauftemperatur B16",
-        "sensor.boesch_hb_aussentemperatur": "Bösch Hydrobox Aussentemperatur",
-        "sensor.boesch_wanda_energie_el_gesamt": "Bösch WANDA Stromverbrauch gesamt",
-        "binary_sensor.boesch_wanda_verdichter_laeuft": "Bösch WANDA Verdichter läuft",
-        "water_heater.boesch_hb_twe": "Bösch Hydrobox Trinkwasser",
+        "sensor.boesch_wanda_b16_vorlauf": "Bösch WANDA Flow temperature B16",
+        "sensor.boesch_hb_aussentemperatur": "Bösch Hydrobox Outdoor temperature",
+        "sensor.boesch_wanda_energie_el_gesamt": "Bösch WANDA Electricity consumption total",
+        "binary_sensor.boesch_wanda_verdichter_laeuft": "Bösch WANDA Compressor running",
+        "water_heater.boesch_hb_twe": "Bösch Hydrobox Hot water",
     }
     for entity_id, name in names.items():
         assert hass.states.get(entity_id).attributes["friendly_name"] == name
@@ -52,10 +52,10 @@ async def test_entity_names(hass, fake_modbus, config_entry) -> None:
 async def test_select_write(hass, fake_modbus, config_entry) -> None:
     fake_modbus.registers[(HYDROBOX, 155)] = 2
     await _setup(hass, config_entry)
-    assert hass.states.get("select.boesch_hb_hk1_energiemodus").state == "Normal"
+    assert hass.states.get("select.boesch_hb_hk1_energiemodus").state == "normal"
     await hass.services.async_call(
         "select", "select_option",
-        {"entity_id": "select.boesch_hb_hk1_energiemodus", "option": "Eco"},
+        {"entity_id": "select.boesch_hb_hk1_energiemodus", "option": "eco"},
         blocking=True,
     )
     assert (HYDROBOX, 155, 1) in fake_modbus.instances[0].writes
@@ -64,14 +64,14 @@ async def test_select_write(hass, fake_modbus, config_entry) -> None:
 async def test_water_heater_boost(hass, fake_modbus, config_entry) -> None:
     await _setup(hass, config_entry)
     state = hass.states.get("water_heater.boesch_hb_twe")
-    assert state.attributes["operation_mode"] == "Normal"
+    assert state.attributes["operation_mode"] == "normal"
     await hass.services.async_call(
         "water_heater", "set_operation_mode",
-        {"entity_id": "water_heater.boesch_hb_twe", "operation_mode": "Einmalladung"},
+        {"entity_id": "water_heater.boesch_hb_twe", "operation_mode": "one_time_charge"},
         blocking=True,
     )
     assert (HYDROBOX, 103, 1) in fake_modbus.instances[0].writes
-    assert hass.states.get("water_heater.boesch_hb_twe").state == "Einmalladung"
+    assert hass.states.get("water_heater.boesch_hb_twe").state == "one_time_charge"
 
 
 async def test_number_write(hass, fake_modbus, config_entry) -> None:
@@ -102,12 +102,14 @@ async def test_write_error_is_ha_error(hass, fake_modbus, config_entry) -> None:
     """Schreibfehler kommen als verständlicher HomeAssistantError an."""
     await _setup(hass, config_entry)
     fake_modbus.fail = True
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             "number", "set_value",
             {"entity_id": "number.boesch_hb_twe_soll_einmal", "value": 45},
             blocking=True,
         )
+    assert err.value.translation_key == "modbus_write_failed"
+    assert str(err.value) == "Modbus write failed: Gerät nicht erreichbar"
 
 
 async def test_connect_failed_retries(hass, fake_modbus, config_entry) -> None:

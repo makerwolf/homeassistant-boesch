@@ -99,5 +99,480 @@
       "invalid_auth": "Web-Passwort abgelehnt.",
       "web_cannot_connect": "Webinterface nicht erreichbar oder Hydrobox nicht gefunden."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "hb_hk1_kuehl": {
+        "name": "HK1 Kühlbetrieb"
+      },
+      "hb_hk1_sommer": {
+        "name": "HK1 Sommerbetrieb"
+      },
+      "hb_hk2_kuehl": {
+        "name": "HK2 Kühlbetrieb"
+      },
+      "hb_hk2_sommer": {
+        "name": "HK2 Sommerbetrieb"
+      },
+      "wanda_alarm_bs": {
+        "name": "Alarm"
+      },
+      "wanda_pv_modulation": {
+        "name": "PV-Modulation"
+      },
+      "wanda_verdichter_laeuft": {
+        "name": "Verdichter läuft"
+      }
+    },
+    "number": {
+      "hb_hk1_festwert": {
+        "name": "HK1 Festwert Heizen"
+      },
+      "hb_hk1_festwert_kuehlen": {
+        "name": "HK1 Festwert Kühlen"
+      },
+      "hb_hk1_heizkurve": {
+        "name": "HK1 Heizkurve bei {temperature} °C"
+      },
+      "hb_hk1_kuehl_aus": {
+        "name": "HK1 Kühlbetrieb aus"
+      },
+      "hb_hk1_kuehl_ein": {
+        "name": "HK1 Kühlbetrieb ein"
+      },
+      "hb_hk1_kuehlkurve": {
+        "name": "HK1 Kühlkurve bei {temperature} °C"
+      },
+      "hb_hk1_parallel": {
+        "name": "HK1 Parallelverschiebung Kurve"
+      },
+      "hb_hk1_sommer_aus": {
+        "name": "HK1 Sommerbetrieb Heizen aus"
+      },
+      "hb_hk1_winter_ein": {
+        "name": "HK1 Winterbetrieb Heizen ein"
+      },
+      "hb_hk2_kuehl_aus": {
+        "name": "HK2 Kühlbetrieb aus"
+      },
+      "hb_hk2_kuehl_ein": {
+        "name": "HK2 Kühlbetrieb ein"
+      },
+      "hb_hk2_parallel": {
+        "name": "HK2 Parallelverschiebung Kurve"
+      },
+      "hb_hk2_sommer_aus": {
+        "name": "HK2 Sommerbetrieb Heizen aus"
+      },
+      "hb_hk2_winter_ein": {
+        "name": "HK2 Winterbetrieb Heizen ein"
+      },
+      "hb_twe_soll_einmal": {
+        "name": "TWE Sollwert Einmalladung"
+      },
+      "wanda_pv_leistung": {
+        "name": "PV-Modulation Leistung"
+      },
+      "wanda_pv_soll_heizen": {
+        "name": "PV-Solltemperatur Heizen"
+      },
+      "wanda_pv_soll_twe": {
+        "name": "PV-Solltemperatur TWE"
+      }
+    },
+    "select": {
+      "hb_hk1_betriebsart": {
+        "name": "HK1 Betriebsart",
+        "state": {
+          "auto": "Auto",
+          "off": "Aus"
+        }
+      },
+      "hb_hk1_energiemodus": {
+        "name": "HK1 Energiemodus",
+        "state": {
+          "off": "Aus",
+          "eco": "Eco",
+          "normal": "Normal",
+          "comfort": "Komfort",
+          "custom": "Benutzerdefiniert"
+        }
+      },
+      "hb_hk1_heizmodus": {
+        "name": "HK1 Heizmodus",
+        "state": {
+          "curve": "Außentemperaturkurve",
+          "fixed": "Festwert",
+          "off": "Aus"
+        }
+      },
+      "hb_hk1_saison": {
+        "name": "HK1 Manuelle Saisonauswahl",
+        "state": {
+          "auto": "Auto",
+          "heating": "Heizen",
+          "cooling": "Kühlen",
+          "off": "Aus"
+        }
+      },
+      "hb_hk2_betriebsart": {
+        "name": "HK2 Betriebsart",
+        "state": {
+          "auto": "Auto",
+          "off": "Aus"
+        }
+      },
+      "hb_hk2_energiemodus": {
+        "name": "HK2 Energiemodus",
+        "state": {
+          "off": "Aus",
+          "eco": "Eco",
+          "normal": "Normal",
+          "comfort": "Komfort",
+          "custom": "Benutzerdefiniert"
+        }
+      },
+      "hb_hk2_saison": {
+        "name": "HK2 Manuelle Saisonauswahl",
+        "state": {
+          "auto": "Auto",
+          "heating": "Heizen",
+          "cooling": "Kühlen",
+          "off": "Aus"
+        }
+      },
+      "hb_wez_heizen_art": {
+        "name": "Ext. WEZ Heizen Betriebsart",
+        "state": {
+          "auto": "Auto",
+          "heat_pump_only": "Nur Wärmepumpe",
+          "both": "Beide",
+          "secondary": "Sekundärer Wärmeerzeuger"
+        }
+      },
+      "hb_wez_twe_art": {
+        "name": "Ext. WEZ TWE Betriebsart",
+        "state": {
+          "auto": "Auto",
+          "heat_pump_only": "Nur Wärmepumpe",
+          "both": "Beide",
+          "secondary": "Sekundärer Wärmeerzeuger"
+        }
+      }
+    },
+    "sensor": {
+      "hb_aussentemperatur": {
+        "name": "Außentemperatur"
+      },
+      "hb_aussentemperatur_gemittelt": {
+        "name": "Außentemperatur gemittelt"
+      },
+      "hb_heizspeicher_ist": {
+        "name": "Heizspeicher Ist"
+      },
+      "hb_heizspeicher_soll": {
+        "name": "Heizspeicher Soll"
+      },
+      "hb_hk1_betriebsmodus": {
+        "name": "HK1 Betriebsmodus",
+        "state": {
+          "off": "Aus",
+          "heating": "Heizen",
+          "cooling": "Kühlen"
+        }
+      },
+      "hb_hk1_ist": {
+        "name": "HK1 Isttemperatur"
+      },
+      "hb_hk1_mischer": {
+        "name": "HK1 Mischer-Öffnung"
+      },
+      "hb_hk1_soll": {
+        "name": "HK1 Solltemperatur"
+      },
+      "hb_hk1_status": {
+        "name": "HK1 Status",
+        "state": {
+          "off": "Aus",
+          "heating": "Heizen",
+          "cooling": "Kühlen",
+          "dew_point": "Taupunkt",
+          "pump_maintenance": "Pumpenwartungslauf",
+          "frost_protection": "Frostschutz",
+          "manual": "Handbetrieb",
+          "test_mode": "Testmodus",
+          "initialization": "Initialisierung",
+          "safety_state": "Sicherheitszustand"
+        }
+      },
+      "hb_hk2_betriebsmodus": {
+        "name": "HK2 Betriebsmodus",
+        "state": {
+          "off": "Aus",
+          "heating": "Heizen",
+          "cooling": "Kühlen"
+        }
+      },
+      "hb_hk2_ist": {
+        "name": "HK2 Isttemperatur"
+      },
+      "hb_hk2_soll": {
+        "name": "HK2 Solltemperatur"
+      },
+      "hb_hk2_status": {
+        "name": "HK2 Status",
+        "state": {
+          "off": "Aus",
+          "heating": "Heizen",
+          "cooling": "Kühlen",
+          "dew_point": "Taupunkt",
+          "pump_maintenance": "Pumpenwartungslauf",
+          "frost_protection": "Frostschutz",
+          "manual": "Handbetrieb",
+          "test_mode": "Testmodus",
+          "initialization": "Initialisierung",
+          "safety_state": "Sicherheitszustand"
+        }
+      },
+      "hb_hkp1_laufzeit": {
+        "name": "Heizkreispumpe 1 Laufzeit"
+      },
+      "hb_hkp2_laufzeit": {
+        "name": "Heizkreispumpe 2 Laufzeit"
+      },
+      "hb_kuehlspeicher_ist": {
+        "name": "Kühlspeicher Ist"
+      },
+      "hb_kuehlspeicher_soll": {
+        "name": "Kühlspeicher Soll"
+      },
+      "hb_saison_aussentemperatur": {
+        "name": "Saison-Außentemperatur"
+      },
+      "hb_twe_ist": {
+        "name": "TWE Ist"
+      },
+      "hb_twe_soll": {
+        "name": "TWE Soll"
+      },
+      "hb_wez_heizen_status": {
+        "name": "Ext. WEZ Heizen Status",
+        "state": {
+          "no_request": "Keine Anforderung",
+          "request": "Anforderung",
+          "standby_auto_parallel": "Bereitschaft Auto Parallel",
+          "standby_auto_alternative": "Bereitschaft Auto Alternativ",
+          "standby_auto_partial_parallel": "Bereitschaft Auto Teilparallel (parallel)",
+          "standby_auto_partial_alternative": "Bereitschaft Auto Teilparallel (alternativ)",
+          "standby_fault": "Bereitschaft wegen Störung",
+          "standby_manual_parallel": "Bereitschaft Handbetrieb Parallel",
+          "standby_manual_alternative": "Bereitschaft Handbetrieb Alternativ",
+          "standby_utility_lock": "Bereitschaft EVU-Sperre",
+          "standby_external_request": "Bereitschaft externe Anforderung",
+          "standby_external_request_comfort": "Bereitschaft externe Anforderung Komfort",
+          "standby_screed_heating": "Bereitschaft Funktionsheizen",
+          "standby_pv": "Bereitschaft PV",
+          "request_auto_parallel": "Anforderung Auto Parallel",
+          "request_auto_alternative": "Anforderung Auto Alternativ",
+          "request_auto_partial_parallel": "Anforderung Auto Teilparallel (parallel)",
+          "request_auto_partial_alternative": "Anforderung Auto Teilparallel (alternativ)",
+          "request_fault": "Anforderung wegen Störung",
+          "request_manual_parallel": "Anforderung Handbetrieb Parallel",
+          "request_manual_alternative": "Anforderung Handbetrieb Alternativ",
+          "request_utility_lock": "Anforderung EVU-Sperre",
+          "request_external_request": "Anforderung externe Anforderung",
+          "request_external_request_comfort": "Anforderung externe Anforderung Komfort",
+          "request_screed_heating": "Anforderung Funktionsheizen",
+          "request_pv": "Anforderung PV"
+        }
+      },
+      "hb_wez_twe_status": {
+        "name": "Ext. WEZ TWE Status",
+        "state": {
+          "no_request": "Keine Anforderung",
+          "request": "Anforderung",
+          "standby_auto_parallel": "Bereitschaft Auto Parallel",
+          "standby_auto_alternative": "Bereitschaft Auto Alternativ",
+          "standby_auto_partial_parallel": "Bereitschaft Auto Teilparallel (parallel)",
+          "standby_auto_partial_alternative": "Bereitschaft Auto Teilparallel (alternativ)",
+          "standby_fault": "Bereitschaft wegen Störung",
+          "standby_manual_parallel": "Bereitschaft Handbetrieb Parallel",
+          "standby_manual_alternative": "Bereitschaft Handbetrieb Alternativ",
+          "standby_utility_lock": "Bereitschaft EVU-Sperre",
+          "standby_external_request": "Bereitschaft externe Anforderung",
+          "standby_external_request_comfort": "Bereitschaft externe Anforderung Komfort",
+          "standby_screed_heating": "Bereitschaft Funktionsheizen",
+          "standby_pv": "Bereitschaft PV",
+          "request_auto_parallel": "Anforderung Auto Parallel",
+          "request_auto_alternative": "Anforderung Auto Alternativ",
+          "request_auto_partial_parallel": "Anforderung Auto Teilparallel (parallel)",
+          "request_auto_partial_alternative": "Anforderung Auto Teilparallel (alternativ)",
+          "request_fault": "Anforderung wegen Störung",
+          "request_manual_parallel": "Anforderung Handbetrieb Parallel",
+          "request_manual_alternative": "Anforderung Handbetrieb Alternativ",
+          "request_utility_lock": "Anforderung EVU-Sperre",
+          "request_external_request": "Anforderung externe Anforderung",
+          "request_external_request_comfort": "Anforderung externe Anforderung Komfort",
+          "request_screed_heating": "Anforderung Funktionsheizen",
+          "request_pv": "Anforderung PV"
+        }
+      },
+      "wanda_alarmcode": {
+        "name": "Alarmcode"
+      },
+      "wanda_b15_quelle_eintritt": {
+        "name": "Energiequelle Eintrittstemperatur B15"
+      },
+      "wanda_b16_vorlauf": {
+        "name": "Vorlauftemperatur B16"
+      },
+      "wanda_b17_ruecklauf": {
+        "name": "Rücklauftemperatur B17"
+      },
+      "wanda_cop": {
+        "name": "COP aktuell"
+      },
+      "wanda_cop_heizen": {
+        "name": "COP Heizen"
+      },
+      "wanda_cop_kuehlen": {
+        "name": "COP Kühlen"
+      },
+      "wanda_cop_twe": {
+        "name": "COP TWE"
+      },
+      "wanda_el_leistung": {
+        "name": "Elektr. Leistung aktuell"
+      },
+      "wanda_el_leistung_heizen": {
+        "name": "Elektr. Leistung Heizen"
+      },
+      "wanda_el_leistung_kuehlen": {
+        "name": "Elektr. Leistung Kühlen"
+      },
+      "wanda_el_leistung_twe": {
+        "name": "Elektr. Leistung TWE"
+      },
+      "wanda_energie_el_gesamt": {
+        "name": "Stromverbrauch gesamt"
+      },
+      "wanda_energie_el_heizen": {
+        "name": "Stromverbrauch Heizen"
+      },
+      "wanda_energie_el_kuehlen": {
+        "name": "Stromverbrauch Kühlen"
+      },
+      "wanda_energie_el_twe": {
+        "name": "Stromverbrauch TWE"
+      },
+      "wanda_energie_th_gesamt": {
+        "name": "Wärmemenge gesamt"
+      },
+      "wanda_energie_th_heizen": {
+        "name": "Wärmemenge Heizen"
+      },
+      "wanda_energie_th_kuehlen": {
+        "name": "Wärmemenge Kühlen"
+      },
+      "wanda_energie_th_twe": {
+        "name": "Wärmemenge TWE"
+      },
+      "wanda_jaz_gesamt": {
+        "name": "Arbeitszahl gesamt"
+      },
+      "wanda_jaz_heizen": {
+        "name": "Arbeitszahl Heizen"
+      },
+      "wanda_jaz_kuehlen": {
+        "name": "Arbeitszahl Kühlen"
+      },
+      "wanda_jaz_twe": {
+        "name": "Arbeitszahl TWE"
+      },
+      "wanda_laufzeit_seit_start": {
+        "name": "Laufzeit seit Start"
+      },
+      "wanda_leistung": {
+        "name": "Leistung aktuell"
+      },
+      "wanda_leistung_heizen": {
+        "name": "Leistung Heizen"
+      },
+      "wanda_leistung_kuehlen": {
+        "name": "Leistung Kühlen"
+      },
+      "wanda_leistung_twe": {
+        "name": "Leistung TWE"
+      },
+      "wanda_p13_durchfluss": {
+        "name": "Durchfluss P13"
+      },
+      "wanda_status": {
+        "name": "Status",
+        "state": {
+          "standby": "Standby",
+          "alarm": "Alarm",
+          "hot_water": "Trinkwassererwärmung",
+          "cooling": "Kühlen",
+          "heating": "Heizen",
+          "defrost": "Abtauung",
+          "preparation": "Vorbereitung",
+          "blocked": "Blockiert",
+          "utility_lock": "EVU-Sperre",
+          "not_available": "Nicht verfügbar"
+        }
+      }
+    },
+    "switch": {
+      "wpm_anwesenheit": {
+        "name": "Anwesenheit"
+      }
+    },
+    "water_heater": {
+      "hb_twe": {
+        "name": "Trinkwasser",
+        "state": {
+          "normal": "Normal",
+          "one_time_charge": "Einmalladung"
+        }
+      }
+    }
+  },
+  "device": {
+    "wanda": {
+      "name": "Bösch WANDA"
+    },
+    "hydrobox": {
+      "name": "Bösch Hydrobox"
+    },
+    "manager": {
+      "name": "Bösch Wärmepumpenmanager"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Verbindung zu {host}:{port} fehlgeschlagen."
+    },
+    "modbus_error": {
+      "message": "Modbus-Fehler: {error}"
+    },
+    "modbus_write_failed": {
+      "message": "Schreiben per Modbus fehlgeschlagen: {error}"
+    },
+    "web_auth_failed": {
+      "message": "Das Webinterface hat das Passwort abgelehnt."
+    },
+    "web_error": {
+      "message": "Webinterface-Fehler: {error}"
+    },
+    "web_not_connected": {
+      "message": "Webinterface nicht verbunden."
+    },
+    "web_write_failed": {
+      "message": "Schreiben übers Webinterface fehlgeschlagen: {error}"
+    },
+    "curve_point_missing": {
+      "message": "Kurve hat keinen Stützpunkt bei {temperature} °C."
+    }
   }
 }

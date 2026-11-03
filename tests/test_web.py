@@ -63,7 +63,7 @@ def _state(hass, entity_id: str) -> str:
 
 async def test_web_entities(hass, fake_modbus, web_values, config_entry) -> None:
     await _setup(hass, config_entry)
-    assert _state(hass, "select.boesch_hb_hk1_heizmodus") == "Festwert"
+    assert _state(hass, "select.boesch_hb_hk1_heizmodus") == "fixed"
     assert _state(hass, "number.boesch_hb_hk1_festwert") == "34.5"
     assert _state(hass, "number.boesch_hb_hk1_heizkurve_m20") == "35.0"
     assert _state(hass, "number.boesch_hb_hk1_kuehlkurve_p40") == "18.0"
@@ -72,7 +72,9 @@ async def test_web_entities(hass, fake_modbus, web_values, config_entry) -> None
     assert _state(hass, "switch.boesch_wpm_anwesenheit") == "on"
     # Anwesenheit hängt am eigenen Gerät "Wärmepumpenmanager".
     attrs = hass.states.get("switch.boesch_wpm_anwesenheit").attributes
-    assert attrs["friendly_name"] == "Bösch Wärmepumpenmanager Anwesenheit"
+    assert attrs["friendly_name"] == "Bösch heat pump manager Presence"
+    curve = hass.states.get("number.boesch_hb_hk1_heizkurve_m20").attributes
+    assert curve["friendly_name"] == "Bösch Hydrobox HC1 heating curve at -20 °C"
 
 
 async def test_web_writes(hass, fake_modbus, web_values, config_entry) -> None:
@@ -81,7 +83,7 @@ async def test_web_writes(hass, fake_modbus, web_values, config_entry) -> None:
 
     await hass.services.async_call(
         "select", "select_option",
-        {"entity_id": "select.boesch_hb_hk1_heizmodus", "option": "Außentemperaturkurve"},
+        {"entity_id": "select.boesch_hb_hk1_heizmodus", "option": "curve"},
         blocking=True,
     )
     await hass.services.async_call(
@@ -125,7 +127,7 @@ async def test_curve_point_write(hass, fake_modbus, web_values, config_entry) ->
 async def test_curve_point_missing(hass, fake_modbus, web_values, config_entry) -> None:
     await _setup(hass, config_entry)
     web_values.values[(HB, DP_HK1_HEATING_CURVE)] = _curve((0,))
-    with pytest.raises(HomeAssistantError, match="Stützpunkt"):
+    with pytest.raises(HomeAssistantError, match="no point at 20 °C"):
         await hass.services.async_call(
             "number", "set_value",
             {"entity_id": "number.boesch_hb_hk1_heizkurve_p20", "value": 25},

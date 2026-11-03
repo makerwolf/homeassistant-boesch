@@ -99,5 +99,480 @@
       "invalid_auth": "Web password rejected.",
       "web_cannot_connect": "Web interface unreachable or Hydrobox not found."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "hb_hk1_kuehl": {
+        "name": "HC1 cooling mode"
+      },
+      "hb_hk1_sommer": {
+        "name": "HC1 summer mode"
+      },
+      "hb_hk2_kuehl": {
+        "name": "HC2 cooling mode"
+      },
+      "hb_hk2_sommer": {
+        "name": "HC2 summer mode"
+      },
+      "wanda_alarm_bs": {
+        "name": "Alarm"
+      },
+      "wanda_pv_modulation": {
+        "name": "PV modulation"
+      },
+      "wanda_verdichter_laeuft": {
+        "name": "Compressor running"
+      }
+    },
+    "number": {
+      "hb_hk1_festwert": {
+        "name": "HC1 fixed setpoint heating"
+      },
+      "hb_hk1_festwert_kuehlen": {
+        "name": "HC1 fixed setpoint cooling"
+      },
+      "hb_hk1_heizkurve": {
+        "name": "HC1 heating curve at {temperature} °C"
+      },
+      "hb_hk1_kuehl_aus": {
+        "name": "HC1 cooling mode off"
+      },
+      "hb_hk1_kuehl_ein": {
+        "name": "HC1 cooling mode on"
+      },
+      "hb_hk1_kuehlkurve": {
+        "name": "HC1 cooling curve at {temperature} °C"
+      },
+      "hb_hk1_parallel": {
+        "name": "HC1 curve offset"
+      },
+      "hb_hk1_sommer_aus": {
+        "name": "HC1 summer mode heating off"
+      },
+      "hb_hk1_winter_ein": {
+        "name": "HC1 winter mode heating on"
+      },
+      "hb_hk2_kuehl_aus": {
+        "name": "HC2 cooling mode off"
+      },
+      "hb_hk2_kuehl_ein": {
+        "name": "HC2 cooling mode on"
+      },
+      "hb_hk2_parallel": {
+        "name": "HC2 curve offset"
+      },
+      "hb_hk2_sommer_aus": {
+        "name": "HC2 summer mode heating off"
+      },
+      "hb_hk2_winter_ein": {
+        "name": "HC2 winter mode heating on"
+      },
+      "hb_twe_soll_einmal": {
+        "name": "Hot water one-time charge setpoint"
+      },
+      "wanda_pv_leistung": {
+        "name": "PV modulation power"
+      },
+      "wanda_pv_soll_heizen": {
+        "name": "PV target temperature heating"
+      },
+      "wanda_pv_soll_twe": {
+        "name": "PV target temperature hot water"
+      }
+    },
+    "select": {
+      "hb_hk1_betriebsart": {
+        "name": "HC1 operating mode",
+        "state": {
+          "auto": "Auto",
+          "off": "Off"
+        }
+      },
+      "hb_hk1_energiemodus": {
+        "name": "HC1 energy mode",
+        "state": {
+          "off": "Off",
+          "eco": "Eco",
+          "normal": "Normal",
+          "comfort": "Comfort",
+          "custom": "Custom"
+        }
+      },
+      "hb_hk1_heizmodus": {
+        "name": "HC1 setpoint mode",
+        "state": {
+          "curve": "Outdoor temperature curve",
+          "fixed": "Fixed setpoint",
+          "off": "Off"
+        }
+      },
+      "hb_hk1_saison": {
+        "name": "HC1 manual season",
+        "state": {
+          "auto": "Auto",
+          "heating": "Heating",
+          "cooling": "Cooling",
+          "off": "Off"
+        }
+      },
+      "hb_hk2_betriebsart": {
+        "name": "HC2 operating mode",
+        "state": {
+          "auto": "Auto",
+          "off": "Off"
+        }
+      },
+      "hb_hk2_energiemodus": {
+        "name": "HC2 energy mode",
+        "state": {
+          "off": "Off",
+          "eco": "Eco",
+          "normal": "Normal",
+          "comfort": "Comfort",
+          "custom": "Custom"
+        }
+      },
+      "hb_hk2_saison": {
+        "name": "HC2 manual season",
+        "state": {
+          "auto": "Auto",
+          "heating": "Heating",
+          "cooling": "Cooling",
+          "off": "Off"
+        }
+      },
+      "hb_wez_heizen_art": {
+        "name": "Ext. heat generator heating mode",
+        "state": {
+          "auto": "Auto",
+          "heat_pump_only": "Heat pump only",
+          "both": "Both",
+          "secondary": "Secondary heat generator"
+        }
+      },
+      "hb_wez_twe_art": {
+        "name": "Ext. heat generator hot water mode",
+        "state": {
+          "auto": "Auto",
+          "heat_pump_only": "Heat pump only",
+          "both": "Both",
+          "secondary": "Secondary heat generator"
+        }
+      }
+    },
+    "sensor": {
+      "hb_aussentemperatur": {
+        "name": "Outdoor temperature"
+      },
+      "hb_aussentemperatur_gemittelt": {
+        "name": "Outdoor temperature averaged"
+      },
+      "hb_heizspeicher_ist": {
+        "name": "Heating buffer actual"
+      },
+      "hb_heizspeicher_soll": {
+        "name": "Heating buffer setpoint"
+      },
+      "hb_hk1_betriebsmodus": {
+        "name": "HC1 heating/cooling mode",
+        "state": {
+          "off": "Off",
+          "heating": "Heating",
+          "cooling": "Cooling"
+        }
+      },
+      "hb_hk1_ist": {
+        "name": "HC1 actual temperature"
+      },
+      "hb_hk1_mischer": {
+        "name": "HC1 mixer opening"
+      },
+      "hb_hk1_soll": {
+        "name": "HC1 target temperature"
+      },
+      "hb_hk1_status": {
+        "name": "HC1 status",
+        "state": {
+          "off": "Off",
+          "heating": "Heating",
+          "cooling": "Cooling",
+          "dew_point": "Dew point",
+          "pump_maintenance": "Pump maintenance run",
+          "frost_protection": "Frost protection",
+          "manual": "Manual mode",
+          "test_mode": "Test mode",
+          "initialization": "Initialization",
+          "safety_state": "Safety state"
+        }
+      },
+      "hb_hk2_betriebsmodus": {
+        "name": "HC2 heating/cooling mode",
+        "state": {
+          "off": "Off",
+          "heating": "Heating",
+          "cooling": "Cooling"
+        }
+      },
+      "hb_hk2_ist": {
+        "name": "HC2 actual temperature"
+      },
+      "hb_hk2_soll": {
+        "name": "HC2 target temperature"
+      },
+      "hb_hk2_status": {
+        "name": "HC2 status",
+        "state": {
+          "off": "Off",
+          "heating": "Heating",
+          "cooling": "Cooling",
+          "dew_point": "Dew point",
+          "pump_maintenance": "Pump maintenance run",
+          "frost_protection": "Frost protection",
+          "manual": "Manual mode",
+          "test_mode": "Test mode",
+          "initialization": "Initialization",
+          "safety_state": "Safety state"
+        }
+      },
+      "hb_hkp1_laufzeit": {
+        "name": "Heating circuit pump 1 runtime"
+      },
+      "hb_hkp2_laufzeit": {
+        "name": "Heating circuit pump 2 runtime"
+      },
+      "hb_kuehlspeicher_ist": {
+        "name": "Cooling buffer actual"
+      },
+      "hb_kuehlspeicher_soll": {
+        "name": "Cooling buffer setpoint"
+      },
+      "hb_saison_aussentemperatur": {
+        "name": "Season outdoor temperature"
+      },
+      "hb_twe_ist": {
+        "name": "Hot water actual"
+      },
+      "hb_twe_soll": {
+        "name": "Hot water setpoint"
+      },
+      "hb_wez_heizen_status": {
+        "name": "Ext. heat generator heating status",
+        "state": {
+          "no_request": "No request",
+          "request": "Request",
+          "standby_auto_parallel": "Standby auto parallel",
+          "standby_auto_alternative": "Standby auto alternative",
+          "standby_auto_partial_parallel": "Standby auto partly parallel (parallel)",
+          "standby_auto_partial_alternative": "Standby auto partly parallel (alternative)",
+          "standby_fault": "Standby due to fault",
+          "standby_manual_parallel": "Standby manual parallel",
+          "standby_manual_alternative": "Standby manual alternative",
+          "standby_utility_lock": "Standby utility lock",
+          "standby_external_request": "Standby external request",
+          "standby_external_request_comfort": "Standby external request comfort",
+          "standby_screed_heating": "Standby screed heating",
+          "standby_pv": "Standby PV",
+          "request_auto_parallel": "Request auto parallel",
+          "request_auto_alternative": "Request auto alternative",
+          "request_auto_partial_parallel": "Request auto partly parallel (parallel)",
+          "request_auto_partial_alternative": "Request auto partly parallel (alternative)",
+          "request_fault": "Request due to fault",
+          "request_manual_parallel": "Request manual parallel",
+          "request_manual_alternative": "Request manual alternative",
+          "request_utility_lock": "Request utility lock",
+          "request_external_request": "Request external request",
+          "request_external_request_comfort": "Request external request comfort",
+          "request_screed_heating": "Request screed heating",
+          "request_pv": "Request PV"
+        }
+      },
+      "hb_wez_twe_status": {
+        "name": "Ext. heat generator hot water status",
+        "state": {
+          "no_request": "No request",
+          "request": "Request",
+          "standby_auto_parallel": "Standby auto parallel",
+          "standby_auto_alternative": "Standby auto alternative",
+          "standby_auto_partial_parallel": "Standby auto partly parallel (parallel)",
+          "standby_auto_partial_alternative": "Standby auto partly parallel (alternative)",
+          "standby_fault": "Standby due to fault",
+          "standby_manual_parallel": "Standby manual parallel",
+          "standby_manual_alternative": "Standby manual alternative",
+          "standby_utility_lock": "Standby utility lock",
+          "standby_external_request": "Standby external request",
+          "standby_external_request_comfort": "Standby external request comfort",
+          "standby_screed_heating": "Standby screed heating",
+          "standby_pv": "Standby PV",
+          "request_auto_parallel": "Request auto parallel",
+          "request_auto_alternative": "Request auto alternative",
+          "request_auto_partial_parallel": "Request auto partly parallel (parallel)",
+          "request_auto_partial_alternative": "Request auto partly parallel (alternative)",
+          "request_fault": "Request due to fault",
+          "request_manual_parallel": "Request manual parallel",
+          "request_manual_alternative": "Request manual alternative",
+          "request_utility_lock": "Request utility lock",
+          "request_external_request": "Request external request",
+          "request_external_request_comfort": "Request external request comfort",
+          "request_screed_heating": "Request screed heating",
+          "request_pv": "Request PV"
+        }
+      },
+      "wanda_alarmcode": {
+        "name": "Alarm code"
+      },
+      "wanda_b15_quelle_eintritt": {
+        "name": "Source inlet temperature B15"
+      },
+      "wanda_b16_vorlauf": {
+        "name": "Flow temperature B16"
+      },
+      "wanda_b17_ruecklauf": {
+        "name": "Return temperature B17"
+      },
+      "wanda_cop": {
+        "name": "Current COP"
+      },
+      "wanda_cop_heizen": {
+        "name": "COP heating"
+      },
+      "wanda_cop_kuehlen": {
+        "name": "COP cooling"
+      },
+      "wanda_cop_twe": {
+        "name": "COP hot water"
+      },
+      "wanda_el_leistung": {
+        "name": "Electric power"
+      },
+      "wanda_el_leistung_heizen": {
+        "name": "Electric power heating"
+      },
+      "wanda_el_leistung_kuehlen": {
+        "name": "Electric power cooling"
+      },
+      "wanda_el_leistung_twe": {
+        "name": "Electric power hot water"
+      },
+      "wanda_energie_el_gesamt": {
+        "name": "Electricity consumption total"
+      },
+      "wanda_energie_el_heizen": {
+        "name": "Electricity consumption heating"
+      },
+      "wanda_energie_el_kuehlen": {
+        "name": "Electricity consumption cooling"
+      },
+      "wanda_energie_el_twe": {
+        "name": "Electricity consumption hot water"
+      },
+      "wanda_energie_th_gesamt": {
+        "name": "Heat energy total"
+      },
+      "wanda_energie_th_heizen": {
+        "name": "Heat energy heating"
+      },
+      "wanda_energie_th_kuehlen": {
+        "name": "Heat energy cooling"
+      },
+      "wanda_energie_th_twe": {
+        "name": "Heat energy hot water"
+      },
+      "wanda_jaz_gesamt": {
+        "name": "Performance factor total"
+      },
+      "wanda_jaz_heizen": {
+        "name": "Performance factor heating"
+      },
+      "wanda_jaz_kuehlen": {
+        "name": "Performance factor cooling"
+      },
+      "wanda_jaz_twe": {
+        "name": "Performance factor hot water"
+      },
+      "wanda_laufzeit_seit_start": {
+        "name": "Runtime since start"
+      },
+      "wanda_leistung": {
+        "name": "Thermal power"
+      },
+      "wanda_leistung_heizen": {
+        "name": "Thermal power heating"
+      },
+      "wanda_leistung_kuehlen": {
+        "name": "Thermal power cooling"
+      },
+      "wanda_leistung_twe": {
+        "name": "Thermal power hot water"
+      },
+      "wanda_p13_durchfluss": {
+        "name": "Flow rate P13"
+      },
+      "wanda_status": {
+        "name": "Status",
+        "state": {
+          "standby": "Standby",
+          "alarm": "Alarm",
+          "hot_water": "Hot water heating",
+          "cooling": "Cooling",
+          "heating": "Heating",
+          "defrost": "Defrost",
+          "preparation": "Preparation",
+          "blocked": "Blocked",
+          "utility_lock": "Utility lock",
+          "not_available": "Not available"
+        }
+      }
+    },
+    "switch": {
+      "wpm_anwesenheit": {
+        "name": "Presence"
+      }
+    },
+    "water_heater": {
+      "hb_twe": {
+        "name": "Hot water",
+        "state": {
+          "normal": "Normal",
+          "one_time_charge": "One-time charge"
+        }
+      }
+    }
+  },
+  "device": {
+    "wanda": {
+      "name": "Bösch WANDA"
+    },
+    "hydrobox": {
+      "name": "Bösch Hydrobox"
+    },
+    "manager": {
+      "name": "Bösch heat pump manager"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Connection to {host}:{port} failed."
+    },
+    "modbus_error": {
+      "message": "Modbus error: {error}"
+    },
+    "modbus_write_failed": {
+      "message": "Modbus write failed: {error}"
+    },
+    "web_auth_failed": {
+      "message": "The web interface rejected the password."
+    },
+    "web_error": {
+      "message": "Web interface error: {error}"
+    },
+    "web_not_connected": {
+      "message": "Web interface not connected."
+    },
+    "web_write_failed": {
+      "message": "Web interface write failed: {error}"
+    },
+    "curve_point_missing": {
+      "message": "Curve has no point at {temperature} °C."
+    }
   }
 }

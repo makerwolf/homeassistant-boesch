@@ -19,8 +19,10 @@ TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
 
 - **77 Datenpunkte** aus WANDA (Modbus-Adresse 40) und Hydrobox (50) über eine
   gemeinsame TCP-Verbindung.
-- **Read-only** als `sensor` / `binary_sensor`, inkl. Klartext für Status-
-  register (`select`-artige Enums als lesbare Zustände).
+- **Read-only** als `sensor` / `binary_sensor`, Statusregister als
+  Enum-Sensoren mit lesbaren Zuständen.
+- **Deutsch und Englisch:** Entity-Namen, Zustände und Fehlermeldungen folgen
+  der Sprache von Home Assistant.
 - **Schreibzugriff** auf alle in der Bösch-Liste als R/W dokumentierten Register:
   - `number` – Sollwerte (Parallelverschiebung, Sommer-/Winter-/Kühl-Schwellen,
     PV-Leistung & -Solltemperaturen, TWE-Sollwerte)
@@ -137,6 +139,15 @@ Wer HK2, den externen WEZ, einen Fühlereingang oder das Web-Passwort wieder
 abschaltet, bekommt die zugehörigen Entities (und ggf. das Gerät
 Wärmepumpenmanager) automatisch entfernt.
 
+**Zustände in Automationen:** Enum-Sensoren, Selects und der Trinkwasser-Modus
+speichern feste englische Schlüssel, angezeigt wird der übersetzte Text. In
+Automationen und Templates daher die Schlüssel verwenden, z. B.
+`sensor.boesch_wanda_status` = `heating` (Anzeige „Heizen“),
+`water_heater.boesch_hb_twe` = `normal` / `one_time_charge` („Einmalladung“).
+Alle Schlüssel stehen in
+[`translations/de.json`](custom_components/boesch/translations/de.json) unter
+`entity`. Im Automations-Editor bietet HA sie als Auswahl an.
+
 ## Datenaktualisierung
 
 Die Integration fragt die Wärmepumpe zyklisch ab (`local_polling`), es gibt
@@ -161,13 +172,13 @@ automation:
     conditions:
       - condition: state
         entity_id: water_heater.boesch_hb_twe
-        state: "Normal"
+        state: "normal"
     actions:
       - action: water_heater.set_operation_mode
         target:
           entity_id: water_heater.boesch_hb_twe
         data:
-          operation_mode: "Einmalladung"
+          operation_mode: "one_time_charge"
 ```
 
 **Anwesenheit an den Wärmepumpenmanager melden** (braucht Web-Passwort):
@@ -185,7 +196,7 @@ automation:
 ```
 
 Weitere Ideen: Energiemodus `select.boesch_hb_hk1_energiemodus` nachts auf
-*Eco*, Parallelverschiebung `number.boesch_hb_hk1_parallel` bei günstigem
+*Eco* (`eco`), Parallelverschiebung `number.boesch_hb_hk1_parallel` bei günstigem
 Strompreis anheben, Benachrichtigung bei `binary_sensor.boesch_wanda_alarm_bs`.
 
 ## Energie & Effizienz (Energy Dashboard)

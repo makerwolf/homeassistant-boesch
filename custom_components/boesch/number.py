@@ -41,24 +41,24 @@ async def async_setup_entry(
     if web := entry.runtime_data.web:
         entities.append(
             BoeschWebFixedSetpoint(
-                web, entry, "boesch_hb_hk1_festwert", "HB HK1 Festwert Heizen",
-                DP_HK1_FIXED_SETPOINT_HEATING, 0.0, 100.0, "mdi:thermometer-lines",
+                web, entry, "boesch_hb_hk1_festwert",
+                DP_HK1_FIXED_SETPOINT_HEATING, 0.0, 100.0,
             )
         )
         entities.append(
             BoeschWebFixedSetpoint(
-                web, entry, "boesch_hb_hk1_festwert_kuehlen", "HB HK1 Festwert Kühlen",
-                DP_HK1_FIXED_SETPOINT_COOLING, 5.0, 30.0, "mdi:snowflake-thermometer",
+                web, entry, "boesch_hb_hk1_festwert_kuehlen",
+                DP_HK1_FIXED_SETPOINT_COOLING, 5.0, 30.0,
             )
         )
         entities.extend(
-            BoeschWebCurvePoint(web, entry, DP_HK1_HEATING_CURVE, "heizkurve", "Heizkurve", x)
+            BoeschWebCurvePoint(web, entry, DP_HK1_HEATING_CURVE, "heizkurve", x)
             for x in CURVE_X
         )
         # Kühlkurve: Grenzen wie beim Festwert Kühlen (5-30 °C).
         entities.extend(
             BoeschWebCurvePoint(
-                web, entry, DP_HK1_COOLING_CURVE, "kuehlkurve", "Kühlkurve", x,
+                web, entry, DP_HK1_COOLING_CURVE, "kuehlkurve", x,
                 5.0, 30.0,
             )
             for x in COOLING_CURVE_X
@@ -101,14 +101,13 @@ class BoeschWebFixedSetpoint(BoeschWebEntity, NumberEntity):
     _attr_native_step = 0.5
 
     def __init__(
-        self, coordinator, entry, key: str, name: str, config_id: str,
-        min_value: float, max_value: float, icon: str,
+        self, coordinator, entry, key: str, config_id: str,
+        min_value: float, max_value: float,
     ) -> None:
-        super().__init__(coordinator, entry, key, name, config_id)
+        super().__init__(coordinator, entry, key, config_id)
         # Grenzen wie in der Web-Oberfläche.
         self._attr_native_min_value = min_value
         self._attr_native_max_value = max_value
-        self._attr_icon = icon
 
     @property
     def native_value(self) -> float | None:
@@ -126,20 +125,18 @@ class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_native_step = 0.5
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:chart-bell-curve-cumulative"
 
     def __init__(
-        self, coordinator, entry, config_id: str, slug: str, label: str, x: int,
+        self, coordinator, entry, config_id: str, slug: str, x: int,
         min_value: float = 0.0, max_value: float = 100.0,
     ) -> None:
         suffix = f"m{-x}" if x < 0 else f"p{x}" if x > 0 else "0"
         super().__init__(
-            coordinator,
-            entry,
-            f"boesch_hb_hk1_{slug}_{suffix}",
-            f"HB HK1 {label} bei {x} °C",
-            config_id,
+            coordinator, entry, f"boesch_hb_hk1_{slug}_{suffix}", config_id
         )
+        # Ein Name für alle Stützpunkte, die Temperatur als Platzhalter.
+        self._attr_translation_key = f"hb_hk1_{slug}"
+        self._attr_translation_placeholders = {"temperature": str(x)}
         self._x = x
         # Die Firmware gibt für Kurven keine Grenzen vor -> wie beim Festwert.
         self._attr_native_min_value = min_value

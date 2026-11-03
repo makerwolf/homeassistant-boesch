@@ -17,24 +17,15 @@ _MODEL_BY_DEVICE = {
     DeviceKey.MANAGER: MODEL_MANAGER,
 }
 
-_DEVICE_NAME = {
-    DeviceKey.WANDA: "Bösch WANDA",
-    DeviceKey.HYDROBOX: "Bösch Hydrobox",
-    DeviceKey.MANAGER: "Bösch Wärmepumpenmanager",
-}
 
 
-# Gerätekürzel aus den historischen Namen ("WP Vorlauftemperatur B16"). Mit
-# has_entity_name stellt HA den Gerätenamen ohnehin voran ("Bösch WANDA …").
-_NAME_PREFIXES = ("WP ", "HB ", "WPM ")
+def translation_key(unique_id: str) -> str:
+    """translation_key einer Entity: unique_id ohne "boesch_"-Präfix.
 
-
-def short_name(name: str) -> str:
-    """Entity-Name ohne Gerätekürzel."""
-    for prefix in _NAME_PREFIXES:
-        if name.startswith(prefix):
-            return name[len(prefix):]
-    return name
+    Namen, Zustände und Icons stehen in translations/*.json bzw. icons.json
+    unter diesem Schlüssel (z. B. sensor.wanda_b16_vorlauf).
+    """
+    return unique_id.removeprefix("boesch_")
 
 
 def assign_entity_ids(entry: ConfigEntry, entities, platform: str) -> None:
@@ -58,7 +49,7 @@ def build_device_info(entry: ConfigEntry, device: DeviceKey) -> DeviceInfo:
     Entities wie die abgeleiteten Energie-/Effizienzzähler)."""
     return DeviceInfo(
         identifiers={(DOMAIN, f"{entry.entry_id}_{device.value}")},
-        name=_DEVICE_NAME[device],
+        translation_key=device.value,
         manufacturer=MANUFACTURER,
         model=_MODEL_BY_DEVICE[device],
         configuration_url=f"http://{entry.data[CONF_HOST]}",
@@ -69,7 +60,9 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
     """Basis für alle Bösch-Entities.
 
     Hängt die Entity an das passende Gerät (WANDA oder Hydrobox); der Name
-    ist relativ zum Gerät. Die Entity-ID setzt assign_entity_ids fest.
+    kommt übersetzt aus translation_key, relativ zum Gerät. Ein expliziter
+    `name` (frei benannte Fühlereingänge) ersetzt ihn. Die Entity-ID setzt
+    assign_entity_ids fest.
     """
 
     _attr_has_entity_name = True
@@ -84,9 +77,10 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
         super().__init__(coordinator)
         self._reg = reg
         self._attr_unique_id = reg.key
-        self._attr_name = short_name(name or reg.name)
-        if reg.icon:
-            self._attr_icon = reg.icon
+        if name:
+            self._attr_name = name
+        else:
+            self._attr_translation_key = translation_key(reg.key)
         if reg.entity_category:
             self._attr_entity_category = EntityCategory(reg.entity_category)
         self._attr_entity_registry_enabled_default = reg.enabled_default
@@ -115,14 +109,13 @@ class BoeschWebEntity(CoordinatorEntity[BoeschWebCoordinator]):
         coordinator: BoeschWebCoordinator,
         entry: ConfigEntry,
         key: str,
-        name: str,
         config_id: str,
         device: DeviceKey = DeviceKey.HYDROBOX,
     ) -> None:
         super().__init__(coordinator)
         self._config_id = config_id
         self._attr_unique_id = key
-        self._attr_name = short_name(name)
+        self._attr_translation_key = translation_key(key)
         self._attr_device_info = build_device_info(entry, device)
 
     @property

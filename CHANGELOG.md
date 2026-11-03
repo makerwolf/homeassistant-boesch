@@ -5,6 +5,18 @@
 
 ## [Unreleased]
 
+- ⚠️ **Breaking – Zustände sind jetzt Schlüssel:** Status-Sensoren, Selects und
+  der Trinkwasser-Modus speichern feste englische Schlüssel statt deutschem
+  Klartext, z. B. `heating` statt „Heizen“, `eco` statt „Eco“,
+  `one_time_charge` statt „Einmalladung“. Angezeigt wird weiterhin der
+  übersetzte Text. **Automationen, Templates und Dashboard-Bedingungen, die auf
+  Klartext-Zustände prüfen, müssen angepasst werden** (Liste der Schlüssel:
+  `translations/de.json`). Im Verlauf stehen ältere Einträge mit dem alten Text.
+- **Deutsch und Englisch:** Entity-Namen, Zustände, Gerätenamen und
+  Fehlermeldungen folgen der Sprache von Home Assistant. Dabei sind auch die
+  Schreibweisen geglättet („Rücklauftemperatur“, „Außentemperatur“,
+  „Kühlbetrieb“). Entity-IDs bleiben unverändert; selbst vergebene Namen auch.
+
 - **Diagnosedaten:** *Geräte & Dienste → Bösch → ⋮ → Diagnose herunterladen*
   liefert Rohregister, Web-Datenpunkte und Verbindungsstatus. IP, Passwort und
   Seriennummern sind geschwärzt – hilfreich für Fehlerberichte.

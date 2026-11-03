@@ -108,14 +108,12 @@ class BoeschWebMixer(BoeschWebEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 0
-    _attr_icon = "mdi:valve"
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(
             coordinator,
             entry,
             "boesch_hb_hk1_mischer",
-            "HB HK1 Mischer-Öffnung",
             DP_HK1_MIXER_POSITION,
         )
 
@@ -137,7 +135,6 @@ class BoeschWebSeasonTemperature(BoeschWebEntity, SensorEntity):
             coordinator,
             entry,
             "boesch_hb_saison_aussentemperatur",
-            "HB Saison-Außentemperatur",
             DP_SEASON_OUTDOOR_TEMPERATURE,
         )
 

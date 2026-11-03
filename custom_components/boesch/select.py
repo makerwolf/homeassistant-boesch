@@ -11,8 +11,8 @@ from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
 from .registers import Kind, Reg
 from .web_client import DP_HK1_HEATING_WATER_MODE, TYPE_INT32
 
-# Heizmodus HK1 (Texte wie im Webinterface).
-HEIZMODUS = {0: "Außentemperaturkurve", 1: "Festwert", 2: "Aus"}
+# Heizmodus HK1 (Anzeigetexte wie im Webinterface, siehe translations/).
+HEIZMODUS = {0: "curve", 1: "fixed", 2: "off"}
 
 
 # Schreibzugriffe nacheinander (eine gemeinsame Modbus-/Web-Verbindung).
@@ -37,12 +37,12 @@ async def async_setup_entry(
 
 
 class BoeschSelect(BoeschEntity, SelectEntity):
-    """Schreibbarer Modus (Klartext ↔ Registercode)."""
+    """Schreibbarer Modus (Zustandsschlüssel ↔ Registercode)."""
 
     def __init__(self, coordinator, reg: Reg, entry) -> None:
         super().__init__(coordinator, reg, entry)
         self._attr_options = list(reg.options.values())
-        # Rückabbildung Klartext -> Registercode.
+        # Rückabbildung Zustandsschlüssel -> Registercode.
         self._code_by_option = {label: code for code, label in reg.options.items()}
 
     @property
@@ -60,14 +60,11 @@ class BoeschSelect(BoeschEntity, SelectEntity):
 class BoeschWebHeizmodus(BoeschWebEntity, SelectEntity):
     """Heizmodus HK1: Sollwert aus Außentemperaturkurve oder Festwert."""
 
-    _attr_icon = "mdi:home-thermometer"
-
     def __init__(self, coordinator, entry) -> None:
         super().__init__(
             coordinator,
             entry,
             "boesch_hb_hk1_heizmodus",
-            "HB HK1 Heizmodus",
             DP_HK1_HEATING_WATER_MODE,
         )
         self._attr_options = list(HEIZMODUS.values())

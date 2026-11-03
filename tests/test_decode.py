@@ -10,7 +10,7 @@ from custom_components.boesch.registers import REGISTERS, DeviceKey, Reg
 
 
 def _reg(address: int = 0, **kwargs) -> Reg:
-    return Reg(key=f"k{address}", name="n", device=DeviceKey.WANDA, address=address, **kwargs)
+    return Reg(key=f"k{address}", device=DeviceKey.WANDA, address=address, **kwargs)
 
 
 @pytest.mark.parametrize(

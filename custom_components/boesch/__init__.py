@@ -27,6 +27,7 @@ from .const import (
     DEFAULT_SCAN_SETPOINT,
     DEFAULT_WANDA_ADDRESS,
     DEFAULT_WEB_POWER,
+    DOMAIN,
     POLL_LIVE,
     SCAN_DEFAULT_BY_GROUP,
     SCAN_OPTION_BY_GROUP,
@@ -70,7 +71,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bo
 
     client = BoeschModbusClient(host, port)
     if not await client.async_connect():
-        raise ConfigEntryNotReady(f"Verbindung zu {host}:{port} fehlgeschlagen")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host, "port": str(port)},
+        )
 
     unit_by_device = {
         DeviceKey.WANDA: entry.data.get(CONF_WANDA_ADDRESS, DEFAULT_WANDA_ADDRESS),
