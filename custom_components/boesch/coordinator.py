@@ -197,17 +197,19 @@ class BoeschCoordinator(DataUpdateCoordinator[dict[str, float | int | None]]):
                 translation_placeholders={"error": str(err)},
             ) from err
         if self._web_power is not None:
-            await self._apply_web_power(data)
+            await self._apply_web_power(self._web_power, data)
         return data
 
-    async def _apply_web_power(self, data: dict[str, float | int | None]) -> None:
+    async def _apply_web_power(
+        self, web_power: WebPowerSource, data: dict[str, float | int | None]
+    ) -> None:
         """Modbus-Leistungen durch die Web-Werte ersetzen, falls verfügbar.
 
         Rückfall pro Poll: schlägt das Webinterface fehl oder fehlt ein Wert,
         bleibt der Modbus-Wert stehen – die Energiezähler laufen weiter.
         """
         try:
-            values = await self._web_power.async_read()
+            values = await web_power.async_read()
         except WebError as err:
             _LOGGER.debug("Web-Leistung nicht verfügbar, nutze Modbus: %s", err)
             return
@@ -260,6 +262,7 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
         self._client = client
+        self._entry_id = entry.entry_id
         self._unit_by_device = unit_by_device
         self._device_id: str | None = None
         # Geräteliste des x-center (für Geräteinfo und Diagnostics).
@@ -268,7 +271,7 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             if self._device_id is None:
-                await self._async_load_devices()
+                self._device_id = await self._async_load_devices()
             data = await self._client.async_read(
                 self._device_id, WEB_DATAPOINTS_HYDROBOX
             )
@@ -288,14 +291,13 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
         return data
 
-    async def _async_load_devices(self) -> None:
-        """Geräteliste lesen, DeviceId der Hydrobox merken, Geräteinfo ergänzen."""
+    async def _async_load_devices(self) -> str:
+        """Geräteliste lesen, Geräteinfo ergänzen; liefert die DeviceId der Hydrobox."""
         self.devices = await self._client.async_get_devices()
         by_address = {str(d.get("Address") or ""): d for d in self.devices}
         hydrobox = by_address.get(str(self._unit_by_device[DeviceKey.HYDROBOX]))
         if hydrobox is None:
             raise WebError("Hydrobox nicht im Webinterface gefunden")
-        self._device_id = hydrobox["DeviceId"]
 
         addresses = {
             DeviceKey.MANAGER: "",
@@ -306,11 +308,12 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if (device := by_address.get(address)) is None:
                 continue
             registry.async_get_or_create(
-                config_entry_id=self.config_entry.entry_id,
-                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{key.value}")},
+                config_entry_id=self._entry_id,
+                identifiers={(DOMAIN, f"{self._entry_id}_{key.value}")},
                 serial_number=device.get("Serial"),
                 sw_version=device.get("SoftwareVersion"),
             )
+        return str(hydrobox["DeviceId"])
 
     async def async_write(self, config_id: str, value_type: str, value: Any) -> None:
         """Datenpunkt schreiben, danach sofortiger Refresh."""

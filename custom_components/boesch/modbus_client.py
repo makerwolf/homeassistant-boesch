@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
+from typing import Any
 
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ModbusException
@@ -67,8 +68,9 @@ class BoeschModbusClient:
         async with self._lock:
             await self._ensure_connected()
             try:
+                unit_arg: dict[str, Any] = {self._unit_kw: unit}
                 result = await self._client.read_holding_registers(
-                    address, count=count, **{self._unit_kw: unit}
+                    address, count=count, **unit_arg
                 )
             except ModbusException as err:
                 # Neuere pymodbus-Versionen werfen bei Timeout/Abbruch, statt
@@ -88,8 +90,9 @@ class BoeschModbusClient:
         async with self._lock:
             await self._ensure_connected()
             try:
+                unit_arg: dict[str, Any] = {self._unit_kw: unit}
                 result = await self._client.write_register(
-                    address, value, **{self._unit_kw: unit}
+                    address, value, **unit_arg
                 )
             except ModbusException as err:
                 raise ModbusError(

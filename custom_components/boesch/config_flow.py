@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-import voluptuous as vol
+import probatio as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
@@ -66,7 +66,7 @@ async def _test_connection(host: str, port: int, wanda_unit: int) -> None:
         await client.async_close()
 
 
-async def _test_web(hass, host: str, hydrobox_unit: int, password: str) -> str | None:
+async def _test_web(hass: HomeAssistant, host: str, hydrobox_unit: int, password: str) -> str | None:
     """Webinterface-Login + Hydrobox-Suche testen; liefert Fehlerschlüssel oder None."""
     client = BoeschWebClient(async_get_clientsession(hass), host, password)
     try:
@@ -79,7 +79,7 @@ async def _test_web(hass, host: str, hydrobox_unit: int, password: str) -> str |
     return None
 
 
-def _web_password_field(current: str | None) -> dict:
+def _web_password_field(current: str | None) -> dict[Any, Any]:
     """Optionales Passwortfeld für das Webinterface (leer = aus)."""
     return {
         vol.Optional(
@@ -96,7 +96,7 @@ class BoeschConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_host: str | None = None
 
     @staticmethod
-    def _schema(defaults: dict[str, Any]) -> vol.Schema:
+    def _schema(defaults: Mapping[str, Any]) -> vol.Schema:
         return vol.Schema(
             {
                 # Kein Default: die IP ist in jedem Netz eine andere.

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
+from .coordinator import BoeschCoordinator, BoeschWebCoordinator
 from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
 from .registers import Kind, Reg
 from .web_client import (
@@ -72,7 +74,9 @@ class BoeschNumber(BoeschEntity, NumberEntity):
 
     _attr_mode = NumberMode.BOX
 
-    def __init__(self, coordinator, reg: Reg, entry) -> None:
+    def __init__(
+        self, coordinator: BoeschCoordinator, reg: Reg, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator, reg, entry)
         self._attr_native_unit_of_measurement = reg.unit
         if reg.device_class:
@@ -101,7 +105,8 @@ class BoeschWebFixedSetpoint(BoeschWebEntity, NumberEntity):
     _attr_native_step = 0.5
 
     def __init__(
-        self, coordinator, entry, key: str, config_id: str,
+        self, coordinator: BoeschWebCoordinator, entry: ConfigEntry, key: str,
+        config_id: str,
         min_value: float, max_value: float,
     ) -> None:
         super().__init__(coordinator, entry, key, config_id)
@@ -111,7 +116,8 @@ class BoeschWebFixedSetpoint(BoeschWebEntity, NumberEntity):
 
     @property
     def native_value(self) -> float | None:
-        return self._value
+        value = self._value
+        return None if value is None else float(value)
 
     async def async_set_native_value(self, value: float) -> None:
         await self.coordinator.async_write(self._config_id, TYPE_SINGLE, value)
@@ -127,7 +133,8 @@ class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, coordinator, entry, config_id: str, slug: str, x: int,
+        self, coordinator: BoeschWebCoordinator, entry: ConfigEntry,
+        config_id: str, slug: str, x: int,
         min_value: float = 0.0, max_value: float = 100.0,
     ) -> None:
         suffix = f"m{-x}" if x < 0 else f"p{x}" if x > 0 else "0"

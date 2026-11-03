@@ -7,12 +7,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
 from .const import CONF_AI_INPUTS
+from .coordinator import BoeschCoordinator, BoeschWebCoordinator
 from .energy import build_energy_entities
 from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
 from .registers import Kind, Reg
@@ -70,7 +72,13 @@ async def async_setup_entry(
 class BoeschSensor(BoeschEntity, SensorEntity):
     """Numerischer Messwert."""
 
-    def __init__(self, coordinator, reg: Reg, entry, name: str | None = None) -> None:
+    def __init__(
+        self,
+        coordinator: BoeschCoordinator,
+        reg: Reg,
+        entry: ConfigEntry,
+        name: str | None = None,
+    ) -> None:
         super().__init__(coordinator, reg, entry, name=name)
         self._attr_native_unit_of_measurement = reg.unit
         if reg.device_class:
@@ -90,16 +98,19 @@ class BoeschEnumSensor(BoeschEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENUM
 
-    def __init__(self, coordinator, reg: Reg, entry) -> None:
+    def __init__(
+        self, coordinator: BoeschCoordinator, reg: Reg, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator, reg, entry)
-        self._attr_options = list(reg.options.values())
+        self._options = reg.options or {}
+        self._attr_options = list(self._options.values())
 
     @property
     def native_value(self) -> str | None:
         value = self._value
         if value is None:
             return None
-        return self._reg.options.get(int(value))
+        return self._options.get(int(value))
 
 
 class BoeschWebMixer(BoeschWebEntity, SensorEntity):
@@ -109,7 +120,7 @@ class BoeschWebMixer(BoeschWebEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 0
 
-    def __init__(self, coordinator, entry) -> None:
+    def __init__(self, coordinator: BoeschWebCoordinator, entry: ConfigEntry) -> None:
         super().__init__(
             coordinator,
             entry,
@@ -119,7 +130,8 @@ class BoeschWebMixer(BoeschWebEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        return self._value
+        value = self._value
+        return None if value is None else float(value)
 
 
 class BoeschWebSeasonTemperature(BoeschWebEntity, SensorEntity):
@@ -130,7 +142,7 @@ class BoeschWebSeasonTemperature(BoeschWebEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 1
 
-    def __init__(self, coordinator, entry) -> None:
+    def __init__(self, coordinator: BoeschWebCoordinator, entry: ConfigEntry) -> None:
         super().__init__(
             coordinator,
             entry,
@@ -142,4 +154,4 @@ class BoeschWebSeasonTemperature(BoeschWebEntity, SensorEntity):
     def native_value(self) -> float | None:
         # Kommt als ungerundeter Float (z. B. 4.716547).
         value = self._value
-        return None if value is None else round(value, 2)
+        return None if value is None else round(float(value), 2)

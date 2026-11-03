@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL_HYDROBOX, MODEL_MANAGER, MODEL_WANDA
 from .coordinator import BoeschCoordinator, BoeschWebCoordinator
 from .registers import DeviceKey, Reg
+
+if TYPE_CHECKING:
+    from . import BoeschConfigEntry
 
 _MODEL_BY_DEVICE = {
     DeviceKey.WANDA: MODEL_WANDA,
@@ -28,7 +35,9 @@ def translation_key(unique_id: str) -> str:
     return unique_id.removeprefix("boesch_")
 
 
-def assign_entity_ids(entry: ConfigEntry, entities, platform: str) -> None:
+def assign_entity_ids(
+    entry: BoeschConfigEntry, entities: Iterable[Entity], platform: str
+) -> None:
     """entity_id = <platform>.<unique_id> setzen und die Entity vormerken.
 
     Damit erhalten NEUE Installationen direkt das kompakte boesch_-Schema
@@ -119,7 +128,7 @@ class BoeschWebEntity(CoordinatorEntity[BoeschWebCoordinator]):
         self._attr_device_info = build_device_info(entry, device)
 
     @property
-    def _value(self):
+    def _value(self) -> Any:
         """Aktueller Rohwert des Datenpunkts (oder None)."""
         return (self.coordinator.data or {}).get(self._config_id)
 

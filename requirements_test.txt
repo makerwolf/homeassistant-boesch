@@ -3,3 +3,4 @@
 # manifest.json (HA installiert es sonst erst beim Laden der Integration).
 pytest-homeassistant-custom-component
 pymodbus>=3.6.0
+mypy

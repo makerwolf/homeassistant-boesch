@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
+from .coordinator import BoeschCoordinator, BoeschWebCoordinator
 from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
 from .registers import Kind, Reg
 from .web_client import DP_HK1_HEATING_WATER_MODE, TYPE_INT32
@@ -39,18 +41,21 @@ async def async_setup_entry(
 class BoeschSelect(BoeschEntity, SelectEntity):
     """Schreibbarer Modus (Zustandsschlüssel ↔ Registercode)."""
 
-    def __init__(self, coordinator, reg: Reg, entry) -> None:
+    def __init__(
+        self, coordinator: BoeschCoordinator, reg: Reg, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator, reg, entry)
-        self._attr_options = list(reg.options.values())
+        self._options = reg.options or {}
+        self._attr_options = list(self._options.values())
         # Rückabbildung Zustandsschlüssel -> Registercode.
-        self._code_by_option = {label: code for code, label in reg.options.items()}
+        self._code_by_option = {label: code for code, label in self._options.items()}
 
     @property
     def current_option(self) -> str | None:
         value = self._value
         if value is None:
             return None
-        return self._reg.options.get(int(value))
+        return self._options.get(int(value))
 
     async def async_select_option(self, option: str) -> None:
         code = self._code_by_option[option]
@@ -60,7 +65,7 @@ class BoeschSelect(BoeschEntity, SelectEntity):
 class BoeschWebHeizmodus(BoeschWebEntity, SelectEntity):
     """Heizmodus HK1: Sollwert aus Außentemperaturkurve oder Festwert."""
 
-    def __init__(self, coordinator, entry) -> None:
+    def __init__(self, coordinator: BoeschWebCoordinator, entry: ConfigEntry) -> None:
         super().__init__(
             coordinator,
             entry,

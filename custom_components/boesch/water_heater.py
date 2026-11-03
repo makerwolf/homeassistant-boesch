@@ -10,18 +10,19 @@ Der Einmalladungs-Zielwert (104) bleibt eine separate number-Entity daneben.
 
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import Any
 
-from homeassistant.components.water_heater import (
-    WaterHeaterEntity,
-    WaterHeaterEntityFeature,
-)
+from homeassistant.components.water_heater import WaterHeaterEntity
+from homeassistant.components.water_heater.const import WaterHeaterEntityFeature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
+from .coordinator import BoeschCoordinator
 from .entity import BoeschEntity, assign_entity_ids
+from .registers import Reg
 
 # Register-Keys, die die water_heater-Entity bündelt.
 KEY_CURRENT = "boesch_hb_twe_ist"          # 100
@@ -59,17 +60,21 @@ class BoeschWaterHeater(BoeschEntity, WaterHeaterEntity):
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
-    _attr_operation_list: ClassVar[list[str]] = [OP_NORMAL, OP_BOOST]
 
-    def __init__(self, coordinator, target_reg, entry) -> None:
+    def __init__(
+        self, coordinator: BoeschCoordinator, target_reg: Reg, entry: ConfigEntry
+    ) -> None:
         # Anker = Zielwert-Register (102) — liefert device_info + Verfügbarkeit.
         super().__init__(coordinator, target_reg, entry)
         self._attr_unique_id = "boesch_hb_twe"
+        self._attr_operation_list = [OP_NORMAL, OP_BOOST]
         self._attr_translation_key = "hb_twe"
         self._target_reg = target_reg
         self._boost_reg = {r.key: r for r in coordinator.regs}[KEY_BOOST]
-        self._attr_min_temp = target_reg.min_value
-        self._attr_max_temp = target_reg.max_value
+        if target_reg.min_value is not None:
+            self._attr_min_temp = target_reg.min_value
+        if target_reg.max_value is not None:
+            self._attr_max_temp = target_reg.max_value
         self._attr_target_temperature_step = target_reg.scale
 
     @property

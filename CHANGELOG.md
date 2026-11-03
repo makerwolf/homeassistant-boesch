@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+- ⚠️ **Mindestens Home Assistant 2026.9:** Der Einrichtungsdialog nutzt jetzt
+  probatio, die Validierungs-Bibliothek, die HA seit 2026.9 statt voluptuous
+  verwendet.
+
 - ⚠️ **Breaking – Zustände sind jetzt Schlüssel:** Status-Sensoren, Selects und
   der Trinkwasser-Modus speichern feste englische Schlüssel statt deutschem
   Klartext, z. B. `heating` statt „Heizen“, `eco` statt „Eco“,

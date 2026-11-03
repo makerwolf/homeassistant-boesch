@@ -5,10 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
+from .coordinator import BoeschCoordinator, BoeschWebCoordinator
 from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
 from .registers import DeviceKey, Kind, Reg
 from .web_client import DP_SYSTEM_IS_PRESENT, TYPE_BOOLEAN
@@ -37,7 +39,9 @@ async def async_setup_entry(
 class BoeschSwitch(BoeschEntity, SwitchEntity):
     """Schreibbares 0/1-Flag."""
 
-    def __init__(self, coordinator, reg: Reg, entry) -> None:
+    def __init__(
+        self, coordinator: BoeschCoordinator, reg: Reg, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator, reg, entry)
 
     @property
@@ -57,7 +61,7 @@ class BoeschSwitch(BoeschEntity, SwitchEntity):
 class BoeschWebPresence(BoeschWebEntity, SwitchEntity):
     """Anwesenheitsstatus des Wärmepumpenmanagers (an = anwesend)."""
 
-    def __init__(self, coordinator, entry) -> None:
+    def __init__(self, coordinator: BoeschWebCoordinator, entry: ConfigEntry) -> None:
         super().__init__(
             coordinator,
             entry,

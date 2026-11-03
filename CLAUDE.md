@@ -98,7 +98,9 @@ water_heater-Modi sind englische Schlüssel (Breaking Change, bewusst in Kauf
 genommen 2026-11-03). `tests/test_translations.py` prüft, dass jede Entity und
 jeder Zustand in beiden Sprachen steht – neue Entity = Eintrag in allen drei
 JSON-Dateien.
-Platin offen: `mypy --strict` (Stand 2026-11-03: 124 Fehler) plus CI-Schritt.
+Platin erfüllt: `mypy --strict` fehlerfrei (`mypy.ini`, läuft in CI im Job
+„Tests“). Config-Flow nutzt `probatio` (HA-Ersatz für voluptuous seit 2026.9)
+→ Mindestversion HA 2026.9 in `hacs.json`.
 
 ## Release-Ablauf
 

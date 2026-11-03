@@ -129,36 +129,39 @@ class Reg:
 
 # Kürzel-Helfer für die häufigsten Muster ------------------------------------
 
-def _temp(key, dev, addr, group=POLL_DEFAULT, *, mn=-50.0, mx=150.0,
-          writable=False, feature=None):
+def _temp(key: str, dev: DeviceKey, addr: int, group: str = POLL_DEFAULT, *,
+          mn: float = -50.0, mx: float = 150.0, writable: bool = False,
+          feature: str | None = None) -> Reg:
     return Reg(key=key, device=dev, address=addr, poll_group=group,
                data_type="int16", scale=0.1, precision=1, unit="°C",
                device_class="temperature", state_class="measurement",
                min_value=mn, max_value=mx, writable=writable, feature=feature)
 
 
-def _power(key, dev, addr, group=POLL_LIVE):
+def _power(key: str, dev: DeviceKey, addr: int, group: str = POLL_LIVE) -> Reg:
     return Reg(key=key, device=dev, address=addr, poll_group=group,
                data_type="int16", scale=0.1, precision=2, unit="kW",
                device_class="power", state_class="measurement",
                min_value=0.0, max_value=100.0)
 
 
-def _cop(key, dev, addr, group=POLL_LIVE):
+def _cop(key: str, dev: DeviceKey, addr: int, group: str = POLL_LIVE) -> Reg:
     return Reg(key=key, device=dev, address=addr, poll_group=group,
                data_type="int16", scale=0.1, precision=2,
                state_class="measurement", min_value=0.0, max_value=20.0)
 
 
-def _enum(key, dev, addr, options, group=POLL_DEFAULT, *,
-          writable=False, feature=None):
+def _enum(key: str, dev: DeviceKey, addr: int, options: dict[int, str],
+          group: str = POLL_DEFAULT, *, writable: bool = False,
+          feature: str | None = None) -> Reg:
     return Reg(key=key, device=dev, address=addr, kind=Kind.ENUM,
                poll_group=group, options=options, min_value=min(options),
                max_value=max(options), writable=writable, feature=feature)
 
 
-def _binary(key, dev, addr, group=POLL_SETPOINT, *, threshold=0.0,
-            device_class=None, feature=None):
+def _binary(key: str, dev: DeviceKey, addr: int, group: str = POLL_SETPOINT, *,
+            threshold: float = 0.0, device_class: str | None = None,
+            feature: str | None = None) -> Reg:
     return Reg(key=key, device=dev, address=addr, kind=Kind.BINARY,
                poll_group=group, on_threshold=threshold, device_class=device_class,
                feature=feature)
@@ -169,31 +172,36 @@ def _binary(key, dev, addr, group=POLL_SETPOINT, *, threshold=0.0,
 # Eingabegrenze der Entity. Der Schreib-Rohwert wird in coordinator.py aus scale
 # zurückgerechnet.
 
-def _number(key, dev, addr, group=POLL_SETPOINT, *, data_type="int16",
-            scale=1.0, precision=None, unit=None, device_class=None,
-            mn=None, mx=None, feature=None, category=None):
+def _number(key: str, dev: DeviceKey, addr: int, group: str = POLL_SETPOINT, *,
+            data_type: str = "int16", scale: float = 1.0,
+            precision: int | None = None, unit: str | None = None,
+            device_class: str | None = None, mn: float | None = None,
+            mx: float | None = None, feature: str | None = None,
+            category: str | None = None) -> Reg:
     return Reg(key=key, device=dev, address=addr, kind=Kind.NUMBER,
                poll_group=group, data_type=data_type, scale=scale, precision=precision,
                unit=unit, device_class=device_class, min_value=mn, max_value=mx,
                writable=True, feature=feature, entity_category=category)
 
 
-def _tnum(key, dev, addr, mn, mx, group=POLL_SETPOINT, *, feature=None,
-          category=None):
+def _tnum(key: str, dev: DeviceKey, addr: int, mn: float, mx: float,
+          group: str = POLL_SETPOINT, *, feature: str | None = None,
+          category: str | None = None) -> Reg:
     """Schreibbarer Temperatur-Sollwert (°C, scale 0.1)."""
     return _number(key, dev, addr, group, scale=0.1, precision=1, unit="°C",
                    device_class="temperature", mn=mn, mx=mx, feature=feature,
                    category=category)
 
 
-def _select(key, dev, addr, options, group=POLL_SETPOINT, *,
-            feature=None):
+def _select(key: str, dev: DeviceKey, addr: int, options: dict[int, str],
+            group: str = POLL_SETPOINT, *, feature: str | None = None) -> Reg:
     return Reg(key=key, device=dev, address=addr, kind=Kind.SELECT,
                poll_group=group, options=options, min_value=min(options),
                max_value=max(options), writable=True, feature=feature)
 
 
-def _switch(key, dev, addr, group=POLL_SETPOINT, *, feature=None):
+def _switch(key: str, dev: DeviceKey, addr: int, group: str = POLL_SETPOINT, *,
+            feature: str | None = None) -> Reg:
     return Reg(key=key, device=dev, address=addr, kind=Kind.SWITCH,
                poll_group=group, min_value=0.0, max_value=1.0, writable=True,
                feature=feature)
@@ -370,7 +378,7 @@ REGISTERS += [
 
 def registers_for(enable_hk2: bool, enable_wez: bool) -> list[Reg]:
     """Registerliste, gefiltert nach aktivierten Features."""
-    result = []
+    result: list[Reg] = []
     for reg in REGISTERS:
         if reg.feature == FEATURE_HK2 and not enable_hk2:
             continue

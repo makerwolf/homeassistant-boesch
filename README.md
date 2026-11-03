@@ -46,6 +46,8 @@ TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
 
 ## Installation (HACS)
 
+Voraussetzung: Home Assistant **2026.9** oder neuer.
+
 1. HACS → Integrationen → ⋮ → *Benutzerdefinierte Repositories*
 2. `https://github.com/makerwolf/homeassistant-boesch` als Kategorie
    **Integration** hinzufügen.

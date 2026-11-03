@@ -149,7 +149,7 @@ class BoeschWebClient:
         """DeviceId (GUID) des Geräts mit der gegebenen Modbus-Adresse."""
         for device in await self.async_get_devices():
             if str(device.get("Address")) == str(address):
-                return device["DeviceId"]
+                return str(device["DeviceId"])
         raise WebError(f"Kein Gerät mit Adresse {address} im Webinterface")
 
     async def async_read(self, device_id: str, config_ids: list[str]) -> dict[str, Any]:

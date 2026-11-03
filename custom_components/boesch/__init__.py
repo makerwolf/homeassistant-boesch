@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -203,7 +204,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if new_uid.startswith("boesch_wp_"):
                 new_uid = "boesch_wanda_" + new_uid[len("boesch_wp_"):]
             new_eid = f"{reg_entry.domain}.{new_uid}"
-            updates: dict[str, str] = {}
+            updates: dict[str, Any] = {}
             if new_uid != reg_entry.unique_id:
                 updates["new_unique_id"] = new_uid
             if new_eid != reg_entry.entity_id and registry.async_get(new_eid) is None:

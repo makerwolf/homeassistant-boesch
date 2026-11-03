@@ -12,6 +12,8 @@ in EINEM Coordinator — daran werden die Sensoren gebunden.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
@@ -76,7 +78,7 @@ class BoeschEnergySensor(CoordinatorEntity[BoeschCoordinator], RestoreSensor):
         self._attr_device_info = build_device_info(entry, DeviceKey.WANDA)
         self._energy: float = 0.0
         self._last_power: float | None = None
-        self._last_time = None
+        self._last_time: datetime | None = None
 
     @property
     def energy(self) -> float:
@@ -88,7 +90,7 @@ class BoeschEnergySensor(CoordinatorEntity[BoeschCoordinator], RestoreSensor):
         last = await self.async_get_last_sensor_data()
         if last is not None and last.native_value is not None:
             try:
-                self._energy = float(last.native_value)
+                self._energy = float(str(last.native_value))
             except (TypeError, ValueError):
                 self._energy = 0.0
         # Timing initialisieren, ohne die Lücke seit Neustart zu integrieren.

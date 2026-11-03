@@ -6,14 +6,14 @@ Problem-Binary abgeleitet — beide teilen sich denselben Modbus-Read.
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor.const import BinarySensorDeviceClass
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
+from .coordinator import BoeschCoordinator
 from .entity import BoeschEntity, assign_entity_ids
 from .registers import Kind, Reg
 
@@ -51,7 +51,9 @@ async def async_setup_entry(
 class BoeschBinarySensor(BoeschEntity, BinarySensorEntity):
     """0/1-Flag als Binary-Sensor (is_on = value > on_threshold)."""
 
-    def __init__(self, coordinator, reg: Reg, entry) -> None:
+    def __init__(
+        self, coordinator: BoeschCoordinator, reg: Reg, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator, reg, entry)
         if reg.device_class:
             self._attr_device_class = BinarySensorDeviceClass(reg.device_class)
@@ -69,7 +71,9 @@ class BoeschAlarmBinarySensor(BoeschEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
-    def __init__(self, coordinator, reg: Reg, entry) -> None:
+    def __init__(
+        self, coordinator: BoeschCoordinator, reg: Reg, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator, reg, entry)
         # Eigene unique_id/Name, nicht die des Quell-Sensors.
         self._attr_unique_id = "boesch_wanda_alarm_bs"
@@ -88,7 +92,9 @@ class BoeschCompressorBinarySensor(BoeschEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
 
-    def __init__(self, coordinator, reg: Reg, entry) -> None:
+    def __init__(
+        self, coordinator: BoeschCoordinator, reg: Reg, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator, reg, entry)
         # Eigene unique_id/Name, nicht die des Quell-Sensors (el. Leistung).
         self._attr_unique_id = "boesch_wanda_verdichter_laeuft"
