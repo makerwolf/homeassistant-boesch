@@ -1,7 +1,7 @@
 # Bösch – Home Assistant Integration
 
 [![hacs](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-![version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+[![version](https://img.shields.io/github/v/release/makerwolf/homeassistant-boesch)](https://github.com/makerwolf/homeassistant-boesch/releases)
 ![license](https://img.shields.io/badge/license-MIT-green.svg)
 
 Eine eigenständige, per UI konfigurierbare Home-Assistant-Integration für
@@ -9,8 +9,8 @@ Wärmepumpen von **[Bösch](https://www.boesch.at/)** (Heizbösch), angebunden �
 **Modbus TCP**. Sie kapselt die gesamte Modbus-Kommunikation in einer einzigen
 TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
 
-> **Unterstützte Geräte:** Bösch **WANDA 10** + **Hydrobox**.
-> Weitere Bösch-Geräte lassen sich über das Registermodell ergänzen.
+> **Unterstützte Geräte:** ausschließlich Bösch **WANDA 10** mit **Hydrobox**.
+> Andere Wärmepumpen werden nicht unterstützt, und das ist auch nicht geplant.
 
 > ⚠️ Inoffizielles Community-Projekt, **nicht** mit der Bösch Heizsysteme GmbH
 > verbunden oder von ihr unterstützt. Nutzung auf eigene Verantwortung.
@@ -315,9 +315,8 @@ Zwei weitere per Verlauf verifizierte Abweichungen von der Doku:
 
 ## Bekannte Einschränkungen
 
-- Getestet mit **WANDA 10 + Hydrobox**. Andere Bösch-Geräte auf derselben
-  Plattform (Kermi x-center) funktionieren vermutlich teilweise, sind aber
-  nicht verifiziert.
+- Nur für **WANDA 10 + Hydrobox** entwickelt und getestet. Andere Wärmepumpen,
+  auch andere Bösch- oder Kermi-Geräte, werden nicht unterstützt.
 - **Modbus schneidet Leistungen auf 0,1 kW ab** (el. Leistung im Mittel
   ~3,5 % zu niedrig). Abhilfe: hochauflösende Leistung übers Webinterface.
 - Hydrobox-Register **301** ist in der Bösch-Doku dreifach vergeben (Pumpe 2,

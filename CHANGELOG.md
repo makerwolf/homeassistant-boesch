@@ -5,10 +5,13 @@
 
 ## [Unreleased]
 
+## [2026.11.0] – Diagnose, Übersetzungen & Typisierung
+
+Ab jetzt Versionsnummern nach Datum (Jahr.Monat.Nummer) wie bei Home Assistant.
+
 - ⚠️ **Mindestens Home Assistant 2026.9:** Der Einrichtungsdialog nutzt jetzt
   probatio, die Validierungs-Bibliothek, die HA seit 2026.9 statt voluptuous
   verwendet.
-
 - ⚠️ **Breaking – Zustände sind jetzt Schlüssel:** Status-Sensoren, Selects und
   der Trinkwasser-Modus speichern feste englische Schlüssel statt deutschem
   Klartext, z. B. `heating` statt „Heizen“, `eco` statt „Eco“,
@@ -20,7 +23,6 @@
   Fehlermeldungen folgen der Sprache von Home Assistant. Dabei sind auch die
   Schreibweisen geglättet („Rücklauftemperatur“, „Außentemperatur“,
   „Kühlbetrieb“). Entity-IDs bleiben unverändert; selbst vergebene Namen auch.
-
 - **Diagnosedaten:** *Geräte & Dienste → Bösch → ⋮ → Diagnose herunterladen*
   liefert Rohregister, Web-Datenpunkte und Verbindungsstatus. IP, Passwort und
   Seriennummern sind geschwärzt – hilfreich für Fehlerberichte.

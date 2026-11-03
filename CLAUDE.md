@@ -104,6 +104,11 @@ Platin erfüllt: `mypy --strict` fehlerfrei (`mypy.ini`, läuft in CI im Job
 
 ## Release-Ablauf
 
+Versionsformat seit 2026-11: **Datum `JJJJ.M.N`** wie bei Home Assistant
+(erstes Release im Monat `.0`, weitere `.1`, `.2` …; z. B. `2026.11.0`). Davor
+Semver bis 0.6.0. Breaking Changes erkennt man nicht an der Nummer → im
+CHANGELOG mit „⚠️ **Breaking**“ markieren.
+
 Nutzer-sichtbare Änderungen laufend in `CHANGELOG.md` unter `## [Unreleased]`
 eintragen (Stil: kurze Stichpunkte für Nutzer, kein Entwickler-Kram). Beim
 Release:
