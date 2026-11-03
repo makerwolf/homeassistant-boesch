@@ -63,7 +63,7 @@ async def async_setup_entry(
             )
             for x in COOLING_CURVE_X
         )
-    assign_entity_ids(entities, "number")
+    assign_entity_ids(entry, entities, "number")
     async_add_entities(entities)
 
 

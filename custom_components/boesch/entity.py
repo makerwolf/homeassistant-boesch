@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import CONF_HOST, EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -37,16 +37,20 @@ def short_name(name: str) -> str:
     return name
 
 
-def assign_entity_ids(entities, platform: str) -> None:
-    """entity_id = <platform>.<unique_id> setzen.
+def assign_entity_ids(entry: ConfigEntry, entities, platform: str) -> None:
+    """entity_id = <platform>.<unique_id> setzen und die Entity vormerken.
 
     Damit erhalten NEUE Installationen direkt das kompakte boesch_-Schema
     (z. B. sensor.boesch_wanda_b16_vorlauf) statt der aus dem Namen erzeugten
     Standard-ID. Für bereits registrierte Entities gewinnt ohnehin die Registry
-    (deren IDs werden per async_migrate_entry umgezogen)."""
+    (deren IDs werden per async_migrate_entry umgezogen).
+
+    Vorgemerkte Entities überleben das Aufräumen verwaister Registry-Einträge
+    nach dem Setup (siehe __init__._async_remove_stale)."""
     for entity in entities:
         if entity.unique_id:
             entity.entity_id = f"{platform}.{entity.unique_id}"
+            entry.runtime_data.entity_keys.add((platform, entity.unique_id))
 
 
 def build_device_info(entry: ConfigEntry, device: DeviceKey) -> DeviceInfo:
@@ -57,6 +61,7 @@ def build_device_info(entry: ConfigEntry, device: DeviceKey) -> DeviceInfo:
         name=_DEVICE_NAME[device],
         manufacturer=MANUFACTURER,
         model=_MODEL_BY_DEVICE[device],
+        configuration_url=f"http://{entry.data[CONF_HOST]}",
     )
 
 
@@ -84,6 +89,7 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
             self._attr_icon = reg.icon
         if reg.entity_category:
             self._attr_entity_category = EntityCategory(reg.entity_category)
+        self._attr_entity_registry_enabled_default = reg.enabled_default
         self._attr_device_info = build_device_info(entry, reg.device)
 
     @property

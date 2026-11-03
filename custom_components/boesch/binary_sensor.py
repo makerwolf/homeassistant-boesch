@@ -44,7 +44,7 @@ async def async_setup_entry(
                 entities.append(BoeschAlarmBinarySensor(coordinator, reg, entry))
             if reg.key == _COMPRESSOR_SOURCE_KEY:
                 entities.append(BoeschCompressorBinarySensor(coordinator, reg, entry))
-    assign_entity_ids(entities, "binary_sensor")
+    assign_entity_ids(entry, entities, "binary_sensor")
     async_add_entities(entities)
 
 

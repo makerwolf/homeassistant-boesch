@@ -17,7 +17,11 @@ from custom_components.boesch.const import (
     DOMAIN,
 )
 from custom_components.boesch.modbus_client import ModbusError
-from custom_components.boesch.web_client import WebAuthError, WebError
+from custom_components.boesch.web_client import (
+    MANAGER_DEVICE_ID,
+    WebAuthError,
+    WebError,
+)
 
 WANDA = 40
 HYDROBOX = 50
@@ -112,6 +116,17 @@ class FakeWebClient:
 
     async def async_login(self) -> None:
         self._check()
+
+    async def async_get_devices(self) -> list[dict[str, Any]]:
+        self._check()
+        return [
+            {"DeviceId": MANAGER_DEVICE_ID, "Address": "", "Serial": "S-WPM",
+             "SoftwareVersion": "1.6.5.44"},
+            {"DeviceId": "dev40", "Address": "40", "Serial": "S-WANDA",
+             "SoftwareVersion": "1.1.2.39"},
+            {"DeviceId": "dev50", "Address": "50", "Serial": "S-HB",
+             "SoftwareVersion": "1.1.1.20"},
+        ]
 
     async def async_get_device_id(self, address: int) -> str:
         self._check()

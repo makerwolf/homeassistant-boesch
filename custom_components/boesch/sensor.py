@@ -63,7 +63,7 @@ async def async_setup_entry(
         entities.append(BoeschWebMixer(web, entry))
         entities.append(BoeschWebSeasonTemperature(web, entry))
 
-    assign_entity_ids(entities, "sensor")
+    assign_entity_ids(entry, entities, "sensor")
     async_add_entities(entities)
 
 

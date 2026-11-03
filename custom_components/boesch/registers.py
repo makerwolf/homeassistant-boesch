@@ -127,7 +127,8 @@ class Reg:
     writable: bool = False           # in der Bösch-Liste als R/W dokumentiert
     feature: str | None = None       # None | FEATURE_HK2 | FEATURE_WEZ
     icon: str | None = None
-    entity_category: str | None = None
+    entity_category: str | None = None  # None | "config" | "diagnostic"
+    enabled_default: bool = True     # False = neu angelegt, aber deaktiviert
     configurable: bool = False       # frei belegbarer Eingang: im Options-Flow
                                      # aktivier- und benennbar (siehe CONF_AI_INPUTS)
 
@@ -176,17 +177,19 @@ def _binary(key, name, dev, addr, group=POLL_SETPOINT, *, threshold=0.0,
 
 def _number(key, name, dev, addr, group=POLL_SETPOINT, *, data_type="int16",
             scale=1.0, precision=None, unit=None, device_class=None,
-            mn=None, mx=None, icon=None, feature=None):
+            mn=None, mx=None, icon=None, feature=None, category=None):
     return Reg(key=key, name=name, device=dev, address=addr, kind=Kind.NUMBER,
                poll_group=group, data_type=data_type, scale=scale, precision=precision,
                unit=unit, device_class=device_class, min_value=mn, max_value=mx,
-               writable=True, icon=icon, feature=feature)
+               writable=True, icon=icon, feature=feature, entity_category=category)
 
 
-def _tnum(key, name, dev, addr, mn, mx, group=POLL_SETPOINT, *, feature=None):
+def _tnum(key, name, dev, addr, mn, mx, group=POLL_SETPOINT, *, feature=None,
+          category=None):
     """Schreibbarer Temperatur-Sollwert (°C, scale 0.1)."""
     return _number(key, name, dev, addr, group, scale=0.1, precision=1, unit="°C",
-                   device_class="temperature", mn=mn, mx=mx, feature=feature)
+                   device_class="temperature", mn=mn, mx=mx, feature=feature,
+                   category=category)
 
 
 def _select(key, name, dev, addr, options, group=POLL_SETPOINT, *,
@@ -240,21 +243,24 @@ REGISTERS: list[Reg] = [
     Reg("boesch_wanda_laufzeit_seit_start", "WP Laufzeit seit Start", W, 152,
         poll_group=POLL_DEFAULT, data_type="uint16", scale=0.1, precision=1,
         unit="h", device_class="duration", state_class="measurement",
-        min_value=0.0, icon="mdi:timer-outline"),
+        min_value=0.0, icon="mdi:timer-outline", entity_category="diagnostic",
+        enabled_default=False),
 
     # ---- Status / Alarm ----
     _enum("boesch_wanda_status", "WP Status", W, 200, WP_STATUS, POLL_LIVE, icon="mdi:heat-pump"),
     Reg("boesch_wanda_alarmcode", "WP AlarmCode", W, 250, poll_group=POLL_DEFAULT,
-        min_value=0.0),
+        min_value=0.0, entity_category="diagnostic"),
 
     # ---- PV Modulation ----
     _binary("boesch_wanda_pv_modulation", "WP PV Modulation", W, 300, POLL_DEFAULT,
             icon="mdi:solar-power"),
     _number("boesch_wanda_pv_leistung", "WP PV Modulation Leistung", W, 301, POLL_DEFAULT,
             data_type="uint16", scale=0.1, precision=1, unit="W",
-            device_class="power", mn=0.0, mx=6553.0),
-    _tnum("boesch_wanda_pv_soll_heizen", "WP PV Solltemp Heizen", W, 302, 0.0, 100.0),
-    _tnum("boesch_wanda_pv_soll_twe", "WP PV Solltemp TWE", W, 303, 0.0, 100.0),
+            device_class="power", mn=0.0, mx=6553.0, category="config"),
+    _tnum("boesch_wanda_pv_soll_heizen", "WP PV Solltemp Heizen", W, 302, 0.0, 100.0,
+          category="config"),
+    _tnum("boesch_wanda_pv_soll_twe", "WP PV Solltemp TWE", W, 303, 0.0, 100.0,
+          category="config"),
 
     # =================  HYDROBOX (device 50)  =================
     # ---- Speicher Heizen / Kühlen / TWE ----
@@ -290,10 +296,10 @@ REGISTERS: list[Reg] = [
             mn=-5.0, mx=5.0, icon="mdi:tune-vertical"),
     _select("boesch_hb_hk1_saison", "HB HK1 Manuelle Saisonauswahl", H, 157, SAISON,
             icon="mdi:calendar-sync"),
-    _tnum("boesch_hb_hk1_sommer_aus", "HB HK1 Sommerbetrieb Heizen Aus", H, 158, 0.0, 50.0),
-    _tnum("boesch_hb_hk1_winter_ein", "HB HK1 Winterbetrieb Heizen Ein", H, 159, 0.0, 50.0),
-    _tnum("boesch_hb_hk1_kuehl_ein", "HB HK1 Kuehlbetrieb Ein", H, 160, 0.0, 50.0),
-    _tnum("boesch_hb_hk1_kuehl_aus", "HB HK1 Kuehlbetrieb Aus", H, 161, 0.0, 50.0),
+    _tnum("boesch_hb_hk1_sommer_aus", "HB HK1 Sommerbetrieb Heizen Aus", H, 158, 0.0, 50.0, category="config"),
+    _tnum("boesch_hb_hk1_winter_ein", "HB HK1 Winterbetrieb Heizen Ein", H, 159, 0.0, 50.0, category="config"),
+    _tnum("boesch_hb_hk1_kuehl_ein", "HB HK1 Kuehlbetrieb Ein", H, 160, 0.0, 50.0, category="config"),
+    _tnum("boesch_hb_hk1_kuehl_aus", "HB HK1 Kuehlbetrieb Aus", H, 161, 0.0, 50.0, category="config"),
     _binary("boesch_hb_hk1_sommer", "HB HK1 Sommerbetrieb", H, 162, icon="mdi:weather-sunny"),
     _binary("boesch_hb_hk1_kuehl", "HB HK1 Kuehlbetrieb", H, 163, icon="mdi:snowflake"),
 
@@ -313,13 +319,13 @@ REGISTERS: list[Reg] = [
     _select("boesch_hb_hk2_saison", "HB HK2 Manuelle Saisonauswahl", H, 182, SAISON,
             icon="mdi:calendar-sync", feature=FEATURE_HK2),
     _tnum("boesch_hb_hk2_sommer_aus", "HB HK2 Sommerbetrieb Heizen Aus", H, 183, 0.0, 50.0,
-          feature=FEATURE_HK2),
+          feature=FEATURE_HK2, category="config"),
     _tnum("boesch_hb_hk2_winter_ein", "HB HK2 Winterbetrieb Heizen Ein", H, 184, 0.0, 50.0,
-          feature=FEATURE_HK2),
+          feature=FEATURE_HK2, category="config"),
     _tnum("boesch_hb_hk2_kuehl_ein", "HB HK2 Kuehlbetrieb Ein", H, 185, 0.0, 50.0,
-          feature=FEATURE_HK2),
+          feature=FEATURE_HK2, category="config"),
     _tnum("boesch_hb_hk2_kuehl_aus", "HB HK2 Kuehlbetrieb Aus", H, 186, 0.0, 50.0,
-          feature=FEATURE_HK2),
+          feature=FEATURE_HK2, category="config"),
     _binary("boesch_hb_hk2_sommer", "HB HK2 Sommerbetrieb", H, 187,
             icon="mdi:weather-sunny", feature=FEATURE_HK2),
     _binary("boesch_hb_hk2_kuehl", "HB HK2 Kuehlbetrieb", H, 188,
@@ -356,7 +362,7 @@ for _key, _name, _addr in AI_INPUTS:
         key=_key, name=f"HB {_name} Temperatur", device=H, address=_addr,
         poll_group=POLL_SETPOINT, data_type="int16", scale=0.1, precision=1,
         unit="°C", device_class="temperature", state_class="measurement",
-        configurable=True,
+        configurable=True, entity_category="diagnostic",
     ))
 
 REGISTERS += [
@@ -370,11 +376,13 @@ REGISTERS += [
     # der Zaehler steigt ~1:1 mit der Uhr (+5 pro 5 min Echtzeit).
     Reg("boesch_hb_hkp1_laufzeit", "HB Heizkreispumpe 1 Laufzeit", H, 300,
         poll_group=POLL_HOURS, data_type="uint16", unit="min",
-        device_class="duration", state_class="total_increasing", min_value=0.0),
+        device_class="duration", state_class="total_increasing", min_value=0.0,
+        entity_category="diagnostic"),
     # Doku vergibt 301 dreifach (HKP2, Ext.WEZ1-1, Ext.WEZ1-2) - bei Bösch prüfen.
     Reg("boesch_hb_hkp2_laufzeit", "HB Heizkreispumpe 2 Laufzeit", H, 301,
         poll_group=POLL_HOURS, data_type="uint16", unit="min",
-        device_class="duration", state_class="total_increasing", min_value=0.0),
+        device_class="duration", state_class="total_increasing", min_value=0.0,
+        entity_category="diagnostic", enabled_default=False),
 ]
 
 

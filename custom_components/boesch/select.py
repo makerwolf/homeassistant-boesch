@@ -32,7 +32,7 @@ async def async_setup_entry(
                 entities.append(BoeschSelect(coordinator, reg, entry))
     if web := entry.runtime_data.web:
         entities.append(BoeschWebHeizmodus(web, entry))
-    assign_entity_ids(entities, "select")
+    assign_entity_ids(entry, entities, "select")
     async_add_entities(entities)
 
 

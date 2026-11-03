@@ -77,8 +77,22 @@ Bronze und Silver erfüllt (eigene Einschätzung; offiziell nur für Core):
 Reauth-Flow fürs Web-Passwort (`WebAuthError` → `ConfigEntryAuthFailed`),
 Config-Flow-Tests 100 %, Gesamtabdeckung > 95 % (`pytest --cov`).
 
-Für Gold offen: Diagnostics, Übersetzungen (Entity-Namen, Icons, Fehler),
-Repair-Issues, Aufräumen verwaister Entities beim Abschalten von HK2/WEZ.
+Gold ohne Übersetzungen erledigt: Diagnostics (`diagnostics.py`, Rohblöcke
+aus `BoeschCoordinator.raw_blocks`), Seriennummer/Firmware aus
+`Device/GetAllDevices` per Web-Coordinator ins Device-Registry,
+`configuration_url`, `Reg.entity_category`/`Reg.enabled_default`, Aufräumen
+verwaister Entities/Geräte nach dem Setup (`_async_remove_stale` gegen
+`runtime_data.entity_keys`, gefüllt von `assign_entity_ids` – neue Entities
+deshalb immer darüber anlegen, sonst werden sie beim nächsten Start gelöscht),
+`async_remove_config_entry_device`, Doku-Abschnitte im README.
+Bewusst ausgenommen: `dynamic-devices` (feste Hardware), `repair-issues`
+(einziger vom Nutzer behebbarer Fall = Passwort, deckt Reauth ab).
+
+Für Gold offen (Phase 2): Übersetzungen für Entity-Namen, Icons
+(`icons.json`) und Fehlermeldungen. **Entschieden (2026-11-03):** alles
+übersetzen, auch Enum-/Select-Zustände (Breaking Change für Automationen auf
+Klartext-Zustände; in Kauf genommen, da praktisch keine weiteren Nutzer).
+Platin offen: `mypy --strict` (Stand 2026-11-03: 124 Fehler) plus CI-Schritt.
 
 ## Release-Ablauf
 

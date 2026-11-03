@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -58,6 +59,8 @@ class BoeschRuntimeData:
     unit_by_device: dict[DeviceKey, int]
     # Nur gesetzt, wenn im Options-Flow ein Web-Passwort hinterlegt ist.
     web: BoeschWebCoordinator | None = None
+    # (Plattform, unique_id) aller angelegten Entities (assign_entity_ids).
+    entity_keys: set[tuple[str, str]] = field(default_factory=set)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bool:
@@ -131,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bo
             entry,
             web_client,
             entry.options.get(CONF_SCAN_SETPOINT, DEFAULT_SCAN_SETPOINT),
-            unit_by_device[DeviceKey.HYDROBOX],
+            unit_by_device,
         )
         await web.async_refresh()
 
@@ -139,8 +142,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bo
         client, coordinators, unit_by_device, web
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _async_remove_stale(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
+
+
+def _async_remove_stale(hass: HomeAssistant, entry: BoeschConfigEntry) -> None:
+    """Verwaiste Registry-Einträge entfernen.
+
+    Wer HK2, den externen WEZ, einen Fühlereingang oder das Web-Passwort
+    abschaltet, bekommt die zugehörigen Entities nicht mehr angelegt; ohne
+    Aufräumen blieben sie als "nicht verfügbar" stehen. Danach fallen Geräte
+    ohne Entities weg (z. B. der Wärmepumpenmanager ohne Webinterface).
+    """
+    keys = entry.runtime_data.entity_keys
+    ent_reg = er.async_get(hass)
+    for reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        if (reg_entry.domain, reg_entry.unique_id) not in keys:
+            _LOGGER.debug("Entferne verwaiste Entity %s", reg_entry.entity_id)
+            ent_reg.async_remove(reg_entry.entity_id)
+
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        if not er.async_entries_for_device(
+            ent_reg, device.id, include_disabled_entities=True
+        ):
+            dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: BoeschConfigEntry, device: dr.DeviceEntry
+) -> bool:
+    """Gerät manuell löschen erlauben, solange keine aktive Entity daran hängt."""
+    keys = entry.runtime_data.entity_keys
+    return not any(
+        (reg_entry.domain, reg_entry.unique_id) in keys
+        for reg_entry in er.async_entries_for_device(
+            er.async_get(hass), device.id, include_disabled_entities=True
+        )
+    )
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

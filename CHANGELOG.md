@@ -5,6 +5,24 @@
 
 ## [Unreleased]
 
+- **Diagnosedaten:** *Geräte & Dienste → Bösch → ⋮ → Diagnose herunterladen*
+  liefert Rohregister, Web-Datenpunkte und Verbindungsstatus. IP, Passwort und
+  Seriennummern sind geschwärzt – hilfreich für Fehlerberichte.
+- **Geräteinfo:** Mit Web-Passwort zeigen WANDA, Hydrobox und
+  Wärmepumpenmanager Seriennummer und Firmware; „Gerät besuchen" öffnet das
+  Webinterface.
+- **Aufgeräumte Geräteseite:** Laufzeiten, Alarmcode und Fühlereingänge stehen
+  unter *Diagnose*, Saison-Schwellen und PV-Sollwerte unter *Konfiguration*.
+  Bei Neuinstallation sind `sensor.boesch_wanda_laufzeit_seit_start` und
+  `sensor.boesch_hb_hkp2_laufzeit` deaktiviert (bestehende bleiben, wie sie
+  sind).
+- **Keine Leichen mehr:** Wer HK2, den externen WEZ, einen Fühlereingang oder
+  das Web-Passwort abschaltet, bekommt die zugehörigen Entities und ggf. das
+  Gerät Wärmepumpenmanager entfernt, statt sie als „nicht verfügbar" zu
+  behalten. Übrig gebliebene Geräte lassen sich von Hand löschen.
+- **README:** Abschnitte zu Datenaktualisierung, Anwendungsbeispielen,
+  bekannten Einschränkungen, Fehlerbehebung und Entfernen.
+
 ## [0.6.0] – Hochauflösende Leistung, Mischer & Anwesenheit
 
 - **Hochauflösende Leistungswerte (optional):** Neuer Haken unter

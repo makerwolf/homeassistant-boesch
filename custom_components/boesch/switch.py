@@ -30,7 +30,7 @@ async def async_setup_entry(
                 entities.append(BoeschSwitch(coordinator, reg, entry))
     if web := entry.runtime_data.web:
         entities.append(BoeschWebPresence(web, entry))
-    assign_entity_ids(entities, "switch")
+    assign_entity_ids(entry, entities, "switch")
     async_add_entities(entities)
 
 

@@ -123,6 +123,71 @@ Prozent nach oben.
 Die Web-API ist inoffiziell (aus der Web-Oberfläche abgeleitet) und kann sich
 mit Firmware-Updates ändern.
 
+Mit Web-Passwort zeigen die Geräte außerdem **Seriennummer und Firmware**;
+„Gerät besuchen" öffnet das Webinterface.
+
+**Kategorien:** Laufzeiten, Alarmcode und die rohen Fühlereingänge stehen unter
+*Diagnose*, Saison-Schwellen, PV-Sollwerte und Kurven-Stützpunkte unter
+*Konfiguration*. Zwei selten gebrauchte Sensoren werden **deaktiviert**
+angelegt und lassen sich in den Entity-Einstellungen einschalten:
+`sensor.boesch_wanda_laufzeit_seit_start` und `sensor.boesch_hb_hkp2_laufzeit`
+(Register 301 ist in der Doku mehrfach vergeben, siehe unten).
+
+Wer HK2, den externen WEZ, einen Fühlereingang oder das Web-Passwort wieder
+abschaltet, bekommt die zugehörigen Entities (und ggf. das Gerät
+Wärmepumpenmanager) automatisch entfernt.
+
+## Datenaktualisierung
+
+Die Integration fragt die Wärmepumpe zyklisch ab (`local_polling`), es gibt
+keine Push-Meldungen. Je Intervall-Klasse läuft ein eigener Abruf, Standard
+15 / 30 / 60 / 300 s (siehe *Optionen*). Zusammenhängende Register werden als
+Block gelesen, eine komplette Runde sind nur wenige Modbus-Anfragen. Die
+Webinterface-Werte laufen im Takt der Sollwerte (60 s), die hochauflösenden
+Leistungen im Live-Takt. Nach jedem Schreiben wird sofort neu gelesen.
+
+## Anwendungsbeispiele
+
+**Trinkwasser mit PV-Überschuss laden** (Einspeise-Sensor anpassen):
+
+```yaml
+automation:
+  - alias: "WP: TWE-Einmalladung bei PV-Überschuss"
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.netz_einspeisung   # W, positiv = Einspeisung
+        above: 2500
+        for: "00:10:00"
+    conditions:
+      - condition: state
+        entity_id: water_heater.boesch_hb_twe
+        state: "Normal"
+    actions:
+      - action: water_heater.set_operation_mode
+        target:
+          entity_id: water_heater.boesch_hb_twe
+        data:
+          operation_mode: "Einmalladung"
+```
+
+**Anwesenheit an den Wärmepumpenmanager melden** (braucht Web-Passwort):
+
+```yaml
+automation:
+  - alias: "WP: Anwesenheit"
+    triggers:
+      - trigger: state
+        entity_id: zone.home
+    actions:
+      - action: "switch.turn_{{ 'on' if states('zone.home') | int > 0 else 'off' }}"
+        target:
+          entity_id: switch.boesch_wpm_anwesenheit
+```
+
+Weitere Ideen: Energiemodus `select.boesch_hb_hk1_energiemodus` nachts auf
+*Eco*, Parallelverschiebung `number.boesch_hb_hk1_parallel` bei günstigem
+Strompreis anheben, Benachrichtigung bei `binary_sensor.boesch_wanda_alarm_bs`.
+
 ## Energie & Effizienz (Energy Dashboard)
 
 Aus den momentanen Leistungen (kW) werden per trapezförmiger Zeit-Integration
@@ -235,12 +300,59 @@ Zwei weitere per Verlauf verifizierte Abweichungen von der Doku:
   (> 0) abgeleitet.
 - **Heizkreispumpen-Laufzeit** (300/301) ist in **Minuten**, nicht Stunden.
 
-## Offene Punkte
+## Bekannte Einschränkungen
 
-- Hydrobox-Register 301 ist in der Bösch-Doku dreifach vergeben (Pumpe 2,
+- Getestet mit **WANDA 10 + Hydrobox**. Andere Bösch-Geräte auf derselben
+  Plattform (Kermi x-center) funktionieren vermutlich teilweise, sind aber
+  nicht verifiziert.
+- **Modbus schneidet Leistungen auf 0,1 kW ab** (el. Leistung im Mittel
+  ~3,5 % zu niedrig). Abhilfe: hochauflösende Leistung übers Webinterface.
+- Hydrobox-Register **301** ist in der Bösch-Doku dreifach vergeben (Pumpe 2,
   ext. WEZ) – reale Belegung noch zu klären.
-- Außentemperatur: die Doku nennt 275/276, je nach Anlage liegt sie auf einem
-  AI-Eingang (z. B. AI8) – über die konfigurierbaren Fühlereingänge abbildbar.
+- **Außentemperatur:** die Doku nennt 275/276, je nach Anlage liegt sie auf
+  einem AI-Eingang (z. B. AI8) – über die konfigurierbaren Fühlereingänge
+  abbildbar.
+- Übers Webinterface eingebunden ist nur **Heizkreis 1**; Heizmodus, Festwert
+  und Kurven von HK2 fehlen noch. Die Web-API ist inoffiziell.
+- Die Heiz- und Kühlkurve lassen sich nur als Ganzes schreiben. Die
+  Integration liest sie vor jeder Änderung frisch, gleichzeitige Änderungen in
+  der Web-Oberfläche können trotzdem kollidieren.
+
+## Fehlerbehebung
+
+- **„Verbindung fehlgeschlagen" im Setup:** IP prüfen, Modbus TCP muss am
+  Wärmepumpenmanager aktiv sein (Port 502). Viele Modbus-Gateways erlauben
+  nur wenige gleichzeitige Verbindungen – andere Modbus-Clients (z. B. eine
+  alte `modbus:`-YAML-Konfiguration für dieselbe IP) abschalten.
+- **Werte um Faktor 10 daneben oder Fühler zeigt Unsinn:** Fühlereingänge sind
+  bewusst ungekappt; ein unbelegter Eingang zeigt einen offensichtlich
+  falschen Wert. Den Eingang in den Optionen leeren.
+- **„Erneut authentifizieren" erscheint:** Das Web-Passwort wurde geändert.
+  Auf die Meldung klicken und das neue Passwort eingeben.
+- **Web-Entities „nicht verfügbar":** Webinterface im Browser prüfen; Modbus-
+  Entities laufen davon unabhängig weiter.
+- **Diagnosedaten:** *Einstellungen → Geräte & Dienste → Bösch → ⋮ →
+  Diagnose herunterladen*. Enthält Rohregister und Web-Datenpunkte, IP,
+  Passwort und Seriennummern sind geschwärzt – gern an ein Issue anhängen.
+- **Debug-Log:** in derselben Ansicht *Debug-Protokollierung aktivieren*,
+  oder dauerhaft:
+
+  ```yaml
+  logger:
+    logs:
+      custom_components.boesch: debug
+  ```
+
+## Entfernen
+
+1. *Einstellungen → Geräte & Dienste → Bösch → ⋮ → Löschen*. Geräte und
+   Entities werden entfernt, die Historie bleibt in der Datenbank.
+2. Bei Installation über HACS: *HACS → Bösch → ⋮ → Entfernen*, sonst den
+   Ordner `<config>/custom_components/boesch/` löschen.
+3. Home Assistant neu starten.
+
+Selbst angelegte Helfer (z. B. `utility_meter` für die JAZ) und Automationen
+bleiben bestehen und müssen bei Bedarf von Hand gelöscht werden.
 
 ## Credits
 

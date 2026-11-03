@@ -16,6 +16,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MAX_BLOCK_GAP, MAX_BLOCK_SIZE
@@ -165,6 +166,8 @@ class BoeschCoordinator(DataUpdateCoordinator[dict[str, float | int | None]]):
         self._unit_by_device = unit_by_device
         self._reg_by_key = {r.key: r for r in regs}
         self._web_power = web_power
+        # Zuletzt gelesene Rohblöcke {"<unit>:<start>": [roh, ...]} (Diagnostics).
+        self.raw_blocks: dict[str, list[int]] = {}
         # Pro Gerät die Blöcke einmalig vorab berechnen.
         self._plan: dict[DeviceKey, list[tuple[int, int]]] = {}
         self._regs_by_device: dict[DeviceKey, list[Reg]] = {}
@@ -182,6 +185,7 @@ class BoeschCoordinator(DataUpdateCoordinator[dict[str, float | int | None]]):
                 dev_regs = self._regs_by_device[device]
                 for start, count in blocks:
                     raw = await self._client.read_block(start, count, unit)
+                    self.raw_blocks[f"{unit}:{start}"] = raw
                     for reg in dev_regs:
                         idx = reg.address - start
                         if 0 <= idx < len(raw):
@@ -228,7 +232,8 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     Daten: {DatapointConfigId: Value}. Die DeviceId der Hydrobox wird beim
     ersten Poll über ihre Modbus-Adresse nachgeschlagen; der Manager hat immer
-    die Null-GUID.
+    die Null-GUID. Bei der Gelegenheit kommen Seriennummer und Firmware der
+    Geräte ins Device-Registry.
     """
 
     def __init__(
@@ -237,7 +242,7 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         entry: ConfigEntry,
         client: BoeschWebClient,
         interval: int,
-        hydrobox_unit: int,
+        unit_by_device: dict[DeviceKey, int],
     ) -> None:
         super().__init__(
             hass,
@@ -247,15 +252,15 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
         self._client = client
-        self._hydrobox_unit = hydrobox_unit
+        self._unit_by_device = unit_by_device
         self._device_id: str | None = None
+        # Geräteliste des x-center (für Geräteinfo und Diagnostics).
+        self.devices: list[dict[str, Any]] = []
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             if self._device_id is None:
-                self._device_id = await self._client.async_get_device_id(
-                    self._hydrobox_unit
-                )
+                await self._async_load_devices()
             data = await self._client.async_read(
                 self._device_id, WEB_DATAPOINTS_HYDROBOX
             )
@@ -268,6 +273,30 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except WebError as err:
             raise UpdateFailed(str(err)) from err
         return data
+
+    async def _async_load_devices(self) -> None:
+        """Geräteliste lesen, DeviceId der Hydrobox merken, Geräteinfo ergänzen."""
+        self.devices = await self._client.async_get_devices()
+        by_address = {str(d.get("Address") or ""): d for d in self.devices}
+        hydrobox = by_address.get(str(self._unit_by_device[DeviceKey.HYDROBOX]))
+        if hydrobox is None:
+            raise WebError("Hydrobox nicht im Webinterface gefunden")
+        self._device_id = hydrobox["DeviceId"]
+
+        addresses = {
+            DeviceKey.MANAGER: "",
+            **{key: str(unit) for key, unit in self._unit_by_device.items()},
+        }
+        registry = dr.async_get(self.hass)
+        for key, address in addresses.items():
+            if (device := by_address.get(address)) is None:
+                continue
+            registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{key.value}")},
+                serial_number=device.get("Serial"),
+                sw_version=device.get("SoftwareVersion"),
+            )
 
     async def async_write(self, config_id: str, value_type: str, value: Any) -> None:
         """Datenpunkt schreiben, danach sofortiger Refresh."""

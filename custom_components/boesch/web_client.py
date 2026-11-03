@@ -137,10 +137,17 @@ class BoeschWebClient:
                 return data.get("ResponseData")
         raise WebError(f"{path}: keine gültige Session")  # pragma: no cover
 
+    async def async_get_devices(self) -> list[dict[str, Any]]:
+        """Alle Geräte des x-center (Manager, WANDA, Hydrobox).
+
+        Je Gerät u. a. `DeviceId`, `Address` (Modbus-Adresse, beim Manager
+        leer), `Name`, `Serial`, `SoftwareVersion`.
+        """
+        return await self._request("GET", "Device/GetAllDevices") or []
+
     async def async_get_device_id(self, address: int) -> str:
         """DeviceId (GUID) des Geräts mit der gegebenen Modbus-Adresse."""
-        devices = await self._request("GET", "Device/GetAllDevices")
-        for device in devices or []:
+        for device in await self.async_get_devices():
             if str(device.get("Address")) == str(address):
                 return device["DeviceId"]
         raise WebError(f"Kein Gerät mit Adresse {address} im Webinterface")

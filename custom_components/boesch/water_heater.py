@@ -46,7 +46,7 @@ async def async_setup_entry(
         regs_by_key = {r.key: r for r in coordinator.regs}
         if KEY_TARGET in regs_by_key:
             entities = [BoeschWaterHeater(coordinator, regs_by_key[KEY_TARGET], entry)]
-            assign_entity_ids(entities, "water_heater")
+            assign_entity_ids(entry, entities, "water_heater")
             async_add_entities(entities)
             return
 
