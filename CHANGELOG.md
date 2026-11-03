@@ -23,6 +23,8 @@
   - Ist das Webinterface kurz nicht erreichbar, gelten für diesen Abruf
     automatisch die Modbus-Werte.
 - **Neue Web-Entities** (mit Web-Passwort):
+  - `number.boesch_hb_hk1_kuehlkurve_p15` … `_p40` – die 5 Stützpunkte der
+    Kühlkurve HK1 (bei 15 / 25 / 30 / 35 / 40 °C Außentemperatur)
   - `sensor.boesch_hb_hk1_mischer` – Mischer-Öffnung HK1 (%)
   - `sensor.boesch_hb_saison_aussentemperatur` – Außentemperatur, nach der die
     Saisonumschaltung schaltet

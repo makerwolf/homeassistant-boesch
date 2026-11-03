@@ -65,6 +65,7 @@ _NAMES = {
     wc.DP_HK1_HEATING_WATER_MODE: "Heizmodus HK1 (0 Kurve / 1 Festwert / 2 Aus)",
     wc.DP_HK1_FIXED_SETPOINT_HEATING: "Konstanter Sollwert Heizkreis HK1",
     wc.DP_HK1_HEATING_CURVE: "Stützpunkte Heizkurve HK1",
+    "b8555de8-2a45-4d7a-bbf4-005104c8c798": "Stützpunkte Kühlkurve HK1",
 }
 
 

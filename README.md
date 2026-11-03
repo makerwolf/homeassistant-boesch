@@ -30,7 +30,7 @@ TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
 - **Webinterface (optional)**: Einstellungen, die per Modbus fehlen, über das
   Webinterface der Wärmepumpe (Kermi x-center): Heizmodus HK1
   (Außentemperaturkurve / Festwert / Aus), Festwert Heizen und Kühlen, die
-  9 Stützpunkte der Heizkurve, Mischer-Öffnung, Saison-Außentemperatur und
+  Stützpunkte von Heiz- und Kühlkurve, Mischer-Öffnung, Saison-Außentemperatur und
   Anwesenheitsstatus – optional
   auch hochauflösende Leistungswerte (0,01 statt 0,1 kW) für genauere
   Energiezähler.
@@ -105,6 +105,7 @@ Wärmepumpenmanager**):
 | `number.boesch_hb_hk1_festwert` | Konstanter Vorlauf-Sollwert Heizen (0–100 °C) |
 | `number.boesch_hb_hk1_festwert_kuehlen` | Konstanter Sollwert Kühlen (5–30 °C) |
 | `number.boesch_hb_hk1_heizkurve_m20` … `_p20` | Vorlauf-Sollwert bei −20 … +20 °C Außentemperatur (9 Stützpunkte) |
+| `number.boesch_hb_hk1_kuehlkurve_p15` … `_p40` | Kühl-Vorlauf-Sollwert bei 15 / 25 / 30 / 35 / 40 °C Außentemperatur (5 Stützpunkte, 5–30 °C) |
 | `sensor.boesch_hb_hk1_mischer` | Mischer-Öffnung HK1 (%) |
 | `sensor.boesch_hb_saison_aussentemperatur` | Außentemperatur, nach der die Saisonumschaltung (Sommer/Winter/Kühlen) schaltet |
 | `switch.boesch_wpm_anwesenheit` | Anwesenheitsstatus des Wärmepumpenmanagers (an = anwesend) |

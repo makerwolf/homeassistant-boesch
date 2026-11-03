@@ -11,14 +11,16 @@ from . import BoeschConfigEntry
 from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
 from .registers import Kind, Reg
 from .web_client import (
+    DP_HK1_COOLING_CURVE,
     DP_HK1_FIXED_SETPOINT_COOLING,
     DP_HK1_FIXED_SETPOINT_HEATING,
     DP_HK1_HEATING_CURVE,
     TYPE_SINGLE,
 )
 
-# Außentemperaturen der Heizkurven-Stützpunkte (fest in der Kermi-Firmware).
+# Außentemperaturen der Kurven-Stützpunkte (fest in der Kermi-Firmware).
 CURVE_X = (-20, -15, -10, -5, 0, 5, 10, 15, 20)
+COOLING_CURVE_X = (15, 25, 30, 35, 40)
 
 
 async def async_setup_entry(
@@ -45,7 +47,18 @@ async def async_setup_entry(
                 DP_HK1_FIXED_SETPOINT_COOLING, 5.0, 30.0, "mdi:snowflake-thermometer",
             )
         )
-        entities.extend(BoeschWebCurvePoint(web, entry, x) for x in CURVE_X)
+        entities.extend(
+            BoeschWebCurvePoint(web, entry, DP_HK1_HEATING_CURVE, "heizkurve", "Heizkurve", x)
+            for x in CURVE_X
+        )
+        # Kühlkurve: Grenzen wie beim Festwert Kühlen (5-30 °C).
+        entities.extend(
+            BoeschWebCurvePoint(
+                web, entry, DP_HK1_COOLING_CURVE, "kuehlkurve", "Kühlkurve", x,
+                5.0, 30.0,
+            )
+            for x in COOLING_CURVE_X
+        )
     assign_entity_ids(entities, "number")
     async_add_entities(entities)
 
@@ -102,28 +115,31 @@ class BoeschWebFixedSetpoint(BoeschWebEntity, NumberEntity):
 
 
 class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
-    """Ein Stützpunkt der Heizkurve HK1: Vorlauf-Sollwert bei Außentemperatur x."""
+    """Ein Stützpunkt einer Kurve HK1: Vorlauf-Sollwert bei Außentemperatur x."""
 
     _attr_mode = NumberMode.BOX
     _attr_device_class = NumberDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    # Die Firmware gibt für die Kurve keine Grenzen vor -> wie beim Festwert.
-    _attr_native_min_value = 0.0
-    _attr_native_max_value = 100.0
     _attr_native_step = 0.5
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:chart-bell-curve-cumulative"
 
-    def __init__(self, coordinator, entry, x: int) -> None:
+    def __init__(
+        self, coordinator, entry, config_id: str, slug: str, label: str, x: int,
+        min_value: float = 0.0, max_value: float = 100.0,
+    ) -> None:
         suffix = f"m{-x}" if x < 0 else f"p{x}" if x > 0 else "0"
         super().__init__(
             coordinator,
             entry,
-            f"boesch_hb_hk1_heizkurve_{suffix}",
-            f"HB HK1 Heizkurve bei {x} °C",
-            DP_HK1_HEATING_CURVE,
+            f"boesch_hb_hk1_{slug}_{suffix}",
+            f"HB HK1 {label} bei {x} °C",
+            config_id,
         )
         self._x = x
+        # Die Firmware gibt für Kurven keine Grenzen vor -> wie beim Festwert.
+        self._attr_native_min_value = min_value
+        self._attr_native_max_value = max_value
 
     @property
     def native_value(self) -> float | None:
@@ -135,4 +151,4 @@ class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
         return super().available and self.native_value is not None
 
     async def async_set_native_value(self, value: float) -> None:
-        await self.coordinator.async_write_curve_point(self._x, value)
+        await self.coordinator.async_write_curve_point(self._config_id, self._x, value)

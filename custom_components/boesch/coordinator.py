@@ -22,6 +22,7 @@ from .const import DOMAIN, MAX_BLOCK_GAP, MAX_BLOCK_SIZE
 from .modbus_client import BoeschModbusClient, ModbusError
 from .registers import DeviceKey, Reg
 from .web_client import (
+    DP_HK1_COOLING_CURVE,
     DP_HK1_FIXED_SETPOINT_COOLING,
     DP_HK1_FIXED_SETPOINT_HEATING,
     DP_HK1_HEATING_CURVE,
@@ -51,6 +52,7 @@ WEB_DATAPOINTS_HYDROBOX = [
     DP_HK1_FIXED_SETPOINT_HEATING,
     DP_HK1_FIXED_SETPOINT_COOLING,
     DP_HK1_HEATING_CURVE,
+    DP_HK1_COOLING_CURVE,
     DP_HK1_MIXER_POSITION,
     DP_SEASON_OUTDOOR_TEMPERATURE,
 ]
@@ -273,8 +275,8 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise HomeAssistantError(str(err)) from err
         await self.async_request_refresh()
 
-    async def async_write_curve_point(self, x: float, y: float) -> None:
-        """Einen Stützpunkt der Heizkurve HK1 ändern.
+    async def async_write_curve_point(self, config_id: str, x: float, y: float) -> None:
+        """Einen Stützpunkt einer Kurve (Heiz- oder Kühlkurve) ändern.
 
         Die Kurve wird nur als Ganzes geschrieben. Deshalb vorher frisch lesen,
         damit eine zwischenzeitliche Änderung in der Web-Oberfläche nicht mit
@@ -283,15 +285,13 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._device_id is None:
             raise HomeAssistantError("Webinterface nicht verbunden")
         try:
-            values = await self._client.async_read(
-                self._device_id, [DP_HK1_HEATING_CURVE]
-            )
+            values = await self._client.async_read(self._device_id, [config_id])
         except WebError as err:
             raise HomeAssistantError(str(err)) from err
-        curve = values.get(DP_HK1_HEATING_CURVE)
+        curve = values.get(config_id)
         points = (curve or {}).get("CurveValues") or []
         point = next((p for p in points if p.get("XValue") == x), None)
         if point is None:
-            raise HomeAssistantError(f"Heizkurve hat keinen Stützpunkt bei {x:g} °C")
+            raise HomeAssistantError(f"Kurve hat keinen Stützpunkt bei {x:g} °C")
         point["YValue"] = y
-        await self.async_write(DP_HK1_HEATING_CURVE, TYPE_CURVE, curve)
+        await self.async_write(config_id, TYPE_CURVE, curve)

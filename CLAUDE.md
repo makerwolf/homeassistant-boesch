@@ -100,7 +100,7 @@ Optional per Web-Passwort im Setup oder später unter Optionen → „Webinterfa
   wird nur als Ganzes geschrieben → vorher frisch lesen.
 
 Eingebunden (nur was Modbus nicht hat): Heizmodus HK1 (Kurve/Festwert/Aus),
-Festwert Heizen und Kühlen HK1, Heizkurve HK1, Mischer-Öffnung HK1
+Festwert Heizen und Kühlen HK1, Heiz- und Kühlkurve HK1, Mischer-Öffnung HK1
 (`HeatingCircuit_MixerPosition`; Mischer-Modus/-Konfig/-Laufzeit sind für
 Benutzerlevel 10 gesperrt), Saison-Außentemperatur, Anwesenheit (`System_IsPresent`, schreibbar, am
 Wärmepumpenmanager = DeviceId Null-GUID → eigenes Gerät `DeviceKey.MANAGER`).
@@ -167,7 +167,8 @@ nennenswerte Unterschiede zwischen Web und Modbus.
 | `HeatingCircuit_HeatingWaterMode` | Heizmodus HK1 | RW | – | **Web** | Kurve / Festwert / Aus |
 | `HeatingCircuit_FixedSetpointHeating` | Konstanter Sollwert Heizkreis HK1 | RW | – | **Web** | |
 | `HeatingCircuit_FixedSetpointCooling` | Konstanter Sollwert Kühlkreis HK1 | RW | – | **Web** | |
-| `HeatingCircuit_HeatingCurve` | Stützpunkte Heizkurve | RW | – | **Web** | `Curve2d`, nur als Ganzes schreibbar |
+| `HeatingCircuit_HeatingCurve` | Stützpunkte Heizkurve | RW | – | **Web** | `Curve2d`, 9 Punkte −20…+20 °C, nur als Ganzes schreibbar |
+| `HeatingCircuit_CoolingCurve` | Stützpunkte Kühlkurve | RW | – | **Web** | nicht im Mitschnitt, live gelesen; `Curve2d`, 5 Punkte bei 15/25/30/35/40 °C |
 | `HeatingCircuit_MixerPosition` | Mischer-Öffnung HK1 | R | – | **Web** | nicht im Mitschnitt, live gelesen; `…MixerMode` / `…ConfigMixingCircuit` / `…RuntimeMixer` für UL10 gesperrt |
 | `HeatingCircuit_Offset{Eco,Normal,Comfort,Custom}` (+ `…Cooling`) | Offsets HK1 (8×) | RW | – | später | −10…+10 K |
 | `HeatingCircuit_HeatExchangeType` | Wärmeübertrager HK1 | RW | – | später | |
@@ -204,8 +205,7 @@ nennenswerte Unterschiede zwischen Web und Modbus.
 | `DH_Led1` / `DH_Led2` / `DH_Output1` / `DH_Output2` / `DH_SendErrorToOutputs` | LEDs, Ausgänge | RW (UL20/30) | – | – | Installateur |
 | `ReferenceId`, `SystemSerialNo` | Referenz-Id, Seriennummer | RW (UL20/40) | – | – | |
 
-Außerdem für später, aber nicht im Mitschnitt: Kühlkurve HK1
-(`HeatingCircuit_CoolingCurve`), HK2-Pendants von Heizmodus/Festwert/Heizkurve
+Außerdem für später, aber nicht im Mitschnitt: HK2-Pendants von Heizmodus/Festwert/Heizkurve
 (IDs in `wellknown-datapoints.js`), Szenen (z. B. „Trinkwassererwärmung“
 ausführen/zurücksetzen), aktuelle Alarme.
 
