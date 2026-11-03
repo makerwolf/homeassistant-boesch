@@ -59,6 +59,20 @@ Leistungen 104–111, Status WP 200, TWE 100–104, Heizkreis 150/153/155/156.
 liest er aus 254/255, bei uns sind das Fühler-Rohwerte (T1/AI6) und die
 Außentemperatur steht in 275/276 (verifiziert).
 
+## Release-Ablauf
+
+Nutzer-sichtbare Änderungen laufend in `CHANGELOG.md` unter `## [Unreleased]`
+eintragen (Stil: kurze Stichpunkte für Nutzer, kein Entwickler-Kram). Beim
+Release:
+
+1. `## [Unreleased]` → `## [x.y.z] – <Titel>` umbenennen, neuen leeren
+   `## [Unreleased]`-Abschnitt darüber anlegen.
+2. `version` in `custom_components/boesch/manifest.json` setzen, Commit
+   „Version x.y.z“.
+3. Annotierter Tag `vx.y.z`, `main` + Tag pushen.
+4. `gh release create vx.y.z --title "vx.y.z – <Titel>" --notes-file <Abschnitt>`
+   (nur der Abschnitt der Version, ohne Überschrift).
+
 ## Offene Punkte
 
 1. **Register 301 Hydrobox** ist in der Bösch-Doku *dreifach* vergeben
