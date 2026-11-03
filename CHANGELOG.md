@@ -5,9 +5,7 @@
 
 ## [Unreleased]
 
-<!-- Geplant als v0.6.0 – Hochauflösende Leistung, Mischer & Anwesenheit.
-     Beim Release: Überschrift auf die Version umbenennen und diesen Abschnitt
-     als Release Notes verwenden (siehe CLAUDE.md, "Release-Ablauf"). -->
+## [0.6.0] – Hochauflösende Leistung, Mischer & Anwesenheit
 
 - **Hochauflösende Leistungswerte (optional):** Neuer Haken unter
   *Konfigurieren → Webinterface*. Die 8 Leistungssensoren der WANDA
