@@ -101,7 +101,9 @@ class BoeschWebClient:
             raise WebError(f"Login fehlgeschlagen: {err}") from err
         if not data.get("isValid"):
             raise WebAuthError("Passwort abgelehnt")
-        self._cookie = cookie.value if cookie else None
+        if not cookie:
+            raise WebError("Login ohne Session-Cookie")
+        self._cookie = cookie.value
 
     async def _request(self, method: str, path: str, payload: Any = None) -> Any:
         """API-Aufruf mit Auto-Login; gibt `ResponseData` zurück."""

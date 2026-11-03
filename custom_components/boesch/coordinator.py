@@ -213,9 +213,12 @@ class BoeschCoordinator(DataUpdateCoordinator[dict[str, float | int | None]]):
         int16-Werte als Zweierkomplement. Danach sofortiger Refresh, damit die
         Entity den bestätigten Gerätewert zeigt.
         """
-        raw = int(round(value / reg.scale)) & 0xFFFF
+        raw = round(value / reg.scale) & 0xFFFF
         unit = self._unit_by_device[reg.device]
-        await self._client.write_register(reg.address, raw, unit)
+        try:
+            await self._client.write_register(reg.address, raw, unit)
+        except ModbusError as err:
+            raise HomeAssistantError(str(err)) from err
         await self.async_request_refresh()
 
 

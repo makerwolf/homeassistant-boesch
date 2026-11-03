@@ -87,19 +87,26 @@ class BoeschEnergySensor(CoordinatorEntity[BoeschCoordinator], RestoreSensor):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if (last := await self.async_get_last_sensor_data()) is not None:
-            if last.native_value is not None:
-                try:
-                    self._energy = float(last.native_value)
-                except (TypeError, ValueError):
-                    self._energy = 0.0
+        last = await self.async_get_last_sensor_data()
+        if last is not None and last.native_value is not None:
+            try:
+                self._energy = float(last.native_value)
+            except (TypeError, ValueError):
+                self._energy = 0.0
         # Timing initialisieren, ohne die Lücke seit Neustart zu integrieren.
         self._last_power = self.coordinator.data.get(self._source_key)
         self._last_time = dt_util.utcnow()
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        power = self.coordinator.data.get(self._source_key)  # kW
+        # Nach einem fehlgeschlagenen Poll stehen in `data` noch die alten Werte.
+        # Wie "unavailable" behandeln, sonst würde beim nächsten Erfolg die
+        # ganze Ausfallzeit mit der alten Leistung mitintegriert.
+        power = (
+            self.coordinator.data.get(self._source_key)  # kW
+            if self.coordinator.last_update_success
+            else None
+        )
         now = dt_util.utcnow()
         if power is not None:
             if self._last_power is not None and self._last_time is not None:
@@ -109,7 +116,7 @@ class BoeschEnergySensor(CoordinatorEntity[BoeschCoordinator], RestoreSensor):
             self._last_power = power
             self._last_time = now
         else:
-            # Quelle unavailable: Lücke nicht integrieren.
+            # Quelle unavailable oder Poll fehlgeschlagen: Lücke nicht integrieren.
             self._last_power = None
             self._last_time = now
         super()._handle_coordinator_update()

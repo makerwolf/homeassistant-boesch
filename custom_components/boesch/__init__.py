@@ -112,7 +112,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bo
             # Die Leistungsregister 104-111 liegen in der LIVE-Gruppe.
             web_power if group == POLL_LIVE else None,
         )
-        await coordinator.async_config_entry_first_refresh()
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except Exception:
+            # Sonst bliebe bei jedem Setup-Retry eine TCP-Verbindung offen –
+            # Modbus-Gateways erlauben oft nur wenige gleichzeitig.
+            await client.async_close()
+            raise
         coordinators[group] = coordinator
 
     # Web-Entities für Einstellungen ohne Modbus-Register. Fehler hier

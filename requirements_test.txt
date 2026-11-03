@@ -1,0 +1,3 @@
+# Test-Abhängigkeiten. pytest-homeassistant-custom-component pinnt die passende
+# homeassistant-Version selbst mit.
+pytest-homeassistant-custom-component

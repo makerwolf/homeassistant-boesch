@@ -32,3 +32,11 @@
     neuen Gerät **Bösch Wärmepumpenmanager**
 - **Robuster:** Ein einzelner gesperrter Datenpunkt im Webinterface lässt die
   übrigen Web-Werte nicht mehr ausfallen.
+- **Fix Energiezähler:** War die Wärmepumpe zeitweise nicht erreichbar, wurde
+  die ganze Ausfallzeit beim nächsten erfolgreichen Abruf mit der letzten
+  Leistung mitgezählt (Strom- und Wärmemenge zu hoch). Ausfälle werden jetzt
+  ausgelassen.
+- **Fix Verbindung:** Timeouts und Verbindungsabbrüche erscheinen als kurze
+  Fehlermeldung statt als Traceback im Log; beim Schalten/Einstellen kommt
+  eine verständliche Fehlermeldung. Startet die Integration bei nicht
+  erreichbarem Gerät mehrfach neu, bleiben keine Modbus-Verbindungen mehr offen.

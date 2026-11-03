@@ -18,6 +18,15 @@ Code-Aufbau: siehe README, Abschnitt „Architektur“. Werkzeuge:
 `scripts/scan_registers.py` (read-only Register-Scanner mit Snapshot-Diff),
 `scripts/web_probe.py` (read-only Test des Web-Clients ohne HA).
 
+Dev-Container (`boesch-ha`, Port 8123, `scripts/develop`): HA ab 2026.3
+braucht Python ≥ 3.14 – mit dem 3.13-Image bleibt pip still bei 2026.2.3
+stehen. Stand 2026-11-03: Python 3.14, HA 2026.10.4, pymodbus 3.16.
+
+Tests: `pytest` (im Container: `docker exec boesch-ha bash -lc pytest`), läuft
+auch in CI (`validate.yml`). Kein Gerät nötig – `tests/conftest.py` ersetzt den
+Modbus-Client durch ein Register-Dict, der Web-Client wird mit einer
+Fake-Session getestet.
+
 ## ⚠️ Kernbefund: Datentyp-Fehler in der Bösch-Doku
 
 Die Modbusliste deklariert die WANDA-Register als **Datenpunkttyp `Float`**

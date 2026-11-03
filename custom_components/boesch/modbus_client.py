@@ -9,9 +9,11 @@ ins Gehege kommen.
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 
 from pymodbus.client import AsyncModbusTcpClient
+from pymodbus.exceptions import ModbusException
 
 from .const import CONNECT_TIMEOUT
 
@@ -32,6 +34,10 @@ class BoeschModbusClient:
             host=host, port=port, timeout=CONNECT_TIMEOUT
         )
         self._lock = asyncio.Lock()
+        # pymodbus hat den Parameter von `slave` auf `device_id` umbenannt
+        # (3.6..3.8+) – einmalig an der Signatur erkennen.
+        params = inspect.signature(self._client.read_holding_registers).parameters
+        self._unit_kw = "device_id" if "device_id" in params else "slave"
 
     async def async_connect(self) -> bool:
         """Verbindung aufbauen. Gibt True bei Erfolg zurück."""
@@ -47,19 +53,10 @@ class BoeschModbusClient:
     def connected(self) -> bool:
         return self._client.connected
 
-    async def _read_holding(self, address: int, count: int, unit: int):
-        """read_holding_registers – kompatibel über pymodbus 3.6..3.8+.
-
-        pymodbus hat den Parameter von `slave` auf `device_id` umbenannt.
-        """
-        try:
-            return await self._client.read_holding_registers(
-                address, count=count, device_id=unit
-            )
-        except TypeError:
-            return await self._client.read_holding_registers(
-                address, count=count, slave=unit
-            )
+    async def _ensure_connected(self) -> None:
+        """Bei Bedarf (neu) verbinden; Aufruf nur unter Lock."""
+        if not self._client.connected and not await self._client.connect():
+            raise ModbusError(f"Verbindung zu {self._host}:{self._port} fehlgeschlagen")
 
     async def read_block(self, address: int, count: int, unit: int) -> list[int]:
         """Einen zusammenhängenden Block Holding-Register lesen.
@@ -68,12 +65,17 @@ class BoeschModbusClient:
         Stellt bei Bedarf die Verbindung her.
         """
         async with self._lock:
-            if not self._client.connected:
-                if not await self._client.connect():
-                    raise ModbusError(
-                        f"Verbindung zu {self._host}:{self._port} fehlgeschlagen"
-                    )
-            result = await self._read_holding(address, count, unit)
+            await self._ensure_connected()
+            try:
+                result = await self._client.read_holding_registers(
+                    address, count=count, **{self._unit_kw: unit}
+                )
+            except ModbusException as err:
+                # Neuere pymodbus-Versionen werfen bei Timeout/Abbruch, statt
+                # ein Fehlerergebnis zurückzugeben.
+                raise ModbusError(
+                    f"Read-Fehler @unit {unit} addr {address}+{count}: {err}"
+                ) from err
 
         if result is None or result.isError():
             raise ModbusError(
@@ -81,24 +83,18 @@ class BoeschModbusClient:
             )
         return list(result.registers)
 
-    async def _write_single(self, address: int, value: int, unit: int):
-        """write_register (FC 0x06) – kompatibel über pymodbus 3.6..3.8+."""
-        try:
-            return await self._client.write_register(
-                address, value, device_id=unit
-            )
-        except TypeError:
-            return await self._client.write_register(address, value, slave=unit)
-
     async def write_register(self, address: int, value: int, unit: int) -> None:
         """Einen 16-Bit-Rohwert in ein Holding-Register schreiben (FC 0x06)."""
         async with self._lock:
-            if not self._client.connected:
-                if not await self._client.connect():
-                    raise ModbusError(
-                        f"Verbindung zu {self._host}:{self._port} fehlgeschlagen"
-                    )
-            result = await self._write_single(address, value, unit)
+            await self._ensure_connected()
+            try:
+                result = await self._client.write_register(
+                    address, value, **{self._unit_kw: unit}
+                )
+            except ModbusException as err:
+                raise ModbusError(
+                    f"Write-Fehler @unit {unit} addr {address} = {value}: {err}"
+                ) from err
 
         if result is None or result.isError():
             raise ModbusError(

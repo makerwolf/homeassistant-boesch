@@ -10,7 +10,7 @@ Der Einmalladungs-Zielwert (104) bleibt eine separate number-Entity daneben.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -55,7 +55,7 @@ class BoeschWaterHeater(BoeschEntity, WaterHeaterEntity):
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
-    _attr_operation_list = [OP_NORMAL, OP_BOOST]
+    _attr_operation_list: ClassVar[list[str]] = [OP_NORMAL, OP_BOOST]
     _attr_icon = "mdi:water-boiler"
 
     def __init__(self, coordinator, target_reg, entry) -> None:
