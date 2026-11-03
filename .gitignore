@@ -14,3 +14,7 @@ Reference/
 
 # Webinterface-Mitschnitte (HAR) – enthalten Gerätedaten, nicht ins Repo
 captures/
+
+# Testläufe
+.coverage
+.pytest_cache/

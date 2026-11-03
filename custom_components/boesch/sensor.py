@@ -27,6 +27,10 @@ _STATE_CLASS = {
 }
 
 
+# Nur lesend; die Coordinators übernehmen das Pollen.
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BoeschConfigEntry,

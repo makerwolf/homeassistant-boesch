@@ -25,6 +25,10 @@ _COMPRESSOR_SOURCE_KEY = "boesch_wanda_el_leistung"
 _COMPRESSOR_ON_KW = 0.1
 
 
+# Nur lesend; die Coordinators übernehmen das Pollen.
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BoeschConfigEntry,
@@ -70,7 +74,7 @@ class BoeschAlarmBinarySensor(BoeschEntity, BinarySensorEntity):
         super().__init__(coordinator, reg, entry)
         # Eigene unique_id/Name, nicht die des Quell-Sensors.
         self._attr_unique_id = "boesch_wanda_alarm_bs"
-        self._attr_name = "WP Alarm"
+        self._attr_name = "Alarm"
 
     @property
     def is_on(self) -> bool | None:
@@ -90,7 +94,7 @@ class BoeschCompressorBinarySensor(BoeschEntity, BinarySensorEntity):
         super().__init__(coordinator, reg, entry)
         # Eigene unique_id/Name, nicht die des Quell-Sensors (el. Leistung).
         self._attr_unique_id = "boesch_wanda_verdichter_laeuft"
-        self._attr_name = "WP Verdichter läuft"
+        self._attr_name = "Verdichter läuft"
 
     @property
     def is_on(self) -> bool | None:

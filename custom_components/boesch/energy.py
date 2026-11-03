@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .coordinator import BoeschCoordinator
-from .entity import build_device_info
+from .entity import build_device_info, short_name
 from .registers import DeviceKey
 
 # (Zähler-key, Name, Quell-Leistungsregister-key)
@@ -60,7 +60,7 @@ class BoeschEnergySensor(CoordinatorEntity[BoeschCoordinator], RestoreSensor):
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_suggested_display_precision = 2
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
     _attr_icon = "mdi:counter"
 
     def __init__(
@@ -74,7 +74,7 @@ class BoeschEnergySensor(CoordinatorEntity[BoeschCoordinator], RestoreSensor):
         super().__init__(coordinator)
         self._source_key = source_key
         self._attr_unique_id = key
-        self._attr_name = name
+        self._attr_name = short_name(name)
         self._attr_device_info = build_device_info(entry, DeviceKey.WANDA)
         self._energy: float = 0.0
         self._last_power: float | None = None
@@ -131,7 +131,7 @@ class BoeschSCOPSensor(CoordinatorEntity[BoeschCoordinator], SensorEntity):
 
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 2
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
     _attr_icon = "mdi:gauge"
 
     def __init__(
@@ -145,7 +145,7 @@ class BoeschSCOPSensor(CoordinatorEntity[BoeschCoordinator], SensorEntity):
     ) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = key
-        self._attr_name = name
+        self._attr_name = short_name(name)
         self._attr_device_info = build_device_info(entry, DeviceKey.WANDA)
         self._thermal = thermal
         self._electrical = electrical

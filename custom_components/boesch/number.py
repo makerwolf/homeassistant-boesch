@@ -23,6 +23,10 @@ CURVE_X = (-20, -15, -10, -5, 0, 5, 10, 15, 20)
 COOLING_CURVE_X = (15, 25, 30, 35, 40)
 
 
+# Schreibzugriffe nacheinander (eine gemeinsame Modbus-/Web-Verbindung).
+PARALLEL_UPDATES = 1
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BoeschConfigEntry,

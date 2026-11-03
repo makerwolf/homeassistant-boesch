@@ -15,6 +15,10 @@ from .web_client import DP_HK1_HEATING_WATER_MODE, TYPE_INT32
 HEIZMODUS = {0: "Außentemperaturkurve", 1: "Festwert", 2: "Aus"}
 
 
+# Schreibzugriffe nacheinander (eine gemeinsame Modbus-/Web-Verbindung).
+PARALLEL_UPDATES = 1
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BoeschConfigEntry,

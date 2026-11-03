@@ -26,6 +26,13 @@
           "wanda_address": "Modbus-Adresse WANDA",
           "hydrobox_address": "Modbus-Adresse Hydrobox"
         }
+      },
+      "reauth_confirm": {
+        "title": "Bösch – Web-Passwort",
+        "description": "Das Webinterface hat das gespeicherte Passwort abgelehnt. Bitte das aktuelle Web-Passwort eingeben. Zum Abschalten der Web-Funktionen stattdessen in den Optionen das Passwort leeren.",
+        "data": {
+          "web_password": "Web-Passwort"
+        }
       }
     },
     "error": {
@@ -36,7 +43,8 @@
     },
     "abort": {
       "already_configured": "Dieser Host ist bereits eingerichtet.",
-      "reconfigure_successful": "Verbindungsdaten aktualisiert, Integration wird neu geladen."
+      "reconfigure_successful": "Verbindungsdaten aktualisiert, Integration wird neu geladen.",
+      "reauth_successful": "Web-Passwort aktualisiert, Integration wird neu geladen."
     }
   },
   "options": {

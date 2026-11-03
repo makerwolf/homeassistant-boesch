@@ -13,6 +13,9 @@ from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
 from .registers import DeviceKey, Kind, Reg
 from .web_client import DP_SYSTEM_IS_PRESENT, TYPE_BOOLEAN
 
+# Schreibzugriffe nacheinander (eine gemeinsame Modbus-/Web-Verbindung).
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

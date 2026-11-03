@@ -26,6 +26,13 @@
           "wanda_address": "WANDA Modbus address",
           "hydrobox_address": "Hydrobox Modbus address"
         }
+      },
+      "reauth_confirm": {
+        "title": "Bösch – web password",
+        "description": "The web interface rejected the stored password. Enter the current web password. To turn the web features off instead, clear the password in the options.",
+        "data": {
+          "web_password": "Web password"
+        }
       }
     },
     "error": {
@@ -36,7 +43,8 @@
     },
     "abort": {
       "already_configured": "This host is already configured.",
-      "reconfigure_successful": "Connection updated, reloading the integration."
+      "reconfigure_successful": "Connection updated, reloading the integration.",
+      "reauth_successful": "Web password updated, reloading the integration."
     }
   },
   "options": {

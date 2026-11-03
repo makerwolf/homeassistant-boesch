@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -215,6 +216,44 @@ class BoeschConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self._schema(user_input or entry.data),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Web-Passwort abgelehnt (vom Web-Coordinator ausgelöst)."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Neues Web-Passwort abfragen und testen."""
+        entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            password = user_input[CONF_WEB_PASSWORD].strip()
+            if error := await _test_web(
+                self.hass,
+                entry.data[CONF_HOST],
+                entry.data.get(CONF_HYDROBOX_ADDRESS, DEFAULT_HYDROBOX_ADDRESS),
+                password,
+            ):
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    entry, options={**entry.options, CONF_WEB_PASSWORD: password}
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_WEB_PASSWORD): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    )
+                }
+            ),
             errors=errors,
         )
 

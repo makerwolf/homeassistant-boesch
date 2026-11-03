@@ -15,7 +15,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MAX_BLOCK_GAP, MAX_BLOCK_SIZE
@@ -41,6 +41,7 @@ from .web_client import (
     MANAGER_DEVICE_ID,
     TYPE_CURVE,
     BoeschWebClient,
+    WebAuthError,
     WebError,
 )
 
@@ -261,6 +262,9 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data.update(
                 await self._client.async_read(MANAGER_DEVICE_ID, WEB_DATAPOINTS_MANAGER)
             )
+        except WebAuthError as err:
+            # Passwort geändert: HA startet daraufhin den Reauth-Flow.
+            raise ConfigEntryAuthFailed(str(err)) from err
         except WebError as err:
             raise UpdateFailed(str(err)) from err
         return data

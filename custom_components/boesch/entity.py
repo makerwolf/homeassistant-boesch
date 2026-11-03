@@ -24,6 +24,19 @@ _DEVICE_NAME = {
 }
 
 
+# Gerätekürzel aus den historischen Namen ("WP Vorlauftemperatur B16"). Mit
+# has_entity_name stellt HA den Gerätenamen ohnehin voran ("Bösch WANDA …").
+_NAME_PREFIXES = ("WP ", "HB ", "WPM ")
+
+
+def short_name(name: str) -> str:
+    """Entity-Name ohne Gerätekürzel."""
+    for prefix in _NAME_PREFIXES:
+        if name.startswith(prefix):
+            return name[len(prefix):]
+    return name
+
+
 def assign_entity_ids(entities, platform: str) -> None:
     """entity_id = <platform>.<unique_id> setzen.
 
@@ -50,11 +63,11 @@ def build_device_info(entry: ConfigEntry, device: DeviceKey) -> DeviceInfo:
 class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
     """Basis für alle Bösch-Entities.
 
-    Behält den ursprünglichen Namen bei (Entity-ID-Kontinuität) und hängt die
-    Entity an das passende Gerät (WANDA oder Hydrobox) im Device-Registry.
+    Hängt die Entity an das passende Gerät (WANDA oder Hydrobox); der Name
+    ist relativ zum Gerät. Die Entity-ID setzt assign_entity_ids fest.
     """
 
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -66,7 +79,7 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
         super().__init__(coordinator)
         self._reg = reg
         self._attr_unique_id = reg.key
-        self._attr_name = name or reg.name
+        self._attr_name = short_name(name or reg.name)
         if reg.icon:
             self._attr_icon = reg.icon
         if reg.entity_category:
@@ -89,7 +102,7 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
 class BoeschWebEntity(CoordinatorEntity[BoeschWebCoordinator]):
     """Basis für Entities aus dem Webinterface (Hydrobox oder Wärmepumpenmanager)."""
 
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -103,7 +116,7 @@ class BoeschWebEntity(CoordinatorEntity[BoeschWebCoordinator]):
         super().__init__(coordinator)
         self._config_id = config_id
         self._attr_unique_id = key
-        self._attr_name = name
+        self._attr_name = short_name(name)
         self._attr_device_info = build_device_info(entry, device)
 
     @property

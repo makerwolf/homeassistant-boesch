@@ -40,3 +40,11 @@
   Fehlermeldung statt als Traceback im Log; beim Schalten/Einstellen kommt
   eine verständliche Fehlermeldung. Startet die Integration bei nicht
   erreichbarem Gerät mehrfach neu, bleiben keine Modbus-Verbindungen mehr offen.
+- **Web-Passwort geändert?** Home Assistant meldet sich jetzt mit „Erneut
+  authentifizieren“ und fragt nach dem neuen Passwort, statt die Web-Entities
+  stumm als nicht verfügbar zu zeigen.
+- **Entity-Namen nach HA-Standard:** Namen sind jetzt relativ zum Gerät, das
+  Kürzel „WP“/„HB“ entfällt – angezeigt wird z. B. „Bösch WANDA
+  Vorlauftemperatur B16“ statt „WP Vorlauftemperatur B16“. **Entity-IDs,
+  Verlauf und Statistik bleiben unverändert**; selbst vergebene Namen auch.
+  Karten ohne eigenen Titel zeigen den neuen Namen.

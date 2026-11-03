@@ -68,6 +68,18 @@ Leistungen 104–111, Status WP 200, TWE 100–104, Heizkreis 150/153/155/156.
 liest er aus 254/255, bei uns sind das Fühler-Rohwerte (T1/AI6) und die
 Außentemperatur steht in 275/276 (verifiziert).
 
+## Quality Scale (Stand 2026-11-03)
+
+Bronze und Silver erfüllt (eigene Einschätzung; offiziell nur für Core):
+`has_entity_name = True` mit Namen ohne „WP “/„HB “/„WPM “ (`short_name` in
+`entity.py`) – Entity-IDs setzt `assign_entity_ids` weiterhin fest auf
+`<plattform>.<unique_id>`. `PARALLEL_UPDATES` 0 (lesend) / 1 (schreibend),
+Reauth-Flow fürs Web-Passwort (`WebAuthError` → `ConfigEntryAuthFailed`),
+Config-Flow-Tests 100 %, Gesamtabdeckung > 95 % (`pytest --cov`).
+
+Für Gold offen: Diagnostics, Übersetzungen (Entity-Namen, Icons, Fehler),
+Repair-Issues, Aufräumen verwaister Entities beim Abschalten von HK2/WEZ.
+
 ## Release-Ablauf
 
 Nutzer-sichtbare Änderungen laufend in `CHANGELOG.md` unter `## [Unreleased]`

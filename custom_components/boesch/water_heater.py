@@ -32,6 +32,10 @@ OP_NORMAL = "Normal"
 OP_BOOST = "Einmalladung"
 
 
+# Schreibzugriffe nacheinander (eine gemeinsame Modbus-/Web-Verbindung).
+PARALLEL_UPDATES = 1
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BoeschConfigEntry,
@@ -62,7 +66,7 @@ class BoeschWaterHeater(BoeschEntity, WaterHeaterEntity):
         # Anker = Zielwert-Register (102) — liefert device_info + Verfügbarkeit.
         super().__init__(coordinator, target_reg, entry)
         self._attr_unique_id = "boesch_hb_twe"
-        self._attr_name = "HB Trinkwasser"
+        self._attr_name = "Trinkwasser"
         self._target_reg = target_reg
         self._boost_reg = {r.key: r for r in coordinator.regs}[KEY_BOOST]
         self._attr_min_temp = target_reg.min_value
