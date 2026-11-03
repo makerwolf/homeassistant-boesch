@@ -9,8 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
-from .entity import BoeschEntity, assign_entity_ids
-from .registers import Kind, Reg
+from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
+from .registers import DeviceKey, Kind, Reg
+from .web_client import DP_SYSTEM_IS_PRESENT, TYPE_BOOLEAN
 
 
 async def async_setup_entry(
@@ -19,11 +20,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Switch-Entities aus dem Registermodell erzeugen."""
-    entities: list[BoeschSwitch] = []
+    entities: list[SwitchEntity] = []
     for coordinator in entry.runtime_data.coordinators.values():
         for reg in coordinator.regs:
             if reg.kind is Kind.SWITCH:
                 entities.append(BoeschSwitch(coordinator, reg, entry))
+    if web := entry.runtime_data.web:
+        entities.append(BoeschWebPresence(web, entry))
     assign_entity_ids(entities, "switch")
     async_add_entities(entities)
 
@@ -46,3 +49,30 @@ class BoeschSwitch(BoeschEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.async_write(self._reg, 0)
+
+
+class BoeschWebPresence(BoeschWebEntity, SwitchEntity):
+    """Anwesenheitsstatus des Wärmepumpenmanagers (an = anwesend)."""
+
+    _attr_icon = "mdi:home-account"
+
+    def __init__(self, coordinator, entry) -> None:
+        super().__init__(
+            coordinator,
+            entry,
+            "boesch_wpm_anwesenheit",
+            "WPM Anwesenheit",
+            DP_SYSTEM_IS_PRESENT,
+            DeviceKey.MANAGER,
+        )
+
+    @property
+    def is_on(self) -> bool | None:
+        value = self._value
+        return None if value is None else bool(value)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_write(self._config_id, TYPE_BOOLEAN, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_write(self._config_id, TYPE_BOOLEAN, False)

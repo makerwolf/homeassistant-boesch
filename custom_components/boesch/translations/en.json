@@ -77,9 +77,13 @@
       },
       "web": {
         "title": "Web interface",
-        "description": "Settings not available via Modbus (heating mode, fixed setpoints and heating curve HC1), via the heat pump's web interface. Password as used for the browser login; leave empty to disable these features.",
+        "description": "Settings not available via Modbus (heating mode, fixed setpoints, heating curve, mixer, presence), via the heat pump's web interface. Password as used for the browser login; leave empty to disable these features.",
         "data": {
-          "web_password": "Web password"
+          "web_password": "Web password",
+          "web_power": "High-resolution power values from the web interface"
+        },
+        "data_description": {
+          "web_power": "Replaces the 8 power sensors (Modbus, truncated to 0.1 kW) with the web values at 0.01 kW. Entity IDs stay the same, the energy counters become more accurate. If the web interface fails, the Modbus values are used."
         }
       }
     },

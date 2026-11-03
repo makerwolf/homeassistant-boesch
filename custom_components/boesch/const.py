@@ -9,6 +9,7 @@ DOMAIN: Final = "boesch"
 MANUFACTURER: Final = "Bösch"
 MODEL_WANDA: Final = "WANDA 10"
 MODEL_HYDROBOX: Final = "Hydrobox"
+MODEL_MANAGER: Final = "Wärmepumpenmanager (x-center)"
 
 # --- Config-Keys ---
 CONF_WANDA_ADDRESS: Final = "wanda_address"
@@ -21,6 +22,8 @@ CONF_AI_INPUTS: Final = "ai_inputs"
 
 # Passwort des Webinterfaces (Kermi x-center). Gesetzt = Web-Entities aktiv.
 CONF_WEB_PASSWORD: Final = "web_password"
+# Leistungen 104-111 hochauflösend aus dem Webinterface statt per Modbus.
+CONF_WEB_POWER: Final = "web_power"
 
 CONF_SCAN_LIVE: Final = "scan_live"
 CONF_SCAN_DEFAULT: Final = "scan_default"
@@ -34,6 +37,7 @@ DEFAULT_HYDROBOX_ADDRESS: Final = 50
 # Optionale Hardware -> Opt-in (Basisanlage: 1 Heizkreis, kein externer WEZ).
 DEFAULT_ENABLE_HK2: Final = False
 DEFAULT_ENABLE_WEZ: Final = False
+DEFAULT_WEB_POWER: Final = False
 
 # Poll-Gruppen -> Default-Intervall in Sekunden.
 # Bilden die scan_interval-Klassen der ursprünglichen boesch.yaml ab.

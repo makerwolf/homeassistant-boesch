@@ -37,6 +37,8 @@ class DeviceKey(str, Enum):
 
     WANDA = "wanda"
     HYDROBOX = "hydrobox"
+    # Wärmepumpenmanager (x-center) – nur Webinterface-Entities, keine Register.
+    MANAGER = "manager"
 
 
 # Default-Modbus-Adressen je Gerät. Die tatsächlich benutzte Adresse kommt aus

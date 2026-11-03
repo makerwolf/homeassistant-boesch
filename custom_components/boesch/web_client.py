@@ -21,6 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # Ziel-ID im API-Pfad; lokal immer die Null-GUID (= Wärmepumpenmanager selbst).
 _DEST = "00000000-0000-0000-0000-000000000000"
+# DeviceId des Wärmepumpenmanagers (IFM) selbst.
+MANAGER_DEVICE_ID = _DEST
 _COOKIE = "XCenter"
 _TIMEOUT = aiohttp.ClientTimeout(total=10)
 
@@ -30,10 +32,26 @@ DP_HK1_HEATING_WATER_MODE = "a060dbf1-50cc-414c-afb2-89cfc6c086f6"
 DP_HK1_FIXED_SETPOINT_HEATING = "588070eb-458c-4fa0-ab40-df3fa4f29887"
 DP_HK1_FIXED_SETPOINT_COOLING = "61ef070e-aa66-4803-9fed-8facaeef76b1"
 DP_HK1_HEATING_CURVE = "3f89c8ba-bc2e-4889-bd73-daba9afc164c"
+DP_HK1_MIXER_POSITION = "8589b3a8-716c-484b-ba07-6039544b795f"
+# Außentemperatur, nach der die Saisonumschaltung (Sommer/Winter/Kühlen) schaltet.
+DP_SEASON_OUTDOOR_TEMPERATURE = "e0ed80e9-ec5a-4c5e-941e-f4430448cb27"
+# Wärmepumpenmanager
+DP_SYSTEM_IS_PRESENT = "55fe1ecb-47f1-4ebf-852f-d9d169042e49"
+# WANDA (EcoODU_*): Leistungen in kW mit 0,01 kW Auflösung. Modbus liefert
+# dieselben Größen nur auf 0,1 kW abgeschnitten (Register 104-111).
+DP_POWER_OUTPUT = "51a1db3b-59cc-4ff8-85b9-2cb596c89f82"
+DP_POWER_OUTPUT_HEATING = "122849bf-342c-495c-a430-b422ff7ecf1b"
+DP_POWER_OUTPUT_TWE = "56f7839a-24e5-4674-862c-eceda2babffe"
+DP_POWER_OUTPUT_COOLING = "2fb83845-661e-4c70-9446-cc29161ba555"
+DP_POWER_ELECTRIC = "45111410-984c-4dcf-beab-acc8a81b376e"
+DP_POWER_ELECTRIC_HEATING = "db8a9dc7-d764-417c-acac-a9997ac49140"
+DP_POWER_ELECTRIC_TWE = "54a9e57b-7739-42cd-bd5d-477d650488ba"
+DP_POWER_ELECTRIC_COOLING = "756bd7b5-7871-43a3-9bab-6c26c1d88b5c"
 
 # .NET-Typnamen, die die API zum Deserialisieren von Schreibwerten erwartet.
 TYPE_INT32 = "BMS.Shared.DatapointCore.DatapointValue`1[[System.Int32, mscorlib]], BMS.Shared"
 TYPE_SINGLE = "BMS.Shared.DatapointCore.DatapointValue`1[[System.Single, mscorlib]], BMS.Shared"
+TYPE_BOOLEAN = "BMS.Shared.DatapointCore.DatapointValue`1[[System.Boolean, mscorlib]], BMS.Shared"
 TYPE_CURVE = (
     "BMS.Shared.DatapointCore.DatapointValue`1"
     "[[BMS.Shared.Model.System.Curve2d, BMS.Shared]], BMS.Shared"
@@ -125,7 +143,12 @@ class BoeschWebClient:
         raise WebError(f"Kein Gerät mit Adresse {address} im Webinterface")
 
     async def async_read(self, device_id: str, config_ids: list[str]) -> dict[str, Any]:
-        """Werte mehrerer Datenpunkte lesen -> {DatapointConfigId: Value}."""
+        """Werte mehrerer Datenpunkte lesen -> {DatapointConfigId: Value}.
+
+        `IgnoreErrors` wie die Web-Oberfläche: ein gesperrter oder fehlender
+        Datenpunkt fehlt dann nur im Ergebnis, statt die ganze Abfrage
+        scheitern zu lassen. "NaN" (z. B. COP ohne Betrieb) wird zu None.
+        """
         values = await self._request(
             "POST",
             "Datapoint/ReadValues",
@@ -133,10 +156,14 @@ class BoeschWebClient:
                 "DatapointValues": [
                     {"DatapointConfigId": cid, "DeviceId": device_id}
                     for cid in config_ids
-                ]
+                ],
+                "IgnoreErrors": True,
             },
         )
-        return {v["DatapointConfigId"]: v.get("Value") for v in values or []}
+        return {
+            v["DatapointConfigId"]: None if v.get("Value") == "NaN" else v.get("Value")
+            for v in values or []
+        }
 
     async def async_write(
         self, device_id: str, config_id: str, value_type: str, value: Any

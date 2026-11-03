@@ -7,16 +7,16 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from homeassistant.components.sensor import SensorEntity
 
 from . import BoeschConfigEntry
 from .const import CONF_AI_INPUTS
 from .energy import build_energy_entities
-from .entity import BoeschEntity, assign_entity_ids
+from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
 from .registers import Kind, Reg
+from .web_client import DP_HK1_MIXER_POSITION, DP_SEASON_OUTDOOR_TEMPERATURE
 
 # Quellregister, an dem der LIVE-Coordinator für die Energiezähler erkannt wird.
 _ENERGY_SOURCE_KEY = "boesch_wanda_el_leistung"
@@ -55,6 +55,10 @@ async def async_setup_entry(
             entities.extend(build_energy_entities(coordinator, entry))
             break
 
+    if web := entry.runtime_data.web:
+        entities.append(BoeschWebMixer(web, entry))
+        entities.append(BoeschWebSeasonTemperature(web, entry))
+
     assign_entity_ids(entities, "sensor")
     async_add_entities(entities)
 
@@ -92,3 +96,49 @@ class BoeschEnumSensor(BoeschEntity, SensorEntity):
         if value is None:
             return None
         return self._reg.options.get(int(value))
+
+
+class BoeschWebMixer(BoeschWebEntity, SensorEntity):
+    """Mischer-Öffnung HK1 (nur im Webinterface, nicht in der Modbus-Liste)."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
+    _attr_icon = "mdi:valve"
+
+    def __init__(self, coordinator, entry) -> None:
+        super().__init__(
+            coordinator,
+            entry,
+            "boesch_hb_hk1_mischer",
+            "HB HK1 Mischer-Öffnung",
+            DP_HK1_MIXER_POSITION,
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        return self._value
+
+
+class BoeschWebSeasonTemperature(BoeschWebEntity, SensorEntity):
+    """Saison-Außentemperatur: Grundlage der Sommer-/Winter-/Kühl-Umschaltung."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, coordinator, entry) -> None:
+        super().__init__(
+            coordinator,
+            entry,
+            "boesch_hb_saison_aussentemperatur",
+            "HB Saison-Außentemperatur",
+            DP_SEASON_OUTDOOR_TEMPERATURE,
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        # Kommt als ungerundeter Float (z. B. 4.716547).
+        value = self._value
+        return None if value is None else round(value, 2)

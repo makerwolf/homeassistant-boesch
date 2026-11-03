@@ -19,15 +19,18 @@ from .const import (
     CONF_SCAN_SETPOINT,
     CONF_WANDA_ADDRESS,
     CONF_WEB_PASSWORD,
+    CONF_WEB_POWER,
     DEFAULT_ENABLE_HK2,
     DEFAULT_ENABLE_WEZ,
     DEFAULT_HYDROBOX_ADDRESS,
     DEFAULT_SCAN_SETPOINT,
     DEFAULT_WANDA_ADDRESS,
+    DEFAULT_WEB_POWER,
+    POLL_LIVE,
     SCAN_DEFAULT_BY_GROUP,
     SCAN_OPTION_BY_GROUP,
 )
-from .coordinator import BoeschCoordinator, BoeschWebCoordinator
+from .coordinator import BoeschCoordinator, BoeschWebCoordinator, WebPowerSource
 from .modbus_client import BoeschModbusClient
 from .registers import DeviceKey, registers_for
 from .web_client import BoeschWebClient
@@ -77,6 +80,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bo
     enable_wez = entry.options.get(CONF_ENABLE_WEZ, DEFAULT_ENABLE_WEZ)
     regs = registers_for(enable_hk2, enable_wez)
 
+    # Optional: Webinterface (Kermi x-center). Ein gemeinsamer Client (eine
+    # Session) für Einstellungen und – per Haken – hochauflösende Leistungen.
+    password = entry.options.get(CONF_WEB_PASSWORD)
+    web_client = (
+        BoeschWebClient(async_get_clientsession(hass), host, password)
+        if password
+        else None
+    )
+    web_power = (
+        WebPowerSource(web_client, unit_by_device[DeviceKey.WANDA])
+        if web_client and entry.options.get(CONF_WEB_POWER, DEFAULT_WEB_POWER)
+        else None
+    )
+
     # Ein Coordinator pro Poll-Gruppe, jeweils mit eigenem Intervall.
     coordinators: dict[str, BoeschCoordinator] = {}
     groups = {reg.poll_group for reg in regs}
@@ -92,19 +109,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bo
             interval,
             [r for r in regs if r.poll_group == group],
             unit_by_device,
+            # Die Leistungsregister 104-111 liegen in der LIVE-Gruppe.
+            web_power if group == POLL_LIVE else None,
         )
         await coordinator.async_config_entry_first_refresh()
         coordinators[group] = coordinator
 
-    # Optional: Webinterface (Kermi x-center) für Einstellungen ohne Modbus-Register.
-    # Fehler hier blockieren das Setup nicht; die Web-Entities sind dann nur
-    # nicht verfügbar, bis ein späterer Poll klappt.
+    # Web-Entities für Einstellungen ohne Modbus-Register. Fehler hier
+    # blockieren das Setup nicht; die Web-Entities sind dann nur nicht
+    # verfügbar, bis ein späterer Poll klappt.
     web: BoeschWebCoordinator | None = None
-    if password := entry.options.get(CONF_WEB_PASSWORD):
+    if web_client:
         web = BoeschWebCoordinator(
             hass,
             entry,
-            BoeschWebClient(async_get_clientsession(hass), host, password),
+            web_client,
             entry.options.get(CONF_SCAN_SETPOINT, DEFAULT_SCAN_SETPOINT),
             unit_by_device[DeviceKey.HYDROBOX],
         )

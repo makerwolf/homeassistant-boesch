@@ -7,18 +7,20 @@ from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL_HYDROBOX, MODEL_WANDA
+from .const import DOMAIN, MANUFACTURER, MODEL_HYDROBOX, MODEL_MANAGER, MODEL_WANDA
 from .coordinator import BoeschCoordinator, BoeschWebCoordinator
 from .registers import DeviceKey, Reg
 
 _MODEL_BY_DEVICE = {
     DeviceKey.WANDA: MODEL_WANDA,
     DeviceKey.HYDROBOX: MODEL_HYDROBOX,
+    DeviceKey.MANAGER: MODEL_MANAGER,
 }
 
 _DEVICE_NAME = {
     DeviceKey.WANDA: "Bösch WANDA",
     DeviceKey.HYDROBOX: "Bösch Hydrobox",
+    DeviceKey.MANAGER: "Bösch Wärmepumpenmanager",
 }
 
 
@@ -85,7 +87,7 @@ class BoeschEntity(CoordinatorEntity[BoeschCoordinator]):
 
 
 class BoeschWebEntity(CoordinatorEntity[BoeschWebCoordinator]):
-    """Basis für Entities aus dem Webinterface (hängen an der Hydrobox)."""
+    """Basis für Entities aus dem Webinterface (Hydrobox oder Wärmepumpenmanager)."""
 
     _attr_has_entity_name = False
 
@@ -96,12 +98,13 @@ class BoeschWebEntity(CoordinatorEntity[BoeschWebCoordinator]):
         key: str,
         name: str,
         config_id: str,
+        device: DeviceKey = DeviceKey.HYDROBOX,
     ) -> None:
         super().__init__(coordinator)
         self._config_id = config_id
         self._attr_unique_id = key
         self._attr_name = name
-        self._attr_device_info = build_device_info(entry, DeviceKey.HYDROBOX)
+        self._attr_device_info = build_device_info(entry, device)
 
     @property
     def _value(self):

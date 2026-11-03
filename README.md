@@ -29,8 +29,11 @@ TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
     Einmalladungs-Modus
 - **Webinterface (optional)**: Einstellungen, die per Modbus fehlen, über das
   Webinterface der Wärmepumpe (Kermi x-center): Heizmodus HK1
-  (Außentemperaturkurve / Festwert / Aus), Festwert Heizen und Kühlen sowie die
-  9 Stützpunkte der Heizkurve.
+  (Außentemperaturkurve / Festwert / Aus), Festwert Heizen und Kühlen, die
+  9 Stützpunkte der Heizkurve, Mischer-Öffnung, Saison-Außentemperatur und
+  Anwesenheitsstatus – optional
+  auch hochauflösende Leistungswerte (0,01 statt 0,1 kW) für genauere
+  Energiezähler.
 - **UI-Konfiguration**: Verbindungstest im Setup, Options-Menü für Heizkreis 2,
   externen Wärmeerzeuger, Poll-Intervalle und frei belegbare Fühlereingänge.
 - **Effizientes Polling**: ein `DataUpdateCoordinator` je Intervall-Klasse
@@ -93,7 +96,8 @@ Zwei Geräte im Device-Registry: **Bösch WANDA** und **Bösch Hydrobox**. Die
 benennt bestehende Entities per Migration einmalig um; Historie und
 Langzeitstatistik bleiben dabei erhalten.
 
-Mit Web-Passwort kommen an der Hydrobox dazu:
+Mit Web-Passwort kommen dazu (Hydrobox bzw. drittes Gerät **Bösch
+Wärmepumpenmanager**):
 
 | Entity | Inhalt |
 |---|---|
@@ -101,6 +105,19 @@ Mit Web-Passwort kommen an der Hydrobox dazu:
 | `number.boesch_hb_hk1_festwert` | Konstanter Vorlauf-Sollwert Heizen (0–100 °C) |
 | `number.boesch_hb_hk1_festwert_kuehlen` | Konstanter Sollwert Kühlen (5–30 °C) |
 | `number.boesch_hb_hk1_heizkurve_m20` … `_p20` | Vorlauf-Sollwert bei −20 … +20 °C Außentemperatur (9 Stützpunkte) |
+| `sensor.boesch_hb_hk1_mischer` | Mischer-Öffnung HK1 (%) |
+| `sensor.boesch_hb_saison_aussentemperatur` | Außentemperatur, nach der die Saisonumschaltung (Sommer/Winter/Kühlen) schaltet |
+| `switch.boesch_wpm_anwesenheit` | Anwesenheitsstatus des Wärmepumpenmanagers (an = anwesend) |
+
+**Hochauflösende Leistungswerte** (Haken unter *Konfigurieren → Webinterface*):
+Modbus liefert die Leistungen nur in 0,1-kW-Schritten und **schneidet ab**
+(gemessen: el. Leistung im Mittel ~3,5 % zu niedrig). Mit dem Haken werden die
+8 bestehenden Leistungssensoren (`sensor.boesch_wanda_leistung*`,
+`sensor.boesch_wanda_el_leistung*`) stattdessen aus dem Webinterface mit
+0,01 kW gefüllt – Entity-IDs und Verlauf bleiben, Stromverbrauch und JAZ
+werden genauer. Ist das Webinterface kurz nicht erreichbar, gelten für diesen
+Poll die Modbus-Werte. Beim Einschalten springen die Werte daher um einige
+Prozent nach oben.
 
 Die Web-API ist inoffiziell (aus der Web-Oberfläche abgeleitet) und kann sich
 mit Firmware-Updates ändern.
@@ -194,7 +211,10 @@ Template-Sensor entsprechend anpassen.
 - **`modbus_client.py`** – ein serialisierter `AsyncModbusTcpClient` für beide
   Geräte (unterschieden per `device_id`), lesen und schreiben (FC 0x03 / 0x06).
 - **`coordinator.py`** – ein Coordinator je Poll-Gruppe, Block-Reads, Encode der
-  Schreibwerte (`value / scale`, int16-Zweierkomplement) plus sofortiger Refresh.
+  Schreibwerte (`value / scale`, int16-Zweierkomplement) plus sofortiger Refresh;
+  dazu der Web-Coordinator und das optionale Ersetzen der Leistungswerte.
+- **`web_client.py`** – schlanker Client fürs Webinterface (Kermi x-center):
+  Login per Cookie, Lesen/Schreiben von Datenpunkten, Auto-Relogin.
 - **`sensor` / `binary_sensor` / `number` / `select` / `switch` /
   `water_heater`** – erzeugen die Entities rein aus dem Registermodell.
 

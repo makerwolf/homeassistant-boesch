@@ -77,9 +77,13 @@
       },
       "web": {
         "title": "Webinterface",
-        "description": "Einstellungen, die per Modbus fehlen (Heizmodus, Festwerte und Heizkurve HK1), über das Webinterface der Wärmepumpe. Passwort wie im Browser-Login; leer lassen schaltet diese Funktionen ab.",
+        "description": "Einstellungen, die per Modbus fehlen (Heizmodus, Festwerte, Heizkurve, Mischer, Anwesenheit), über das Webinterface der Wärmepumpe. Passwort wie im Browser-Login; leer lassen schaltet diese Funktionen ab.",
         "data": {
-          "web_password": "Web-Passwort"
+          "web_password": "Web-Passwort",
+          "web_power": "Hochauflösende Leistungswerte aus dem Webinterface"
+        },
+        "data_description": {
+          "web_power": "Ersetzt die 8 Leistungssensoren (Modbus, auf 0,1 kW abgeschnitten) durch die Web-Werte mit 0,01 kW. Entity-IDs bleiben gleich, die Energiezähler werden genauer. Fällt das Webinterface aus, gelten die Modbus-Werte."
         }
       }
     },

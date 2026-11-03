@@ -33,6 +33,7 @@ from .const import (
     CONF_SCAN_SETPOINT,
     CONF_WANDA_ADDRESS,
     CONF_WEB_PASSWORD,
+    CONF_WEB_POWER,
     DEFAULT_ENABLE_HK2,
     DEFAULT_ENABLE_WEZ,
     DEFAULT_HYDROBOX_ADDRESS,
@@ -42,6 +43,7 @@ from .const import (
     DEFAULT_SCAN_LIVE,
     DEFAULT_SCAN_SETPOINT,
     DEFAULT_WANDA_ADDRESS,
+    DEFAULT_WEB_POWER,
     DOMAIN,
 )
 from .modbus_client import BoeschModbusClient, ModbusError
@@ -303,6 +305,8 @@ class BoeschOptionsFlow(OptionsFlow):
         """Webinterface (Kermi x-center): Passwort setzen = Web-Entities aktiv.
 
         Leer lassen schaltet die Web-Entities ab. Host ist derselbe wie für Modbus.
+        Der Haken `web_power` ersetzt die Modbus-Leistungen durch die
+        hochauflösenden Web-Werte (wirkt nur mit Passwort).
         """
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -320,10 +324,21 @@ class BoeschOptionsFlow(OptionsFlow):
             else:
                 return self.async_create_entry(
                     title="",
-                    data={**entry.options, CONF_WEB_PASSWORD: password},
+                    data={
+                        **entry.options,
+                        CONF_WEB_PASSWORD: password,
+                        CONF_WEB_POWER: user_input.get(CONF_WEB_POWER, False),
+                    },
                 )
 
+        opts = self.config_entry.options
         schema = vol.Schema(
-            _web_password_field(self.config_entry.options.get(CONF_WEB_PASSWORD))
+            {
+                **_web_password_field(opts.get(CONF_WEB_PASSWORD)),
+                vol.Required(
+                    CONF_WEB_POWER,
+                    default=opts.get(CONF_WEB_POWER, DEFAULT_WEB_POWER),
+                ): bool,
+            }
         )
         return self.async_show_form(step_id="web", data_schema=schema, errors=errors)
