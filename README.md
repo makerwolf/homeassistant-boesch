@@ -1,6 +1,6 @@
 # Bösch – Home Assistant Integration
 
-[![hacs](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![marketplace](https://img.shields.io/badge/Home%20Assistant-Marketplace-41BDF5.svg)](https://hacs.xyz/docs/marketplace/)
 [![version](https://img.shields.io/github/v/release/makerwolf/homeassistant-boesch)](https://github.com/makerwolf/homeassistant-boesch/releases)
 ![license](https://img.shields.io/badge/license-MIT-green.svg)
 
@@ -44,15 +44,18 @@ TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
   Wärmemenge, gesamt + je Modus) fürs Energy Dashboard, plus laufende
   Jahresarbeitszahl (JAZ/SCOP).
 
-## Installation (HACS)
+## Installation (Marketplace)
 
-Voraussetzung: Home Assistant **2026.9** oder neuer.
+Voraussetzung: Home Assistant **2026.9** oder neuer. Ab **2026.11** über den
+eingebauten Marketplace, bei älteren Versionen über HACS (gleiche Schritte).
 
-1. HACS → Integrationen → ⋮ → *Benutzerdefinierte Repositories*
-2. `https://github.com/makerwolf/homeassistant-boesch` als Kategorie
+1. *Einstellungen → Marketplace* öffnen und nach „Bösch" suchen.
+   Solange die Integration noch nicht im Katalog steht: ⋮ →
+   *Benutzerdefinierte Repositories* →
+   `https://github.com/makerwolf/homeassistant-boesch` als Kategorie
    **Integration** hinzufügen.
-3. „Bösch" installieren, Home Assistant neu starten.
-4. *Einstellungen → Geräte & Dienste → Integration hinzufügen → Bösch*.
+2. „Bösch" installieren, Home Assistant neu starten.
+3. *Einstellungen → Geräte & Dienste → Integration hinzufügen → Bösch*.
 
 Alternativ den Ordner `custom_components/boesch/` manuell nach
 `<config>/custom_components/` kopieren und HA neu starten.
@@ -359,8 +362,9 @@ Zwei weitere per Verlauf verifizierte Abweichungen von der Doku:
 
 1. *Einstellungen → Geräte & Dienste → Bösch → ⋮ → Löschen*. Geräte und
    Entities werden entfernt, die Historie bleibt in der Datenbank.
-2. Bei Installation über HACS: *HACS → Bösch → ⋮ → Entfernen*, sonst den
-   Ordner `<config>/custom_components/boesch/` löschen.
+2. Bei Installation über den Marketplace (oder HACS): *Marketplace → Bösch →
+   ⋮ → Entfernen*, sonst den Ordner `<config>/custom_components/boesch/`
+   löschen.
 3. Home Assistant neu starten.
 
 Selbst angelegte Helfer (z. B. `utility_meter` für die JAZ) und Automationen

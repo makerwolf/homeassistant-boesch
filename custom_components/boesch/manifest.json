@@ -1,6 +1,10 @@
 {
   "domain": "boesch",
   "name": "Bösch",
+  "categories": [
+    "climate.heat_pumps_air_conditioning",
+    "climate.water_heaters"
+  ],
   "codeowners": ["@makerwolf"],
   "config_flow": true,
   "dhcp": [{ "hostname": "xcenter*" }],

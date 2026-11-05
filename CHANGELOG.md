@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+- **Home Assistant Marketplace:** Installationsanleitung auf den in
+  Home Assistant 2026.11 eingebauten Marketplace (Nachfolger von HACS)
+  umgestellt.
+
 ## [2026.11.0] – Diagnose, Übersetzungen & Typisierung
 
 Ab jetzt Versionsnummern nach Datum (Jahr.Monat.Nummer) wie bei Home Assistant.
