@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [2026.11.1] – Home Assistant Marketplace
+
 - **Home Assistant Marketplace:** Installationsanleitung auf den in
   Home Assistant 2026.11 eingebauten Marketplace (Nachfolger von HACS)
   umgestellt.
