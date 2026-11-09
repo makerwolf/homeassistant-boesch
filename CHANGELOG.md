@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [2026.11.2] – Warnung beim Warmwasser behoben
+
 - **Heiz- und Kühlkurve:** Stützpunkte lassen sich wie in der Web-Oberfläche
   nur noch in ganzen Grad einstellen (bisher 0,5), die Heizkurve höchstens bis
   65 °C (bisher 100 °C). Feiner justiert wird über die Parallelverschiebung
