@@ -129,13 +129,15 @@ class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
     _attr_mode = NumberMode.BOX
     _attr_device_class = NumberDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_native_step = 0.5
+    # Wie die Web-Oberfläche: ganze Grad (Feinjustierung über die
+    # Parallelverschiebung, Register H 156, 0,1 K).
+    _attr_native_step = 1.0
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, coordinator: BoeschWebCoordinator, entry: ConfigEntry,
         config_id: str, slug: str, x: int,
-        min_value: float = 0.0, max_value: float = 100.0,
+        min_value: float = 0.0, max_value: float = 65.0,
     ) -> None:
         suffix = f"m{-x}" if x < 0 else f"p{x}" if x > 0 else "0"
         super().__init__(
@@ -145,7 +147,7 @@ class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
         self._attr_translation_key = f"hb_hk1_{slug}"
         self._attr_translation_placeholders = {"temperature": str(x)}
         self._x = x
-        # Die Firmware gibt für Kurven keine Grenzen vor -> wie beim Festwert.
+        # Grenzen: Heizkurve wie der Kurven-Editor der Web-Oberfläche (0-65 °C).
         self._attr_native_min_value = min_value
         self._attr_native_max_value = max_value
 

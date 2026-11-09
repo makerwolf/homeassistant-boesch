@@ -111,8 +111,8 @@ Wärmepumpenmanager**):
 | `select.boesch_hb_hk1_heizmodus` | Heizmodus HK1: Außentemperaturkurve / Festwert / Aus |
 | `number.boesch_hb_hk1_festwert` | Konstanter Vorlauf-Sollwert Heizen (0–100 °C) |
 | `number.boesch_hb_hk1_festwert_kuehlen` | Konstanter Sollwert Kühlen (5–30 °C) |
-| `number.boesch_hb_hk1_heizkurve_m20` … `_p20` | Vorlauf-Sollwert bei −20 … +20 °C Außentemperatur (9 Stützpunkte) |
-| `number.boesch_hb_hk1_kuehlkurve_p15` … `_p40` | Kühl-Vorlauf-Sollwert bei 15 / 25 / 30 / 35 / 40 °C Außentemperatur (5 Stützpunkte, 5–30 °C) |
+| `number.boesch_hb_hk1_heizkurve_m20` … `_p20` | Vorlauf-Sollwert bei −20 … +20 °C Außentemperatur (9 Stützpunkte, 0–65 °C, ganze Grad) |
+| `number.boesch_hb_hk1_kuehlkurve_p15` … `_p40` | Kühl-Vorlauf-Sollwert bei 15 / 25 / 30 / 35 / 40 °C Außentemperatur (5 Stützpunkte, 5–30 °C, ganze Grad) |
 | `sensor.boesch_hb_hk1_mischer` | Mischer-Öffnung HK1 (%) |
 | `sensor.boesch_hb_saison_aussentemperatur` | Außentemperatur, nach der die Saisonumschaltung (Sommer/Winter/Kühlen) schaltet |
 | `switch.boesch_wpm_anwesenheit` | Anwesenheitsstatus des Wärmepumpenmanagers (an = anwesend) |
