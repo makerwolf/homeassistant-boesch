@@ -9,6 +9,9 @@
   nur noch in ganzen Grad einstellen (bisher 0,5), die Heizkurve höchstens bis
   65 °C (bisher 100 °C). Feiner justiert wird über die Parallelverschiebung
   (0,1 K).
+- **Warmwasser:** Behebt die Warnung „provides the deprecated
+  _attr_temperature_unit / current_temperature / target_temperature“ im
+  Protokoll von Home Assistant 2026.11.
 
 ## [2026.11.1] – Home Assistant Marketplace
 

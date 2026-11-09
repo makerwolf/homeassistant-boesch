@@ -1,8 +1,8 @@
 """Water-Heater-Plattform: Trinkwassererwärmung (TWE).
 
 Bündelt die TWE-Register zu einer Entity:
-- current_temperature  = TWE Ist (100)
-- target_temperature   = TWE konstanter Sollwert (102, schreibbar 0-85 °C)
+- native_current_temperature = TWE Ist (100)
+- native_target_temperature  = TWE konstanter Sollwert (102, schreibbar 0-85 °C)
 - operation mode       = Einmalladung (103): "normal" / "one_time_charge"
 
 Der Einmalladungs-Zielwert (104) bleibt eine separate number-Entity daneben.
@@ -55,7 +55,7 @@ async def async_setup_entry(
 class BoeschWaterHeater(BoeschEntity, WaterHeaterEntity):
     """Trinkwassererwärmung als water_heater-Entity."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -78,11 +78,11 @@ class BoeschWaterHeater(BoeschEntity, WaterHeaterEntity):
         self._attr_target_temperature_step = target_reg.scale
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         return self.coordinator.data.get(KEY_CURRENT)
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         return self.coordinator.data.get(self._target_reg.key)
 
     @property
@@ -91,6 +91,18 @@ class BoeschWaterHeater(BoeschEntity, WaterHeaterEntity):
         if value is None:
             return None
         return OP_BOOST if value > 0 else OP_NORMAL
+
+    # HA < 2026.11 kennt die native_*-Namen noch nicht. Der Block läuft dort
+    # nur, damit 2026.9/2026.10 weiter funktionieren; ab 2026.11 wird er
+    # übersprungen (sonst gäbe es dort die Deprecation-Warnung).
+    if not hasattr(WaterHeaterEntity, "native_temperature_unit"):
+        _attr_temperature_unit = UnitOfTemperature.CELSIUS  # type: ignore[misc, unused-ignore]
+        current_temperature = property(  # type: ignore[misc, assignment, unused-ignore]
+            lambda self: self.native_current_temperature
+        )
+        target_temperature = property(  # type: ignore[misc, assignment, unused-ignore]
+            lambda self: self.native_target_temperature
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         temperature = kwargs.get(ATTR_TEMPERATURE)
