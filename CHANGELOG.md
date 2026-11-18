@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [2026.11.3] – Softwareupdate & Firmware-Versionen
+
 - **Softwareupdate (Webinterface):** neue Diagnose-Sensoren am
   Wärmepumpenmanager aus *System-Einstellungen → Update*: Update-Status
   (z. B. „Aktuell“, „Neue Version verfügbar“), Download-Fortschritt und
