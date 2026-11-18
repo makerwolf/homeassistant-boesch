@@ -32,8 +32,8 @@ TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
 - **Webinterface (optional)**: Einstellungen, die per Modbus fehlen, über das
   Webinterface der Wärmepumpe (Kermi x-center): Heizmodus HK1
   (Außentemperaturkurve / Festwert / Aus), Festwert Heizen und Kühlen, die
-  Stützpunkte von Heiz- und Kühlkurve, Mischer-Öffnung, Saison-Außentemperatur und
-  Anwesenheitsstatus – optional
+  Stützpunkte von Heiz- und Kühlkurve, Mischer-Öffnung, Saison-Außentemperatur,
+  Anwesenheitsstatus und Softwareupdate-Status – optional
   auch hochauflösende Leistungswerte (0,01 statt 0,1 kW) für genauere
   Energiezähler.
 - **UI-Konfiguration**: Verbindungstest im Setup, Options-Menü für Heizkreis 2,
@@ -116,6 +116,14 @@ Wärmepumpenmanager**):
 | `sensor.boesch_hb_hk1_mischer` | Mischer-Öffnung HK1 (%) |
 | `sensor.boesch_hb_saison_aussentemperatur` | Außentemperatur, nach der die Saisonumschaltung (Sommer/Winter/Kühlen) schaltet |
 | `switch.boesch_wpm_anwesenheit` | Anwesenheitsstatus des Wärmepumpenmanagers (an = anwesend) |
+| `sensor.boesch_wpm_update_status` | Softwareupdate-Status (Aktuell / Neue Version verfügbar / Wird heruntergeladen / …), Diagnose |
+| `sensor.boesch_wpm_update_fortschritt` | Download-Fortschritt eines Updates (%), Diagnose |
+| `sensor.boesch_wpm_update_info` | Infotext während eines Updates, Diagnose (standardmäßig deaktiviert) |
+| `sensor.boesch_wpm_firmware` / `_wanda_firmware` / `_hb_firmware` | Firmware-Version von Wärmepumpenmanager, WANDA und Hydrobox, Diagnose – der Verlauf zeigt, wann ein Update kam |
+
+Die Update-Werte sind nur lesend: ein Update startet die Integration nie.
+Achtung, die Web-Oberfläche startet es beim Öffnen von *System-Einstellungen →
+Update* von selbst, sobald eine neue Version verfügbar ist.
 
 **Hochauflösende Leistungswerte** (Haken unter *Konfigurieren → Webinterface*):
 Modbus liefert die Leistungen nur in 0,1-kW-Schritten und **schneidet ab**

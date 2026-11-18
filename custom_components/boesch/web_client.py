@@ -38,6 +38,12 @@ DP_HK1_MIXER_POSITION = "8589b3a8-716c-484b-ba07-6039544b795f"
 DP_SEASON_OUTDOOR_TEMPERATURE = "e0ed80e9-ec5a-4c5e-941e-f4430448cb27"
 # Wärmepumpenmanager
 DP_SYSTEM_IS_PRESENT = "55fe1ecb-47f1-4ebf-852f-d9d169042e49"
+# Seite "System-Einstellungen / Update" (nur lesen). Achtung: die Web-UI
+# startet beim Öffnen dieser Seite das Update selbst (schreibt
+# InitiateApplicationUpdate), sobald der Status != 0 ist - das tun wir nie.
+DP_UPDATE_STATE = "61afe142-5709-47f3-9624-511f6c96ec00"  # System_SoftwareUpdateState
+DP_UPDATE_PROGRESS = "11280ea1-c02d-434e-9ed0-b17be8a5e4b6"  # System_DownloadProgress
+DP_UPDATE_INFO = "a32c3a02-704b-46b0-bac3-7d54202646d1"  # System_SoftwareUpdateInfo
 # WANDA (EcoODU_*): Leistungen in kW mit 0,01 kW Auflösung. Modbus liefert
 # dieselben Größen nur auf 0,1 kW abgeschnitten (Register 104-111).
 DP_POWER_OUTPUT = "51a1db3b-59cc-4ff8-85b9-2cb596c89f82"

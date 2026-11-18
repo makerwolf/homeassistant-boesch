@@ -8,17 +8,23 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
 from .const import CONF_AI_INPUTS
-from .coordinator import BoeschCoordinator, BoeschWebCoordinator
+from .coordinator import BoeschCoordinator, BoeschWebCoordinator, firmware_key
 from .energy import build_energy_entities
 from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
-from .registers import Kind, Reg
-from .web_client import DP_HK1_MIXER_POSITION, DP_SEASON_OUTDOOR_TEMPERATURE
+from .registers import DeviceKey, Kind, Reg
+from .web_client import (
+    DP_HK1_MIXER_POSITION,
+    DP_SEASON_OUTDOOR_TEMPERATURE,
+    DP_UPDATE_INFO,
+    DP_UPDATE_PROGRESS,
+    DP_UPDATE_STATE,
+)
 
 # Quellregister, an dem der LIVE-Coordinator für die Energiezähler erkannt wird.
 _ENERGY_SOURCE_KEY = "boesch_wanda_el_leistung"
@@ -64,6 +70,11 @@ async def async_setup_entry(
     if web := entry.runtime_data.web:
         entities.append(BoeschWebMixer(web, entry))
         entities.append(BoeschWebSeasonTemperature(web, entry))
+        entities.append(BoeschWebUpdateState(web, entry))
+        entities.append(BoeschWebUpdateProgress(web, entry))
+        entities.append(BoeschWebUpdateInfo(web, entry))
+        for device, key in _FIRMWARE.items():
+            entities.append(BoeschWebFirmware(web, entry, device, key))
 
     assign_entity_ids(entry, entities, "sensor")
     async_add_entities(entities)
@@ -155,3 +166,109 @@ class BoeschWebSeasonTemperature(BoeschWebEntity, SensorEntity):
         # Kommt als ungerundeter Float (z. B. 4.716547).
         value = self._value
         return None if value is None else round(float(value), 2)
+
+
+# Firmware-Sensor je Gerät: Gerät -> unique_id.
+_FIRMWARE = {
+    DeviceKey.MANAGER: "boesch_wpm_firmware",
+    DeviceKey.WANDA: "boesch_wanda_firmware",
+    DeviceKey.HYDROBOX: "boesch_hb_firmware",
+}
+
+
+class BoeschWebFirmware(BoeschWebEntity, SensorEntity):
+    """Firmware-Version eines Geräts (Verlauf zeigt vergangene Updates)."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: BoeschWebCoordinator,
+        entry: ConfigEntry,
+        device: DeviceKey,
+        key: str,
+    ) -> None:
+        super().__init__(coordinator, entry, key, firmware_key(device), device)
+
+    @property
+    def native_value(self) -> str | None:
+        value = self._value
+        return None if value is None else str(value)
+
+
+# Softwareupdate-Status (PossibleValues "UpdateState" der Firmware IFM 1.6.5.44).
+UPDATE_STATES = {
+    0: "up_to_date",
+    1: "update_available",
+    2: "downloading",
+    3: "download_finished",
+    4: "no_connection",
+    5: "update_error",
+    6: "version_not_found",
+    7: "unpacking",
+    8: "os_update",
+    9: "checking",
+}
+
+
+class BoeschWebUpdateState(BoeschWebEntity, SensorEntity):
+    """Softwareupdate-Status des Wärmepumpenmanagers (Seite "Update")."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_options = list(UPDATE_STATES.values())
+
+    def __init__(self, coordinator: BoeschWebCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(
+            coordinator,
+            entry,
+            "boesch_wpm_update_status",
+            DP_UPDATE_STATE,
+            DeviceKey.MANAGER,
+        )
+
+    @property
+    def native_value(self) -> str | None:
+        value = self._value
+        return None if value is None else UPDATE_STATES.get(int(value))
+
+
+class BoeschWebUpdateProgress(BoeschWebEntity, SensorEntity):
+    """Download-Fortschritt eines laufenden Softwareupdates."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: BoeschWebCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(
+            coordinator,
+            entry,
+            "boesch_wpm_update_fortschritt",
+            DP_UPDATE_PROGRESS,
+            DeviceKey.MANAGER,
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        value = self._value
+        return None if value is None else int(value)
+
+
+class BoeschWebUpdateInfo(BoeschWebEntity, SensorEntity):
+    """Infotext während eines Updates (sonst leer -> unbekannt)."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: BoeschWebCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(
+            coordinator,
+            entry,
+            "boesch_wpm_update_info",
+            DP_UPDATE_INFO,
+            DeviceKey.MANAGER,
+        )
+
+    @property
+    def native_value(self) -> str | None:
+        return self._value or None

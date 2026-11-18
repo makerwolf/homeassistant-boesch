@@ -67,4 +67,8 @@ async def test_every_entity_translated(hass, fake_modbus, fake_web, config_entry
 
     # Deaktivierte Entities fehlen in platform.entities; sonst nichts Überzähliges.
     unused = {(p, k) for p, keys in entity.items() for k in keys} - used
-    assert unused == {("sensor", "wanda_laufzeit_seit_start"), ("sensor", "hb_hkp2_laufzeit")}
+    assert unused == {
+        ("sensor", "wanda_laufzeit_seit_start"),
+        ("sensor", "hb_hkp2_laufzeit"),
+        ("sensor", "wpm_update_info"),
+    }

@@ -267,6 +267,9 @@
       "hb_aussentemperatur_gemittelt": {
         "name": "Außentemperatur gemittelt"
       },
+      "hb_firmware": {
+        "name": "Firmware"
+      },
       "hb_heizspeicher_ist": {
         "name": "Heizspeicher Ist"
       },
@@ -477,6 +480,9 @@
       "wanda_energie_th_twe": {
         "name": "Wärmemenge TWE"
       },
+      "wanda_firmware": {
+        "name": "Firmware"
+      },
       "wanda_jaz_gesamt": {
         "name": "Arbeitszahl gesamt"
       },
@@ -520,6 +526,30 @@
           "blocked": "Blockiert",
           "utility_lock": "EVU-Sperre",
           "not_available": "Nicht verfügbar"
+        }
+      },
+      "wpm_firmware": {
+        "name": "Firmware"
+      },
+      "wpm_update_fortschritt": {
+        "name": "Update-Downloadfortschritt"
+      },
+      "wpm_update_info": {
+        "name": "Softwareupdate-Info"
+      },
+      "wpm_update_status": {
+        "name": "Softwareupdate-Status",
+        "state": {
+          "up_to_date": "Aktuell",
+          "update_available": "Neue Version verfügbar",
+          "downloading": "Wird heruntergeladen",
+          "download_finished": "Download fertig",
+          "no_connection": "Keine Verbindung zum Server",
+          "update_error": "Fehler beim Update",
+          "version_not_found": "Version nicht gefunden",
+          "unpacking": "Entpacken",
+          "os_update": "OS-Update wird ausgeführt",
+          "checking": "Suche nach Update"
         }
       }
     },

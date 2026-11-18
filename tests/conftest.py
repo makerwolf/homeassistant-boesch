@@ -100,6 +100,8 @@ class FakeWebClient:
 
     instances: ClassVar[list[FakeWebClient]] = []
     values: ClassVar[dict[tuple[str, str], Any]] = {}
+    # Firmware je Adresse ("" = Manager), für Update-Tests veränderbar.
+    sw_versions: ClassVar[dict[str, str]] = {}
     auth_error = False
     error = False
 
@@ -121,11 +123,11 @@ class FakeWebClient:
         self._check()
         return [
             {"DeviceId": MANAGER_DEVICE_ID, "Address": "", "Serial": "S-WPM",
-             "SoftwareVersion": "1.6.5.44"},
+             "SoftwareVersion": FakeWebClient.sw_versions[""]},
             {"DeviceId": "dev40", "Address": "40", "Serial": "S-WANDA",
-             "SoftwareVersion": "1.1.2.39"},
+             "SoftwareVersion": FakeWebClient.sw_versions["40"]},
             {"DeviceId": "dev50", "Address": "50", "Serial": "S-HB",
-             "SoftwareVersion": "1.1.1.20"},
+             "SoftwareVersion": FakeWebClient.sw_versions["50"]},
         ]
 
     async def async_get_device_id(self, address: int) -> str:
@@ -151,6 +153,7 @@ def fake_web() -> Generator[type[FakeWebClient]]:
     """FakeWebClient in Setup und Config-Flow einsetzen."""
     FakeWebClient.instances = []
     FakeWebClient.values = {}
+    FakeWebClient.sw_versions = {"": "1.6.5.44", "40": "1.1.2.39", "50": "1.1.1.20"}
     FakeWebClient.auth_error = False
     FakeWebClient.error = False
     with (

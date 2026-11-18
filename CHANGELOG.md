@@ -5,6 +5,16 @@
 
 ## [Unreleased]
 
+- **Softwareupdate (Webinterface):** neue Diagnose-Sensoren am
+  Wärmepumpenmanager aus *System-Einstellungen → Update*: Update-Status
+  (z. B. „Aktuell“, „Neue Version verfügbar“), Download-Fortschritt und
+  Infotext (standardmäßig deaktiviert). Nur lesend – ein Update wird nie
+  gestartet.
+- **Firmware-Versionen (Webinterface):** je ein Diagnose-Sensor für
+  Wärmepumpenmanager, WANDA und Hydrobox. Im Verlauf sieht man, wann eine neue
+  Firmware kam; die Version in den Geräteinfos aktualisiert sich jetzt auch
+  ohne Neustart von Home Assistant.
+
 ## [2026.11.2] – Warnung beim Warmwasser behoben
 
 - **Heiz- und Kühlkurve:** Stützpunkte lassen sich wie in der Web-Oberfläche

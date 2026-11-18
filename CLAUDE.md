@@ -79,7 +79,8 @@ Config-Flow-Tests 100 %, Gesamtabdeckung > 95 % (`pytest --cov`).
 
 Gold ohne Übersetzungen erledigt: Diagnostics (`diagnostics.py`, Rohblöcke
 aus `BoeschCoordinator.raw_blocks`), Seriennummer/Firmware aus
-`Device/GetAllDevices` per Web-Coordinator ins Device-Registry,
+`Device/GetAllDevices` per Web-Coordinator ins Device-Registry (bei jedem
+Web-Poll neu gelesen, dazu Firmware-Sensoren `*_firmware` je Gerät),
 `configuration_url`, `Reg.entity_category`/`Reg.enabled_default`, Aufräumen
 verwaister Entities/Geräte nach dem Setup (`_async_remove_stale` gegen
 `runtime_data.entity_keys`, gefüllt von `assign_entity_ids` – neue Entities
@@ -247,6 +248,9 @@ nennenswerte Unterschiede zwischen Web und Modbus.
 | WellKnownName | Anzeige (Web) | Zugriff | Modbus | Angebunden | Notiz |
 |---|---|---|---|---|---|
 | `System_IsPresent` | Anwesenheitsstatus | RW | – | **Web** (`switch`) | versteckt unter System-Einstellungen → Interne Statuswerte |
+| `System_SoftwareUpdateState` | Softwareupdate Status | R | – | **Web** (`sensor`, Enum 0–9) | Seite „Update“; Web-UI schreibt beim Öffnen der Seite `InitiateApplicationUpdate` = true, wenn Status ≠ 0 → startet das Update! |
+| `System_DownloadProgress` / `System_SoftwareUpdateInfo` | Downloadfortschritt / Softwareupdate Info | R | – | **Web** (`sensor`) | % bzw. Text (leer ohne Update); Info standardmäßig deaktiviert |
+| `InitiateApplicationUpdate` | Update ausführen | RW | – | – | bewusst nicht (würde Firmware-Update starten) |
 | `DH_SGReady1` / `DH_SGReady2` / `DH_SmartGridState` | EVU / SGReady2 / SmartGrid State | R | – | später | SG-Ready-Status; Invertierung (UL30) nicht |
 | `S0_1_W` | S0_1 W | R | – | später | S0-Zählereingang in W (falls belegt) |
 | `RemoteControlConnected` / `RemoteControlEnabled` | Verbunden mit Server / Serververbindung erlauben | R / RW | – | – | Kermi-Cloud |

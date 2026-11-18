@@ -267,6 +267,9 @@
       "hb_aussentemperatur_gemittelt": {
         "name": "Outdoor temperature averaged"
       },
+      "hb_firmware": {
+        "name": "Firmware"
+      },
       "hb_heizspeicher_ist": {
         "name": "Heating buffer actual"
       },
@@ -477,6 +480,9 @@
       "wanda_energie_th_twe": {
         "name": "Heat energy hot water"
       },
+      "wanda_firmware": {
+        "name": "Firmware"
+      },
       "wanda_jaz_gesamt": {
         "name": "Performance factor total"
       },
@@ -520,6 +526,30 @@
           "blocked": "Blocked",
           "utility_lock": "Utility lock",
           "not_available": "Not available"
+        }
+      },
+      "wpm_firmware": {
+        "name": "Firmware"
+      },
+      "wpm_update_fortschritt": {
+        "name": "Update download progress"
+      },
+      "wpm_update_info": {
+        "name": "Software update info"
+      },
+      "wpm_update_status": {
+        "name": "Software update status",
+        "state": {
+          "up_to_date": "Up to date",
+          "update_available": "New version available",
+          "downloading": "Downloading",
+          "download_finished": "Download finished",
+          "no_connection": "No connection to server",
+          "update_error": "Update error",
+          "version_not_found": "Version not found",
+          "unpacking": "Unpacking",
+          "os_update": "OS update in progress",
+          "checking": "Checking for update"
         }
       }
     },

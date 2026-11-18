@@ -56,6 +56,25 @@ async def test_device_info_from_web(hass, fake_modbus, fake_web, config_entry) -
     assert _device(hass, config_entry, "wanda").name == "Bösch WANDA"
 
 
+async def test_firmware_sensors(hass, fake_modbus, fake_web, config_entry) -> None:
+    """Firmware je Gerät als Sensor; ein Update fällt beim nächsten Poll auf."""
+    await _setup(hass, config_entry, **{CONF_WEB_PASSWORD: "pw"})
+    assert hass.states.get("sensor.boesch_wpm_firmware").state == "1.6.5.44"
+    assert hass.states.get("sensor.boesch_wanda_firmware").state == "1.1.2.39"
+    assert hass.states.get("sensor.boesch_hb_firmware").state == "1.1.1.20"
+    attrs = hass.states.get("sensor.boesch_wanda_firmware").attributes
+    assert attrs["friendly_name"] == "Bösch WANDA Firmware"
+    entry = er.async_get(hass).async_get("sensor.boesch_wanda_firmware")
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    fake_web.sw_versions["40"] = "1.1.3.1"
+    await config_entry.runtime_data.web.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.boesch_wanda_firmware").state == "1.1.3.1"
+    # Die Geräteinfo zieht mit.
+    assert _device(hass, config_entry, "wanda").sw_version == "1.1.3.1"
+
+
 async def test_disabled_feature_removes_entities(hass, fake_modbus, config_entry) -> None:
     await _setup(hass, config_entry, **{CONF_ENABLE_HK2: True})
     registry = er.async_get(hass)

@@ -39,6 +39,9 @@ from .web_client import (
     DP_POWER_OUTPUT_TWE,
     DP_SEASON_OUTDOOR_TEMPERATURE,
     DP_SYSTEM_IS_PRESENT,
+    DP_UPDATE_INFO,
+    DP_UPDATE_PROGRESS,
+    DP_UPDATE_STATE,
     MANAGER_DEVICE_ID,
     TYPE_CURVE,
     BoeschWebClient,
@@ -58,7 +61,12 @@ WEB_DATAPOINTS_HYDROBOX = [
     DP_HK1_MIXER_POSITION,
     DP_SEASON_OUTDOOR_TEMPERATURE,
 ]
-WEB_DATAPOINTS_MANAGER = [DP_SYSTEM_IS_PRESENT]
+WEB_DATAPOINTS_MANAGER = [
+    DP_SYSTEM_IS_PRESENT,
+    DP_UPDATE_STATE,
+    DP_UPDATE_PROGRESS,
+    DP_UPDATE_INFO,
+]
 
 # Hochauflösende Leistung (Option): Modbus-Register-Key -> Web-Datenpunkt.
 WEB_POWER = {
@@ -237,13 +245,19 @@ class BoeschCoordinator(DataUpdateCoordinator[dict[str, float | int | None]]):
         await self.async_request_refresh()
 
 
+def firmware_key(device: DeviceKey) -> str:
+    """Schlüssel der Firmware-Version eines Geräts in den Web-Daten."""
+    return f"firmware_{device.value}"
+
+
 class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator für die Webinterface-Datenpunkte (Hydrobox + Wärmepumpenmanager).
 
-    Daten: {DatapointConfigId: Value}. Die DeviceId der Hydrobox wird beim
-    ersten Poll über ihre Modbus-Adresse nachgeschlagen; der Manager hat immer
-    die Null-GUID. Bei der Gelegenheit kommen Seriennummer und Firmware der
-    Geräte ins Device-Registry.
+    Daten: {DatapointConfigId: Value} plus {firmware_key(Gerät): Version}.
+    Die Geräteliste wird bei jedem Poll neu gelesen: daraus kommen die DeviceId
+    der Hydrobox (über ihre Modbus-Adresse; der Manager hat immer die
+    Null-GUID) sowie Seriennummer und Firmware fürs Device-Registry und die
+    Firmware-Sensoren - so fällt auch ein Update im laufenden Betrieb auf.
     """
 
     def __init__(
@@ -270,11 +284,11 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
-            if self._device_id is None:
-                self._device_id = await self._async_load_devices()
+            self._device_id = await self._async_load_devices()
             data = await self._client.async_read(
                 self._device_id, WEB_DATAPOINTS_HYDROBOX
             )
+            data.update(self._firmware())
             data.update(
                 await self._client.async_read(MANAGER_DEVICE_ID, WEB_DATAPOINTS_MANAGER)
             )
@@ -291,6 +305,24 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
         return data
 
+    def _firmware(self) -> dict[str, str]:
+        """Firmware-Version je Gerät aus der zuletzt gelesenen Geräteliste."""
+        result: dict[str, str] = {}
+        for key, address in self._addresses().items():
+            for device in self.devices:
+                if str(device.get("Address") or "") == address and (
+                    version := device.get("SoftwareVersion")
+                ):
+                    result[firmware_key(key)] = str(version)
+        return result
+
+    def _addresses(self) -> dict[DeviceKey, str]:
+        """Adresse im Webinterface je Gerät (Manager: leer)."""
+        return {
+            DeviceKey.MANAGER: "",
+            **{key: str(unit) for key, unit in self._unit_by_device.items()},
+        }
+
     async def _async_load_devices(self) -> str:
         """Geräteliste lesen, Geräteinfo ergänzen; liefert die DeviceId der Hydrobox."""
         self.devices = await self._client.async_get_devices()
@@ -299,12 +331,8 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if hydrobox is None:
             raise WebError("Hydrobox nicht im Webinterface gefunden")
 
-        addresses = {
-            DeviceKey.MANAGER: "",
-            **{key: str(unit) for key, unit in self._unit_by_device.items()},
-        }
         registry = dr.async_get(self.hass)
-        for key, address in addresses.items():
+        for key, address in self._addresses().items():
             if (device := by_address.get(address)) is None:
                 continue
             registry.async_get_or_create(

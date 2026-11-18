@@ -70,6 +70,9 @@
       }
     },
     "sensor": {
+      "hb_firmware": {
+        "default": "mdi:chip"
+      },
       "hb_hk1_betriebsmodus": {
         "default": "mdi:sun-snowflake-variant"
       },
@@ -115,6 +118,9 @@
       "wanda_energie_th_twe": {
         "default": "mdi:counter"
       },
+      "wanda_firmware": {
+        "default": "mdi:chip"
+      },
       "wanda_jaz_gesamt": {
         "default": "mdi:gauge"
       },
@@ -132,6 +138,18 @@
       },
       "wanda_status": {
         "default": "mdi:heat-pump"
+      },
+      "wpm_firmware": {
+        "default": "mdi:chip"
+      },
+      "wpm_update_fortschritt": {
+        "default": "mdi:progress-download"
+      },
+      "wpm_update_info": {
+        "default": "mdi:information-outline"
+      },
+      "wpm_update_status": {
+        "default": "mdi:update"
       }
     },
     "switch": {

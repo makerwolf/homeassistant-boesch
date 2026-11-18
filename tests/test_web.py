@@ -6,6 +6,7 @@ import pytest
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from custom_components.boesch.const import CONF_WEB_PASSWORD, CONF_WEB_POWER
 from custom_components.boesch.web_client import (
@@ -17,6 +18,9 @@ from custom_components.boesch.web_client import (
     DP_POWER_ELECTRIC,
     DP_SEASON_OUTDOOR_TEMPERATURE,
     DP_SYSTEM_IS_PRESENT,
+    DP_UPDATE_INFO,
+    DP_UPDATE_PROGRESS,
+    DP_UPDATE_STATE,
     MANAGER_DEVICE_ID,
     TYPE_BOOLEAN,
     TYPE_CURVE,
@@ -44,6 +48,9 @@ def web_values(fake_web):
         (HB, DP_HK1_MIXER_POSITION): 42.0,
         (HB, DP_SEASON_OUTDOOR_TEMPERATURE): 4.716547,
         (MANAGER_DEVICE_ID, DP_SYSTEM_IS_PRESENT): True,
+        (MANAGER_DEVICE_ID, DP_UPDATE_STATE): 2,
+        (MANAGER_DEVICE_ID, DP_UPDATE_PROGRESS): 37,
+        (MANAGER_DEVICE_ID, DP_UPDATE_INFO): "",
     })
     return fake_web
 
@@ -73,8 +80,29 @@ async def test_web_entities(hass, fake_modbus, web_values, config_entry) -> None
     # Anwesenheit hängt am eigenen Gerät "Wärmepumpenmanager".
     attrs = hass.states.get("switch.boesch_wpm_anwesenheit").attributes
     assert attrs["friendly_name"] == "Bösch heat pump manager Presence"
+    # Seite "Update" des Wärmepumpenmanagers (nur lesend).
+    assert _state(hass, "sensor.boesch_wpm_update_status") == "downloading"
+    assert _state(hass, "sensor.boesch_wpm_update_fortschritt") == "37"
+    # Infotext ist standardmäßig deaktiviert.
+    assert hass.states.get("sensor.boesch_wpm_update_info") is None
     curve = hass.states.get("number.boesch_hb_hk1_heizkurve_m20").attributes
     assert curve["friendly_name"] == "Bösch Hydrobox HC1 heating curve at -20 °C"
+
+
+async def test_web_update_info(hass, fake_modbus, web_values, config_entry) -> None:
+    """Aktivierter Infotext: leer -> unbekannt, sonst der Text der Firmware."""
+    await _setup(hass, config_entry)
+    er.async_get(hass).async_update_entity(
+        "sensor.boesch_wpm_update_info", disabled_by=None
+    )
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert _state(hass, "sensor.boesch_wpm_update_info") == "unknown"
+
+    web_values.values[(MANAGER_DEVICE_ID, DP_UPDATE_INFO)] = "Entpacke 2/5"
+    await config_entry.runtime_data.web.async_refresh()
+    await hass.async_block_till_done()
+    assert _state(hass, "sensor.boesch_wpm_update_info") == "Entpacke 2/5"
 
 
 async def test_web_writes(hass, fake_modbus, web_values, config_entry) -> None:
