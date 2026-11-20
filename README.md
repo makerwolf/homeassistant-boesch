@@ -170,6 +170,11 @@ einer Instanz einschalten. In beiden Fällen erscheint ein Hinweis unter
 *Einstellungen → Reparaturen* (das Gerät heizt dann mit festem Wert ohne
 Außentemperatur-Führung); er verschwindet, sobald die feine Kurve wieder
 eingeschaltet wird.
+**Fällt Home Assistant länger aus**, heizt das Gerät mit dem zuletzt
+geschriebenen Festwert weiter. Rückweg ohne HA: im Bösch-Webinterface den
+Heizmodus HK1 auf „Kurve“ stellen; das Gerät regelt dann wieder nach seiner
+eigenen Kurve. HA erkennt die Umstellung beim nächsten Start und lässt die
+feine Kurve aus.
 Beim Beenden von Home Assistant wird der Festwert ohne Zuschlag und
 Sofort-Anhebung geschrieben, damit keine Anhebung stehen bleibt. Entladen der
 Integration oder Abschalten der Option stellt den Heizmodus zurück auf „Kurve“.
