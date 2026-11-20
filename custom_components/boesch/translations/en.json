@@ -54,7 +54,8 @@
         "menu_options": {
           "general": "General (heating circuits, intervals)",
           "inputs": "Sensor inputs (AI1–AI8)",
-          "web": "Web interface (heating mode, heating curve)"
+          "web": "Web interface (heating mode, heating curve)",
+          "fine_curve": "Fine heating curve (limits, ramp)"
         }
       },
       "general": {
@@ -88,16 +89,37 @@
         "description": "Settings not available via Modbus (heating mode, fixed setpoints, heating curve, mixer, presence), via the heat pump's web interface. Password as used for the browser login; leave empty to disable these features.",
         "data": {
           "web_password": "Web password",
-          "web_power": "High-resolution power values from the web interface"
+          "web_power": "High-resolution power values from the web interface",
+          "fine_curve": "Use fine heating curve from Home Assistant"
         },
         "data_description": {
-          "web_power": "Replaces the 8 power sensors (Modbus, truncated to 0.1 kW) with the web values at 0.01 kW. Entity IDs stay the same, the energy counters become more accurate. If the web interface fails, the Modbus values are used."
+          "web_power": "Replaces the 8 power sensors (Modbus, truncated to 0.1 kW) with the web values at 0.01 kW. Entity IDs stay the same, the energy counters become more accurate. If the web interface fails, the Modbus values are used.",
+          "fine_curve": "Home Assistant calculates the HC1 heating curve in 0.1 K steps and writes the result as fixed setpoint (heating mode “Fixed value”). Adds support points, offset, instant boost and the switch “Fine heating curve active”. Turning it off sets the heating mode back to “Curve”."
+        }
+      },
+      "fine_curve": {
+        "title": "Fine heating curve",
+        "description": "Limits and ramp of the fine HC1 heating curve. The ramp limits how fast the fixed setpoint changes; the instant boost bypasses ramp and write interval.",
+        "data": {
+          "fine_min": "Minimum flow temperature (°C)",
+          "fine_max": "Maximum flow temperature (°C)",
+          "fine_boost_max": "Maximum flow temperature with instant boost (°C)",
+          "fine_ramp_down": "Ramp down (K per 10 min)",
+          "fine_ramp_up": "Ramp up (K per 10 min)",
+          "fine_write_interval": "Minimum time between writes (min)"
+        },
+        "data_description": {
+          "fine_min": "Limits apply to curve + parallel shift + offset.",
+          "fine_ramp_down": "Lower slowly: the heat pump stops when the buffer is more than 5 K above its setpoint.",
+          "fine_ramp_up": "Raise slowly: a fast increase drives the heat pump to full load."
         }
       }
     },
     "error": {
       "invalid_auth": "Web password rejected.",
-      "web_cannot_connect": "Web interface unreachable or Hydrobox not found."
+      "web_cannot_connect": "Web interface unreachable or Hydrobox not found.",
+      "fine_min_max": "The minimum must be below the maximum.",
+      "fine_boost_max": "The maximum with instant boost must not be below the maximum."
     }
   },
   "entity": {
@@ -178,6 +200,18 @@
       },
       "wanda_pv_soll_twe": {
         "name": "PV target temperature hot water"
+      },
+      "hb_hk1_feinkurve": {
+        "name": "HC1 fine curve at {temperature} °C"
+      },
+      "hb_hk1_fein_parallel": {
+        "name": "HC1 fine parallel shift"
+      },
+      "hb_hk1_zuschlag": {
+        "name": "HC1 offset"
+      },
+      "hb_hk1_sofort_anhebung": {
+        "name": "HC1 instant boost"
       }
     },
     "select": {
@@ -551,11 +585,17 @@
           "os_update": "OS update in progress",
           "checking": "Checking for update"
         }
+      },
+      "hb_hk1_fein_festwert": {
+        "name": "HC1 calculated fixed setpoint"
       }
     },
     "switch": {
       "wpm_anwesenheit": {
         "name": "Presence"
+      },
+      "hb_hk1_feinkurve_aktiv": {
+        "name": "Fine heating curve active"
       }
     },
     "water_heater": {
@@ -603,6 +643,19 @@
     },
     "curve_point_missing": {
       "message": "Curve has no point at {temperature} °C."
+    },
+    "fine_curve_not_ready": {
+      "message": "Fine heating curve not ready: web interface, heating curve or HC1 setpoint missing."
+    }
+  },
+  "issues": {
+    "fine_curve_foreign_write": {
+      "title": "Fine heating curve stopped: setpoint changed externally",
+      "description": "The HC1 fixed heating setpoint on the device is {value} °C, but the fine heating curve last wrote {last_written} °C. Someone else changed it – the web interface, the “HC1 fixed setpoint heating” entity or a second Home Assistant instance running the fine heating curve. To avoid two controllers fighting each other, the fine heating curve has switched itself off.\n\nThe device keeps heating at the fixed value of {value} °C, **without outdoor temperature compensation**. Either switch “Fine heating curve active” back on or set the HC1 setpoint mode to “Outdoor temperature curve”. If a second instance is running, enable the fine heating curve in only one of them.\n\nThis notice disappears once the fine heating curve is switched on again."
+    },
+    "fine_curve_mode_changed": {
+      "title": "Fine heating curve stopped: heating mode changed",
+      "description": "The HC1 setpoint mode is no longer “Fixed setpoint” – it was changed on the device, in the web interface or via the “HC1 setpoint mode” entity. The fine heating curve has therefore switched itself off and does not switch back.\n\nIf this was intended, you can ignore this notice. Otherwise switch “Fine heating curve active” back on; the notice then disappears."
     }
   }
 }

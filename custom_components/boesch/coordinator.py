@@ -343,8 +343,10 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         return str(hydrobox["DeviceId"])
 
-    async def async_write(self, config_id: str, value_type: str, value: Any) -> None:
-        """Datenpunkt schreiben, danach sofortiger Refresh."""
+    async def async_write(
+        self, config_id: str, value_type: str, value: Any, *, refresh: bool = True
+    ) -> None:
+        """Datenpunkt schreiben, danach (außer beim Beenden) sofortiger Refresh."""
         if self._device_id is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="web_not_connected"
@@ -360,7 +362,12 @@ class BoeschWebCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="web_write_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        await self.async_request_refresh()
+        # Geschriebenen Wert sofort übernehmen: der Refresh ist entprellt und
+        # käme bei schnell aufeinanderfolgenden Schreibvorgängen später.
+        if self.data is not None:
+            self.data = {**self.data, config_id: value}
+        if refresh:
+            await self.async_request_refresh()
 
     async def async_write_curve_point(self, config_id: str, x: float, y: float) -> None:
         """Einen Stützpunkt einer Kurve (Heiz- oder Kühlkurve) ändern.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,7 @@ from homeassistant.helpers import entity_platform
 from custom_components.boesch.const import (
     CONF_ENABLE_HK2,
     CONF_ENABLE_WEZ,
+    CONF_FINE_CURVE,
     CONF_WEB_PASSWORD,
     DOMAIN,
 )
@@ -47,7 +49,12 @@ async def test_every_entity_translated(hass, fake_modbus, fake_web, config_entry
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         config_entry,
-        options={CONF_ENABLE_HK2: True, CONF_ENABLE_WEZ: True, CONF_WEB_PASSWORD: "pw"},
+        options={
+            CONF_ENABLE_HK2: True,
+            CONF_ENABLE_WEZ: True,
+            CONF_WEB_PASSWORD: "pw",
+            CONF_FINE_CURVE: True,
+        },
     )
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -72,3 +79,19 @@ async def test_every_entity_translated(hass, fake_modbus, fake_web, config_entry
         ("sensor", "hb_hkp2_laufzeit"),
         ("sensor", "wpm_update_info"),
     }
+
+
+def test_issue_texts() -> None:
+    """Reparaturhinweise der feinen Heizkurve: Texte und Platzhalter in beiden Sprachen."""
+    placeholders = {
+        "fine_curve_foreign_write": {"value", "last_written"},
+        "fine_curve_mode_changed": set(),
+    }
+    for lang in ("de", "en"):
+        issues = _load(f"translations/{lang}.json")["issues"]
+        assert set(issues) == set(placeholders), lang
+        for key, expected in placeholders.items():
+            text = issues[key]["title"] + issues[key]["description"]
+            found = {p for p in expected if f"{{{p}}}" in text}
+            assert found == expected, (lang, key)
+            assert text.count("{") == text.count("}") == len(re.findall(r"\{\w+\}", text))

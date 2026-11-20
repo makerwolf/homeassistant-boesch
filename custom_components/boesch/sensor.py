@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -16,7 +18,8 @@ from . import BoeschConfigEntry
 from .const import CONF_AI_INPUTS
 from .coordinator import BoeschCoordinator, BoeschWebCoordinator, firmware_key
 from .energy import build_energy_entities
-from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
+from .entity import BoeschEntity, BoeschWebEntity, FineCurveEntity, assign_entity_ids
+from .fine_curve import FineCurveCoordinator
 from .registers import DeviceKey, Kind, Reg
 from .web_client import (
     DP_HK1_MIXER_POSITION,
@@ -75,6 +78,8 @@ async def async_setup_entry(
         entities.append(BoeschWebUpdateInfo(web, entry))
         for device, key in _FIRMWARE.items():
             entities.append(BoeschWebFirmware(web, entry, device, key))
+    if fine := entry.runtime_data.fine:
+        entities.append(FineCurveSetpoint(fine, entry))
 
     assign_entity_ids(entry, entities, "sensor")
     async_add_entities(entities)
@@ -272,3 +277,23 @@ class BoeschWebUpdateInfo(BoeschWebEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         return self._value or None
+
+
+class FineCurveSetpoint(FineCurveEntity, SensorEntity):
+    """Berechneter Festwert der feinen Heizkurve (was geschrieben wird/würde)."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, coordinator: FineCurveCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry, "boesch_hb_hk1_fein_festwert")
+
+    @property
+    def native_value(self) -> float | None:
+        return self.coordinator.output
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return self.coordinator.attributes()

@@ -11,7 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
 from .coordinator import BoeschCoordinator, BoeschWebCoordinator
-from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
+from .entity import BoeschEntity, BoeschWebEntity, FineCurveEntity, assign_entity_ids
+from .fine_curve import FineCurveCoordinator
 from .registers import DeviceKey, Kind, Reg
 from .web_client import DP_SYSTEM_IS_PRESENT, TYPE_BOOLEAN
 
@@ -32,6 +33,8 @@ async def async_setup_entry(
                 entities.append(BoeschSwitch(coordinator, reg, entry))
     if web := entry.runtime_data.web:
         entities.append(BoeschWebPresence(web, entry))
+    if fine := entry.runtime_data.fine:
+        entities.append(FineCurveActive(fine, entry))
     assign_entity_ids(entry, entities, "switch")
     async_add_entities(entities)
 
@@ -80,3 +83,20 @@ class BoeschWebPresence(BoeschWebEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.async_write(self._config_id, TYPE_BOOLEAN, False)
+
+
+class FineCurveActive(FineCurveEntity, SwitchEntity):
+    """Feine Heizkurve aktiv: an = Heizmodus "fixed", aus = zurück auf "curve"."""
+
+    def __init__(self, coordinator: FineCurveCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry, "boesch_hb_hk1_feinkurve_aktiv")
+
+    @property
+    def is_on(self) -> bool:
+        return self.coordinator.active
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_activate()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_deactivate()

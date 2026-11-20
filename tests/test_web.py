@@ -133,6 +133,20 @@ async def test_web_writes(hass, fake_modbus, web_values, config_entry) -> None:
     assert (MANAGER_DEVICE_ID, DP_SYSTEM_IS_PRESENT, TYPE_BOOLEAN, True) in client.writes
 
 
+async def test_fixed_setpoint_tenths(hass, fake_modbus, web_values, config_entry) -> None:
+    """Festwert in 0,1-K-Schritten; gerundet, bevor er geschrieben wird."""
+    await _setup(hass, config_entry)
+    attrs = hass.states.get("number.boesch_hb_hk1_festwert").attributes
+    assert attrs["step"] == 0.1
+    assert hass.states.get("number.boesch_hb_hk1_festwert_kuehlen").attributes["step"] == 0.1
+    await hass.services.async_call(
+        "number", "set_value",
+        {"entity_id": "number.boesch_hb_hk1_festwert", "value": 33.24},
+        blocking=True,
+    )
+    assert web_values.instances[0].writes[-1][2:] == (TYPE_SINGLE, 33.2)
+
+
 async def test_curve_point_write(hass, fake_modbus, web_values, config_entry) -> None:
     """Kurve wird frisch gelesen und als Ganzes geschrieben."""
     await _setup(hass, config_entry)

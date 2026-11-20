@@ -86,8 +86,8 @@ verwaister Entities/Geräte nach dem Setup (`_async_remove_stale` gegen
 `runtime_data.entity_keys`, gefüllt von `assign_entity_ids` – neue Entities
 deshalb immer darüber anlegen, sonst werden sie beim nächsten Start gelöscht),
 `async_remove_config_entry_device`, Doku-Abschnitte im README.
-Bewusst ausgenommen: `dynamic-devices` (feste Hardware), `repair-issues`
-(einziger vom Nutzer behebbarer Fall = Passwort, deckt Reauth ab).
+Bewusst ausgenommen: `dynamic-devices` (feste Hardware). `repair-issues`:
+nur die Selbstabschaltung der feinen Heizkurve (Passwort deckt Reauth ab).
 
 Übersetzungen (Gold komplett): `translation_key` = unique_id ohne „boesch_“
 (`entity.translation_key`), Ausnahmen: Kurven-Stützpunkte teilen sich
@@ -256,6 +256,40 @@ nennenswerte Unterschiede zwischen Web und Modbus.
 | `RemoteControlConnected` / `RemoteControlEnabled` | Verbunden mit Server / Serververbindung erlauben | R / RW | – | – | Kermi-Cloud |
 | `DH_Led1` / `DH_Led2` / `DH_Output1` / `DH_Output2` / `DH_SendErrorToOutputs` | LEDs, Ausgänge | RW (UL20/30) | – | – | Installateur |
 | `ReferenceId`, `SystemSerialNo` | Referenz-Id, Seriennummer | RW (UL20/40) | – | – | |
+
+### Feine Heizkurve (`fine_curve.py`, Option `fine_curve`, 2026-11-19)
+
+Integration rechnet die HK1-Kurve in 0,1 K und schreibt sie als Festwert
+(Heizmodus `fixed`). Verifiziert 2026-11-19: das Gerät rechnet seinen HK1-Soll
+als Interpolation der Bösch-Kurve über die **gemittelte** Außentemperatur
+(H 276) + H 156 (32,7 °C bei 6,5 °C), daher Vorbelegung = Kurve + H 156.
+Festwert nimmt Zehntel an (33.2 → 33.2), die Datenpunkt-Konfig hat keine
+Schrittweite. Zustand (Stützpunkte, feine PV, aktiv) im `Store`, nicht in den
+Optionen (Optionsänderung = Reload). Unload schaltet auf `curve` zurück, außer
+beim Reload aus dem Update-Listener (`runtime_data.reloading`). HA-Stop
+entlädt nicht → STOP-Listener schreibt Festwert ohne Zuschlag/Sofort-Anhebung.
+**Verifiziert 2026-11-20 (Nachtlauf, H 156 = 1):** H 156 wirkt im
+Festwert-Modus **nicht** – HK1-Soll (H 152) und Puffer-Soll (H 2) = Festwert
+exakt, `abweichung_hk1_soll` 0 (0,1 nur bis zum nächsten Modbus-Poll). Daher
+`number.boesch_hb_hk1_parallel` bei aktiver feiner Kurve wirkungslos → feine
+PV/Zuschlag nutzen. HA-Neustart (STOP-Write, Wiederaufnahme) und Halten bei
+TWE am 2026-11-20 beobachtet; Abtauen noch nicht.
+
+Fremd-Schreiber-Erkennung: weicht der Festwert am Gerät ≥ 0,05 K von
+`last_written` ab → `foreign_write`, abschalten ohne Moduswechsel (wie
+`mode_changed`); beide legen den Reparaturhinweis `fine_curve_stopped`
+(persistent, `translation_key` `fine_curve_<grund>`, Texte unter `issues`) an,
+gelöscht beim Einschalten bzw. wenn die Option aus ist. Nach eigenem Schreibfehler kein Vergleich. Voraussetzung:
+`BoeschWebCoordinator.async_write` übernimmt den geschriebenen Wert sofort in
+`data` (der Refresh ist entprellt, sonst Fehlalarm bei schnellen Writes).
+Dev-Container: Neustart aus HA beendet `hass` mit Code 100, der Container
+bleibt stehen → `docker start boesch-ha`.
+
+Karte `heizkurve-card` (Vanilla JS, eigene `CARD_VERSION`) liegt in
+`custom_components/boesch/frontend/`; `card.py` stellt sie unter
+`/boesch_static/heizkurve-card.js?v=<Integrationsversion>` bereit und lädt sie
+per `add_extra_js_url` (nur wenn http + frontend geladen sind;
+`after_dependencies`, damit Tests ohne `hass_frontend` laufen).
 
 Außerdem für später, aber nicht im Mitschnitt: HK2-Pendants von Heizmodus/Festwert/Heizkurve
 (IDs in `wellknown-datapoints.js`), Szenen (z. B. „Trinkwassererwärmung“

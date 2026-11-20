@@ -5,6 +5,25 @@
 
 ## [Unreleased]
 
+- **Festwert HK1 in 0,1-K-Schritten:** Festwert Heizen und Kühlen lassen sich
+  jetzt auf Zehntelgrad einstellen (bisher 0,5).
+- **Feine Heizkurve aus Home Assistant (neu, optional):** Haken unter
+  *Konfigurieren → Webinterface*. Home Assistant rechnet die Heizkurve HK1 in
+  0,1-K-Schritten über die gemittelte Außentemperatur und schreibt das Ergebnis
+  als Festwert. Dazu 9 Stützpunkte, eine feine Parallelverschiebung, ein
+  Zuschlag für Automationen (z. B. Nachtabsenkung), eine Sofort-Anhebung
+  (z. B. Anlaufhilfe nach Warmwasser), der Sensor „Berechneter Festwert“ und
+  der Schalter „Feine Heizkurve aktiv“. Sanfte Rampe, kein Schreiben während
+  Warmwasser/Abtauen, beim Ausschalten zurück auf die Bösch-Kurve. Grenzen und
+  Rampe unter *Konfigurieren → Feine Heizkurve*. Die Parallelverschiebung am
+  Gerät wirkt dabei nicht – dafür die feine Parallelverschiebung nutzen.
+  Ändert jemand anderes den Festwert (Webinterface, zweite
+  Home-Assistant-Instanz) oder den Heizmodus, schaltet sich die feine Kurve ab
+  statt gegenzusteuern – mit Hinweis unter *Einstellungen → Reparaturen*.
+- **Dashboard-Karte „Heizkurve“ (neu):** zeigt die Heizkurve als Diagramm mit
+  Betriebspunkt, Stützpunkte per Ziehen änderbar. Wird automatisch geladen
+  (keine Ressource nötig), Vorbelegung mit der feinen Heizkurve.
+
 ## [2026.11.3] – Softwareupdate & Firmware-Versionen
 
 - **Softwareupdate (Webinterface):** neue Diagnose-Sensoren am

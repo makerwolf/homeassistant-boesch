@@ -200,6 +200,17 @@ async def test_web_write_single_as_string() -> None:
     assert value["Value"] == "34"
 
 
+@pytest.mark.parametrize(
+    ("value", "sent"),
+    [(33.2, "33.2"), (0.1 + 0.2 + 33, "33.3"), (33.25, "33.25"), (20.0, "20")],
+)
+async def test_web_write_single_without_float_artifacts(value, sent) -> None:
+    """Zehntelgrad gehen ohne Float-Artefakte (33.300000000000004) raus."""
+    session = FakeSession([_login_ok()], [_ok(None)])
+    await BoeschWebClient(session, "h", "pw").async_write("dev", "cid", TYPE_SINGLE, value)
+    assert session.calls[1][2]["DatapointValues"][0]["Value"] == sent
+
+
 async def test_web_timeout_mapped() -> None:
     session = FakeSession([_login_ok()], [])
     session.request = MagicMock(side_effect=TimeoutError)

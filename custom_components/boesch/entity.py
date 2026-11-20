@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL_HYDROBOX, MODEL_MANAGER, MODEL_WANDA
 from .coordinator import BoeschCoordinator, BoeschWebCoordinator
+from .fine_curve import FineCurveCoordinator
 from .registers import DeviceKey, Reg
 
 if TYPE_CHECKING:
@@ -135,3 +136,25 @@ class BoeschWebEntity(CoordinatorEntity[BoeschWebCoordinator]):
     @property
     def available(self) -> bool:
         return super().available and self._value is not None
+
+
+class FineCurveEntity(CoordinatorEntity[FineCurveCoordinator]):
+    """Basis der Entities der feinen Heizkurve (an der Hydrobox).
+
+    Immer verfügbar: Einstellungen sollen sich auch ohne Gerät ändern lassen;
+    ob gerade gehalten wird, zeigt der Sensor "Berechneter Festwert".
+    """
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, coordinator: FineCurveCoordinator, entry: ConfigEntry, key: str
+    ) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = key
+        self._attr_translation_key = translation_key(key)
+        self._attr_device_info = build_device_info(entry, DeviceKey.HYDROBOX)
+
+    @property
+    def available(self) -> bool:
+        return True

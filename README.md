@@ -35,7 +35,8 @@ TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
   Stützpunkte von Heiz- und Kühlkurve, Mischer-Öffnung, Saison-Außentemperatur,
   Anwesenheitsstatus und Softwareupdate-Status – optional
   auch hochauflösende Leistungswerte (0,01 statt 0,1 kW) für genauere
-  Energiezähler.
+  Energiezähler und eine **feine Heizkurve** in 0,1-K-Schritten, die Home
+  Assistant rechnet.
 - **UI-Konfiguration**: Verbindungstest im Setup, Options-Menü für Heizkreis 2,
   externen Wärmeerzeuger, Poll-Intervalle und frei belegbare Fühlereingänge.
 - **Effizientes Polling**: ein `DataUpdateCoordinator` je Intervall-Klasse
@@ -109,8 +110,8 @@ Wärmepumpenmanager**):
 | Entity | Inhalt |
 |---|---|
 | `select.boesch_hb_hk1_heizmodus` | Heizmodus HK1: Außentemperaturkurve / Festwert / Aus |
-| `number.boesch_hb_hk1_festwert` | Konstanter Vorlauf-Sollwert Heizen (0–100 °C) |
-| `number.boesch_hb_hk1_festwert_kuehlen` | Konstanter Sollwert Kühlen (5–30 °C) |
+| `number.boesch_hb_hk1_festwert` | Konstanter Vorlauf-Sollwert Heizen (0–100 °C, 0,1 K) |
+| `number.boesch_hb_hk1_festwert_kuehlen` | Konstanter Sollwert Kühlen (5–30 °C, 0,1 K) |
 | `number.boesch_hb_hk1_heizkurve_m20` … `_p20` | Vorlauf-Sollwert bei −20 … +20 °C Außentemperatur (9 Stützpunkte, 0–65 °C, ganze Grad) |
 | `number.boesch_hb_hk1_kuehlkurve_p15` … `_p40` | Kühl-Vorlauf-Sollwert bei 15 / 25 / 30 / 35 / 40 °C Außentemperatur (5 Stützpunkte, 5–30 °C, ganze Grad) |
 | `sensor.boesch_hb_hk1_mischer` | Mischer-Öffnung HK1 (%) |
@@ -134,6 +135,72 @@ Modbus liefert die Leistungen nur in 0,1-kW-Schritten und **schneidet ab**
 werden genauer. Ist das Webinterface kurz nicht erreichbar, gelten für diesen
 Poll die Modbus-Werte. Beim Einschalten springen die Werte daher um einige
 Prozent nach oben.
+
+**Feine Heizkurve** (Haken unter *Konfigurieren → Webinterface*): Stützpunkte
+und Parallelverschiebung der Bösch-Kurve kennen nur ganze Grad, bei einer
+Fußbodenheizung ist 1 K Vorlauf viel. Mit dem Haken rechnet Home Assistant die
+Kurve selbst in 0,1-K-Schritten und schreibt das Ergebnis jede Minute (gefiltert)
+als Festwert HK1; der Heizmodus steht dabei auf „Festwert“.
+
+| Entity | Bedeutung |
+|---|---|
+| `switch.boesch_hb_hk1_feinkurve_aktiv` | An: Festwert = aktueller HK1-Soll, dann Heizmodus „Festwert“ (kein Sprung). Aus: zurück auf „Kurve“ |
+| `number.boesch_hb_hk1_feinkurve_m20` … `_p20` | 9 Stützpunkte (0,1 K). Beim ersten Einschalten = Bösch-Kurve + Parallelverschiebung |
+| `number.boesch_hb_hk1_fein_parallel` | Feine Parallelverschiebung (−5…+5 K), gespeichert |
+| `number.boesch_hb_hk1_zuschlag` | Zuschlag für Automationen (−5…+5 K), läuft durch die Rampe, nach Neustart 0 |
+| `number.boesch_hb_hk1_sofort_anhebung` | Sofort-Anhebung (0…12 K, z. B. Anlaufhilfe nach Warmwasser): wird sofort geschrieben, nach Neustart 0 |
+| `sensor.boesch_hb_hk1_fein_festwert` | Berechneter Festwert; Attribute: Basiskurve, Ziel vor Rampe, zuletzt geschrieben, Grund fürs Halten, HK1-/Puffer-Soll |
+
+Rechenweg: Kurve über die **gemittelte Außentemperatur** interpolieren (wie das
+Gerät selbst), + feine Parallelverschiebung + Zuschlag, auf 20–40 °C begrenzen.
+Eine Rampe fährt das Ziel langsam an (senken 0,1 K, heben 0,2 K je 10 min), weil
+der Puffer-Soll dem HK1-Soll folgt. Geschrieben wird frühestens alle 10 min und
+nur bei ≥ 0,1 K Unterschied. Die Sofort-Anhebung kommt danach dazu (bis 45 °C)
+und geht an Rampe und Filter vorbei. Grenzen, Rampe und Schreibabstand stehen
+unter *Konfigurieren → Feine Heizkurve*.
+
+Gehalten wird (nichts geschrieben, Rampe pausiert) bei Warmwasser und Abtauen
+(außer Sofort-Anhebung), ohne Außentemperatur oder Webinterface. Stellt jemand
+am Gerät den Heizmodus um, schaltet sich die Steuerung ab, ohne zurückzuschalten.
+Genauso, wenn der Festwert von außen geändert wird – im Webinterface, über
+`number.boesch_hb_hk1_festwert` oder von einer zweiten
+Home-Assistant-Instanz mit aktiver feiner Kurve: Der Heizmodus bleibt dann auf
+„Festwert“, es steuert nur noch der andere. Die feine Kurve also immer nur in
+einer Instanz einschalten. In beiden Fällen erscheint ein Hinweis unter
+*Einstellungen → Reparaturen* (das Gerät heizt dann mit festem Wert ohne
+Außentemperatur-Führung); er verschwindet, sobald die feine Kurve wieder
+eingeschaltet wird.
+Beim Beenden von Home Assistant wird der Festwert ohne Zuschlag und
+Sofort-Anhebung geschrieben, damit keine Anhebung stehen bleibt. Entladen der
+Integration oder Abschalten der Option stellt den Heizmodus zurück auf „Kurve“.
+**Die Parallelverschiebung am Gerät (`number.boesch_hb_hk1_parallel`) wirkt
+nicht, solange die feine Heizkurve aktiv ist.** Im Festwert-Modus übernimmt das
+Gerät den Festwert unverändert als HK1-Soll (und Heizspeicher-Soll). Stattdessen
+die feine Parallelverschiebung oder den Zuschlag verwenden.
+
+#### Dashboard-Karte „Heizkurve“
+
+Die Integration bringt eine Karte mit, die eine Heizkurve als Diagramm zeigt;
+die Stützpunkte lassen sich mit der Maus/dem Finger ziehen (oder per Pfeiltasten).
+Eine Dashboard-Ressource ist nicht nötig – nach dem Einrichten der Integration
+einmal den Browser neu laden, dann steht sie unter *Karte hinzufügen →
+Heizkurve*. Die Vorbelegung nimmt die feine Heizkurve (sonst die Bösch-Kurve)
+und die gemittelte Außentemperatur als Betriebspunkt.
+
+```yaml
+type: custom:heizkurve-card
+title: Feine Heizkurve
+outdoor_entity: sensor.boesch_hb_aussentemperatur_gemittelt
+flow_entity: sensor.boesch_hb_hk1_ist   # optional: Ist-Vorlauf als Punkt
+points:
+  - { x: -20, entity: number.boesch_hb_hk1_feinkurve_m20 }
+  - { x: -15, entity: number.boesch_hb_hk1_feinkurve_m15 }
+  # … bis
+  - { x: 20, entity: number.boesch_hb_hk1_feinkurve_p20 }
+```
+
+Weitere Optionen: `y_min`, `y_max`, `step` (Schrittweite beim Ziehen, sonst die
+der Entity). Die Karte funktioniert mit beliebigen `number`-Entities.
 
 Die Web-API ist inoffiziell (aus der Web-Oberfläche abgeleitet) und kann sich
 mit Firmware-Updates ändern.
@@ -210,7 +277,8 @@ automation:
 
 Weitere Ideen: Energiemodus `select.boesch_hb_hk1_energiemodus` nachts auf
 *Eco* (`eco`), Parallelverschiebung `number.boesch_hb_hk1_parallel` bei günstigem
-Strompreis anheben, Benachrichtigung bei `binary_sensor.boesch_wanda_alarm_bs`.
+Strompreis anheben (mit feiner Heizkurve stattdessen `number.boesch_hb_hk1_zuschlag`),
+Benachrichtigung bei `binary_sensor.boesch_wanda_alarm_bs`.
 
 ## Energie & Effizienz (Energy Dashboard)
 
@@ -303,6 +371,10 @@ Template-Sensor entsprechend anpassen.
 - **`coordinator.py`** – ein Coordinator je Poll-Gruppe, Block-Reads, Encode der
   Schreibwerte (`value / scale`, int16-Zweierkomplement) plus sofortiger Refresh;
   dazu der Web-Coordinator und das optionale Ersetzen der Leistungswerte.
+- **`fine_curve.py`** – feine Heizkurve: Interpolation, Rampe, Schreibfilter
+  und ein eigener Coordinator (60 s), Zustand im HA-Store.
+- **`card.py` + `frontend/heizkurve-card.js`** – Lovelace-Karte, beim Setup als
+  statischer Pfad bereitgestellt und als Frontend-Modul geladen.
 - **`web_client.py`** – schlanker Client fürs Webinterface (Kermi x-center):
   Login per Cookie, Lesen/Schreiben von Datenpunkten, Auto-Relogin.
 - **`sensor` / `binary_sensor` / `number` / `select` / `switch` /

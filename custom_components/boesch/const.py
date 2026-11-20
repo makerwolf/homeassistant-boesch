@@ -25,6 +25,15 @@ CONF_WEB_PASSWORD: Final = "web_password"
 # Leistungen 104-111 hochauflösend aus dem Webinterface statt per Modbus.
 CONF_WEB_POWER: Final = "web_power"
 
+# Feine Heizkurve HK1 aus HA (Festwert-Modus, siehe fine_curve.py).
+CONF_FINE_CURVE: Final = "fine_curve"
+CONF_FINE_MIN: Final = "fine_min"
+CONF_FINE_MAX: Final = "fine_max"
+CONF_FINE_BOOST_MAX: Final = "fine_boost_max"
+CONF_FINE_RAMP_UP: Final = "fine_ramp_up"
+CONF_FINE_RAMP_DOWN: Final = "fine_ramp_down"
+CONF_FINE_WRITE_INTERVAL: Final = "fine_write_interval"
+
 CONF_SCAN_LIVE: Final = "scan_live"
 CONF_SCAN_DEFAULT: Final = "scan_default"
 CONF_SCAN_SETPOINT: Final = "scan_setpoint"
@@ -38,6 +47,13 @@ DEFAULT_HYDROBOX_ADDRESS: Final = 50
 DEFAULT_ENABLE_HK2: Final = False
 DEFAULT_ENABLE_WEZ: Final = False
 DEFAULT_WEB_POWER: Final = False
+DEFAULT_FINE_CURVE: Final = False
+DEFAULT_FINE_MIN: Final = 20.0         # °C, Ziel ohne Sofort-Anhebung
+DEFAULT_FINE_MAX: Final = 40.0         # °C, Ziel ohne Sofort-Anhebung
+DEFAULT_FINE_BOOST_MAX: Final = 45.0   # °C, mit Sofort-Anhebung
+DEFAULT_FINE_RAMP_UP: Final = 0.2      # K je 10 min
+DEFAULT_FINE_RAMP_DOWN: Final = 0.1    # K je 10 min
+DEFAULT_FINE_WRITE_INTERVAL: Final = 10  # min zwischen zwei Schreibvorgängen
 
 # Poll-Gruppen -> Default-Intervall in Sekunden.
 # Bilden die scan_interval-Klassen der ursprünglichen boesch.yaml ab.

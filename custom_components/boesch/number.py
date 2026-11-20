@@ -10,7 +10,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BoeschConfigEntry
 from .coordinator import BoeschCoordinator, BoeschWebCoordinator
-from .entity import BoeschEntity, BoeschWebEntity, assign_entity_ids
+from .entity import BoeschEntity, BoeschWebEntity, FineCurveEntity, assign_entity_ids
+from .fine_curve import (
+    CURVE_X,
+    FIXED_SETPOINT_STEP,
+    FineCurveCoordinator,
+    round_setpoint,
+)
 from .registers import Kind, Reg
 from .web_client import (
     DP_HK1_COOLING_CURVE,
@@ -20,8 +26,6 @@ from .web_client import (
     TYPE_SINGLE,
 )
 
-# Außentemperaturen der Kurven-Stützpunkte (fest in der Kermi-Firmware).
-CURVE_X = (-20, -15, -10, -5, 0, 5, 10, 15, 20)
 COOLING_CURVE_X = (15, 25, 30, 35, 40)
 
 
@@ -65,8 +69,20 @@ async def async_setup_entry(
             )
             for x in COOLING_CURVE_X
         )
+    if fine := entry.runtime_data.fine:
+        entities.extend(
+            FineCurvePoint(fine, entry, i, x) for i, x in enumerate(CURVE_X)
+        )
+        entities.append(FineCurveParallel(fine, entry))
+        entities.append(FineCurveZuschlag(fine, entry))
+        entities.append(FineCurveBoost(fine, entry))
     assign_entity_ids(entry, entities, "number")
     async_add_entities(entities)
+
+
+def _suffix(x: int) -> str:
+    """Außentemperatur im Entity-Namen: -20 -> m20, 0 -> 0, 5 -> p5."""
+    return f"m{-x}" if x < 0 else f"p{x}" if x > 0 else "0"
 
 
 class BoeschNumber(BoeschEntity, NumberEntity):
@@ -102,7 +118,9 @@ class BoeschWebFixedSetpoint(BoeschWebEntity, NumberEntity):
     _attr_mode = NumberMode.BOX
     _attr_device_class = NumberDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_native_step = 0.5
+    # Das Gerät übernimmt Zehntelgrad (33.2 geschrieben -> 33.2 gelesen,
+    # getestet 2026-11-19), auch wenn die Web-UI selbst ganze Grad schickt.
+    _attr_native_step = FIXED_SETPOINT_STEP
 
     def __init__(
         self, coordinator: BoeschWebCoordinator, entry: ConfigEntry, key: str,
@@ -120,7 +138,9 @@ class BoeschWebFixedSetpoint(BoeschWebEntity, NumberEntity):
         return None if value is None else float(value)
 
     async def async_set_native_value(self, value: float) -> None:
-        await self.coordinator.async_write(self._config_id, TYPE_SINGLE, value)
+        await self.coordinator.async_write(
+            self._config_id, TYPE_SINGLE, round_setpoint(value)
+        )
 
 
 class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
@@ -129,8 +149,8 @@ class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
     _attr_mode = NumberMode.BOX
     _attr_device_class = NumberDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    # Wie die Web-Oberfläche: ganze Grad (Feinjustierung über die
-    # Parallelverschiebung, Register H 156, 0,1 K).
+    # Wie die Web-Oberfläche: ganze Grad (feiner geht es nur über die
+    # Option "Feine Heizkurve", siehe fine_curve.py).
     _attr_native_step = 1.0
     _attr_entity_category = EntityCategory.CONFIG
 
@@ -139,7 +159,7 @@ class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
         config_id: str, slug: str, x: int,
         min_value: float = 0.0, max_value: float = 65.0,
     ) -> None:
-        suffix = f"m{-x}" if x < 0 else f"p{x}" if x > 0 else "0"
+        suffix = _suffix(x)
         super().__init__(
             coordinator, entry, f"boesch_hb_hk1_{slug}_{suffix}", config_id
         )
@@ -162,3 +182,90 @@ class BoeschWebCurvePoint(BoeschWebEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         await self.coordinator.async_write_curve_point(self._config_id, self._x, value)
+
+
+class _FineCurveNumber(FineCurveEntity, NumberEntity):
+    """Gemeinsames der Einstellwerte der feinen Heizkurve (0,1 K)."""
+
+    _attr_mode = NumberMode.BOX
+    _attr_native_step = FIXED_SETPOINT_STEP
+
+
+class FineCurvePoint(_FineCurveNumber):
+    """Stützpunkt der feinen Heizkurve bei Außentemperatur x."""
+
+    _attr_device_class = NumberDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = 10.0
+    _attr_native_max_value = 65.0
+
+    def __init__(
+        self, coordinator: FineCurveCoordinator, entry: ConfigEntry, index: int, x: int
+    ) -> None:
+        super().__init__(coordinator, entry, f"boesch_hb_hk1_feinkurve_{_suffix(x)}")
+        self._attr_translation_key = "hb_hk1_feinkurve"
+        self._attr_translation_placeholders = {"temperature": str(x)}
+        self._index = index
+
+    @property
+    def native_value(self) -> float | None:
+        points = self.coordinator.points
+        return None if points is None else points[self._index]
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.coordinator.async_set_point(self._index, value)
+
+
+class FineCurveParallel(_FineCurveNumber):
+    """Feine Parallelverschiebung der feinen Kurve (gespeichert)."""
+
+    _attr_native_unit_of_measurement = UnitOfTemperature.KELVIN
+    _attr_native_min_value = -5.0
+    _attr_native_max_value = 5.0
+
+    def __init__(self, coordinator: FineCurveCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry, "boesch_hb_hk1_fein_parallel")
+
+    @property
+    def native_value(self) -> float:
+        return self.coordinator.parallel
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.coordinator.async_set_parallel(value)
+
+
+class FineCurveZuschlag(_FineCurveNumber):
+    """Zuschlag für Automationen; läuft durch die Rampe, nach Neustart 0."""
+
+    _attr_native_unit_of_measurement = UnitOfTemperature.KELVIN
+    _attr_native_min_value = -5.0
+    _attr_native_max_value = 5.0
+
+    def __init__(self, coordinator: FineCurveCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry, "boesch_hb_hk1_zuschlag")
+
+    @property
+    def native_value(self) -> float:
+        return self.coordinator.zuschlag
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.coordinator.set_zuschlag(value)
+
+
+class FineCurveBoost(_FineCurveNumber):
+    """Sofort-Anhebung (WP-Anlaufhilfe): an Rampe und Filter vorbei, nach Neustart 0."""
+
+    _attr_native_unit_of_measurement = UnitOfTemperature.KELVIN
+    _attr_native_min_value = 0.0
+    _attr_native_max_value = 12.0
+
+    def __init__(self, coordinator: FineCurveCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry, "boesch_hb_hk1_sofort_anhebung")
+
+    @property
+    def native_value(self) -> float:
+        return self.coordinator.boost
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.coordinator.async_set_boost(value)

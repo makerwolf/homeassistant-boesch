@@ -27,6 +27,13 @@ from .const import (
     CONF_AI_INPUTS,
     CONF_ENABLE_HK2,
     CONF_ENABLE_WEZ,
+    CONF_FINE_BOOST_MAX,
+    CONF_FINE_CURVE,
+    CONF_FINE_MAX,
+    CONF_FINE_MIN,
+    CONF_FINE_RAMP_DOWN,
+    CONF_FINE_RAMP_UP,
+    CONF_FINE_WRITE_INTERVAL,
     CONF_HYDROBOX_ADDRESS,
     CONF_SCAN_DEFAULT,
     CONF_SCAN_HOURS,
@@ -37,6 +44,13 @@ from .const import (
     CONF_WEB_POWER,
     DEFAULT_ENABLE_HK2,
     DEFAULT_ENABLE_WEZ,
+    DEFAULT_FINE_BOOST_MAX,
+    DEFAULT_FINE_CURVE,
+    DEFAULT_FINE_MAX,
+    DEFAULT_FINE_MIN,
+    DEFAULT_FINE_RAMP_DOWN,
+    DEFAULT_FINE_RAMP_UP,
+    DEFAULT_FINE_WRITE_INTERVAL,
     DEFAULT_HYDROBOX_ADDRESS,
     DEFAULT_PORT,
     DEFAULT_SCAN_DEFAULT,
@@ -47,6 +61,7 @@ from .const import (
     DEFAULT_WEB_POWER,
     DOMAIN,
 )
+from .fine_curve import fine_curve_enabled
 from .modbus_client import BoeschModbusClient, ModbusError
 from .registers import AI_INPUTS
 from .web_client import BoeschWebClient, WebAuthError, WebError
@@ -269,9 +284,11 @@ class BoeschOptionsFlow(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        return self.async_show_menu(
-            step_id="init", menu_options=["general", "inputs", "web"]
-        )
+        menu = ["general", "inputs", "web"]
+        # Einstellungen der feinen Heizkurve nur, wenn sie eingeschaltet ist.
+        if fine_curve_enabled(self.config_entry.options):
+            menu.append("fine_curve")
+        return self.async_show_menu(step_id="init", menu_options=menu)
 
     async def async_step_general(
         self, user_input: dict[str, Any] | None = None
@@ -367,6 +384,7 @@ class BoeschOptionsFlow(OptionsFlow):
                         **entry.options,
                         CONF_WEB_PASSWORD: password,
                         CONF_WEB_POWER: user_input.get(CONF_WEB_POWER, False),
+                        CONF_FINE_CURVE: user_input.get(CONF_FINE_CURVE, False),
                     },
                 )
 
@@ -378,6 +396,50 @@ class BoeschOptionsFlow(OptionsFlow):
                     CONF_WEB_POWER,
                     default=opts.get(CONF_WEB_POWER, DEFAULT_WEB_POWER),
                 ): bool,
+                vol.Required(
+                    CONF_FINE_CURVE,
+                    default=opts.get(CONF_FINE_CURVE, DEFAULT_FINE_CURVE),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="web", data_schema=schema, errors=errors)
+
+    async def async_step_fine_curve(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Grenzen, Rampe und Schreibabstand der feinen Heizkurve."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if user_input[CONF_FINE_MIN] >= user_input[CONF_FINE_MAX]:
+                errors["base"] = "fine_min_max"
+            elif user_input[CONF_FINE_BOOST_MAX] < user_input[CONF_FINE_MAX]:
+                errors["base"] = "fine_boost_max"
+            else:
+                return self.async_create_entry(
+                    title="", data={**self.config_entry.options, **user_input}
+                )
+
+        opts = self.config_entry.options
+        temp = vol.All(vol.Coerce(float), vol.Range(min=10.0, max=65.0))
+        rate = vol.All(vol.Coerce(float), vol.Range(min=0.1, max=5.0))
+        fields = (
+            (CONF_FINE_MIN, DEFAULT_FINE_MIN, temp),
+            (CONF_FINE_MAX, DEFAULT_FINE_MAX, temp),
+            (CONF_FINE_BOOST_MAX, DEFAULT_FINE_BOOST_MAX, temp),
+            (CONF_FINE_RAMP_DOWN, DEFAULT_FINE_RAMP_DOWN, rate),
+            (CONF_FINE_RAMP_UP, DEFAULT_FINE_RAMP_UP, rate),
+            (
+                CONF_FINE_WRITE_INTERVAL,
+                DEFAULT_FINE_WRITE_INTERVAL,
+                vol.All(int, vol.Range(min=1, max=120)),
+            ),
+        )
+        schema = vol.Schema(
+            {
+                vol.Required(key, default=opts.get(key, default)): validator
+                for key, default, validator in fields
+            }
+        )
+        return self.async_show_form(
+            step_id="fine_curve", data_schema=schema, errors=errors
+        )

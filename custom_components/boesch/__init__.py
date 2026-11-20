@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .card import async_register_card
@@ -35,6 +36,13 @@ from .const import (
     SCAN_OPTION_BY_GROUP,
 )
 from .coordinator import BoeschCoordinator, BoeschWebCoordinator, WebPowerSource
+from .fine_curve import (
+    ISSUE_STOPPED,
+    FineCurveCoordinator,
+    FineCurveParams,
+    fine_curve_enabled,
+    store_for,
+)
 from .modbus_client import BoeschModbusClient
 from .registers import DeviceKey, registers_for
 from .web_client import BoeschWebClient
@@ -62,8 +70,12 @@ class BoeschRuntimeData:
     unit_by_device: dict[DeviceKey, int]
     # Nur gesetzt, wenn im Options-Flow ein Web-Passwort hinterlegt ist.
     web: BoeschWebCoordinator | None = None
+    # Nur gesetzt, wenn die Option "Feine Heizkurve" an ist.
+    fine: FineCurveCoordinator | None = None
     # (Plattform, unique_id) aller angelegten Entities (assign_entity_ids).
     entity_keys: set[tuple[str, str]] = field(default_factory=set)
+    # Neu laden wegen geänderter Optionen (kein echtes Entladen).
+    reloading: bool = False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bool:
@@ -146,9 +158,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bo
         )
         await web.async_refresh()
 
+    # Feine Heizkurve: Zustand im Store. Option aus -> Store verwerfen, damit
+    # ein späteres Einschalten wieder von der aktuellen Bösch-Kurve ausgeht.
+    fine: FineCurveCoordinator | None = None
+    if web and fine_curve_enabled(entry.options):
+        fine = FineCurveCoordinator(
+            hass, entry, web, coordinators, FineCurveParams.from_options(entry.options)
+        )
+        await fine.async_setup()
+    else:
+        await store_for(hass, entry.entry_id).async_remove()
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_STOPPED)
+
     entry.runtime_data = BoeschRuntimeData(
-        client, coordinators, unit_by_device, web
+        client, coordinators, unit_by_device, web, fine
     )
+    if fine:
+        await fine.async_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _async_remove_stale(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -223,15 +249,30 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bool:
-    """Config-Entry entladen."""
+    """Config-Entry entladen.
+
+    Die feine Heizkurve schaltet dabei auf "Kurve" zurück, außer beim Neu laden
+    nach einer Optionsänderung, die sie anlässt (sonst gäbe es jedes Mal einen
+    Sprung Kurve -> Festwert). Ein HA-Neustart entlädt nicht; dafür sorgt der
+    STOP-Listener im FineCurveCoordinator.
+    """
+    runtime = entry.runtime_data
+    if runtime.fine and not (runtime.reloading and fine_curve_enabled(entry.options)):
+        await runtime.fine.async_release()
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         await entry.runtime_data.client.async_close()
     return unloaded
 
 
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Entry gelöscht: gespeicherte feine Heizkurve mit entfernen."""
+    await store_for(hass, entry.entry_id).async_remove()
+
+
 async def _async_update_listener(
     hass: HomeAssistant, entry: BoeschConfigEntry
 ) -> None:
     """Bei geänderten Optionen (Intervalle, Features) neu laden."""
+    entry.runtime_data.reloading = True
     await hass.config_entries.async_reload(entry.entry_id)

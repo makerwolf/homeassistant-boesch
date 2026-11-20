@@ -14,6 +14,7 @@ from custom_components.boesch.const import (
     CONF_AI_INPUTS,
     CONF_ENABLE_HK2,
     CONF_ENABLE_WEZ,
+    CONF_FINE_CURVE,
     CONF_HYDROBOX_ADDRESS,
     CONF_SCAN_DEFAULT,
     CONF_SCAN_HOURS,
@@ -256,7 +257,9 @@ async def test_options_web(hass, fake_web, config_entry) -> None:
         result["flow_id"], {CONF_WEB_PASSWORD: "pw", CONF_WEB_POWER: True}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_WEB_PASSWORD: "pw", CONF_WEB_POWER: True}
+    assert config_entry.options == {
+        CONF_WEB_PASSWORD: "pw", CONF_WEB_POWER: True, CONF_FINE_CURVE: False
+    }
 
 
 async def test_options_web_disable(hass, fake_web, config_entry) -> None:

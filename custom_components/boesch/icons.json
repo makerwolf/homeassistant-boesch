@@ -38,6 +38,18 @@
       },
       "hb_hk2_parallel": {
         "default": "mdi:tune-vertical"
+      },
+      "hb_hk1_feinkurve": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "hb_hk1_fein_parallel": {
+        "default": "mdi:tune-vertical"
+      },
+      "hb_hk1_zuschlag": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "hb_hk1_sofort_anhebung": {
+        "default": "mdi:rocket-launch"
       }
     },
     "select": {
@@ -150,11 +162,17 @@
       },
       "wpm_update_status": {
         "default": "mdi:update"
+      },
+      "hb_hk1_fein_festwert": {
+        "default": "mdi:thermometer-lines"
       }
     },
     "switch": {
       "wpm_anwesenheit": {
         "default": "mdi:home-account"
+      },
+      "hb_hk1_feinkurve_aktiv": {
+        "default": "mdi:chart-bell-curve-cumulative"
       }
     },
     "water_heater": {

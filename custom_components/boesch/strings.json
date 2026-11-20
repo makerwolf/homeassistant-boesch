@@ -54,7 +54,8 @@
         "menu_options": {
           "general": "Allgemein (Heizkreise, Intervalle)",
           "inputs": "Fühlereingänge (AI1–AI8)",
-          "web": "Webinterface (Heizmodus, Heizkurve)"
+          "web": "Webinterface (Heizmodus, Heizkurve)",
+          "fine_curve": "Feine Heizkurve (Grenzen, Rampe)"
         }
       },
       "general": {
@@ -88,16 +89,37 @@
         "description": "Einstellungen, die per Modbus fehlen (Heizmodus, Festwerte, Heizkurve, Mischer, Anwesenheit), über das Webinterface der Wärmepumpe. Passwort wie im Browser-Login; leer lassen schaltet diese Funktionen ab.",
         "data": {
           "web_password": "Web-Passwort",
-          "web_power": "Hochauflösende Leistungswerte aus dem Webinterface"
+          "web_power": "Hochauflösende Leistungswerte aus dem Webinterface",
+          "fine_curve": "Feine Heizkurve aus Home Assistant verwenden"
         },
         "data_description": {
-          "web_power": "Ersetzt die 8 Leistungssensoren (Modbus, auf 0,1 kW abgeschnitten) durch die Web-Werte mit 0,01 kW. Entity-IDs bleiben gleich, die Energiezähler werden genauer. Fällt das Webinterface aus, gelten die Modbus-Werte."
+          "web_power": "Ersetzt die 8 Leistungssensoren (Modbus, auf 0,1 kW abgeschnitten) durch die Web-Werte mit 0,01 kW. Entity-IDs bleiben gleich, die Energiezähler werden genauer. Fällt das Webinterface aus, gelten die Modbus-Werte.",
+          "fine_curve": "Home Assistant rechnet die Heizkurve HK1 in 0,1-K-Schritten und schreibt das Ergebnis als Festwert (Heizmodus „Festwert“). Legt Stützpunkte, Zuschlag, Sofort-Anhebung und den Schalter „Feine Heizkurve aktiv“ an. Ausschalten stellt den Heizmodus zurück auf „Kurve“."
+        }
+      },
+      "fine_curve": {
+        "title": "Feine Heizkurve",
+        "description": "Grenzen und Rampe der feinen Heizkurve HK1. Die Rampe begrenzt, wie schnell sich der Festwert ändert; die Sofort-Anhebung geht an Rampe und Schreibabstand vorbei.",
+        "data": {
+          "fine_min": "Minimaler Vorlauf (°C)",
+          "fine_max": "Maximaler Vorlauf (°C)",
+          "fine_boost_max": "Maximaler Vorlauf mit Sofort-Anhebung (°C)",
+          "fine_ramp_down": "Rampe senken (K je 10 min)",
+          "fine_ramp_up": "Rampe heben (K je 10 min)",
+          "fine_write_interval": "Mindestabstand zwischen Schreibvorgängen (min)"
+        },
+        "data_description": {
+          "fine_min": "Grenzen gelten für Kurve + Parallelverschiebung + Zuschlag.",
+          "fine_ramp_down": "Langsam senken: die Wärmepumpe schaltet ab, wenn der Puffer mehr als 5 K über dem Soll liegt.",
+          "fine_ramp_up": "Langsam heben: ein schneller Anstieg treibt die Wärmepumpe auf Volllast."
         }
       }
     },
     "error": {
       "invalid_auth": "Web-Passwort abgelehnt.",
-      "web_cannot_connect": "Webinterface nicht erreichbar oder Hydrobox nicht gefunden."
+      "web_cannot_connect": "Webinterface nicht erreichbar oder Hydrobox nicht gefunden.",
+      "fine_min_max": "Das Minimum muss unter dem Maximum liegen.",
+      "fine_boost_max": "Das Maximum mit Sofort-Anhebung darf nicht unter dem Maximum liegen."
     }
   },
   "entity": {
@@ -178,6 +200,18 @@
       },
       "wanda_pv_soll_twe": {
         "name": "PV-Solltemperatur TWE"
+      },
+      "hb_hk1_feinkurve": {
+        "name": "HK1 Feinkurve bei {temperature} °C"
+      },
+      "hb_hk1_fein_parallel": {
+        "name": "HK1 feine Parallelverschiebung"
+      },
+      "hb_hk1_zuschlag": {
+        "name": "HK1 Zuschlag"
+      },
+      "hb_hk1_sofort_anhebung": {
+        "name": "HK1 Sofort-Anhebung"
       }
     },
     "select": {
@@ -551,11 +585,17 @@
           "os_update": "OS-Update wird ausgeführt",
           "checking": "Suche nach Update"
         }
+      },
+      "hb_hk1_fein_festwert": {
+        "name": "HK1 berechneter Festwert"
       }
     },
     "switch": {
       "wpm_anwesenheit": {
         "name": "Anwesenheit"
+      },
+      "hb_hk1_feinkurve_aktiv": {
+        "name": "Feine Heizkurve aktiv"
       }
     },
     "water_heater": {
@@ -603,6 +643,19 @@
     },
     "curve_point_missing": {
       "message": "Kurve hat keinen Stützpunkt bei {temperature} °C."
+    },
+    "fine_curve_not_ready": {
+      "message": "Feine Heizkurve noch nicht bereit: Webinterface, Heizkurve oder HK1-Soll fehlen."
+    }
+  },
+  "issues": {
+    "fine_curve_foreign_write": {
+      "title": "Feine Heizkurve abgeschaltet: Festwert von außen geändert",
+      "description": "Der Festwert Heizen HK1 am Gerät steht auf {value} °C, die feine Heizkurve hatte zuletzt {last_written} °C geschrieben. Jemand anderes hat ihn geändert – das Webinterface, die Entity „HK1 Festwert Heizen“ oder eine zweite Home-Assistant-Instanz mit feiner Heizkurve. Damit nicht zwei gegeneinander steuern, hat sich die feine Heizkurve abgeschaltet.\n\nDas Gerät heizt weiter mit dem festen Wert {value} °C, **ohne Außentemperatur-Führung**. Entweder den Schalter „Feine Heizkurve aktiv“ wieder einschalten oder den Heizmodus HK1 auf „Außentemperaturkurve“ stellen. Läuft eine zweite Instanz, die feine Heizkurve nur in einer davon einschalten.\n\nDer Hinweis verschwindet, sobald die feine Heizkurve wieder eingeschaltet wird."
+    },
+    "fine_curve_mode_changed": {
+      "title": "Feine Heizkurve abgeschaltet: Heizmodus umgestellt",
+      "description": "Der Heizmodus HK1 steht nicht mehr auf „Festwert“ – er wurde am Gerät, im Webinterface oder über die Entity „HK1 Heizmodus“ umgestellt. Die feine Heizkurve hat sich deshalb abgeschaltet und schaltet nicht zurück.\n\nWar das beabsichtigt, kann der Hinweis ignoriert werden. Sonst den Schalter „Feine Heizkurve aktiv“ wieder einschalten; der Hinweis verschwindet dann."
     }
   }
 }
