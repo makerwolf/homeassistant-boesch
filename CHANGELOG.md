@@ -5,24 +5,153 @@
 
 ## [Unreleased]
 
-- **Festwert HK1 in 0,1-K-Schritten:** Festwert Heizen und Kühlen lassen sich
-  jetzt auf Zehntelgrad einstellen (bisher 0,5).
-- **Feine Heizkurve aus Home Assistant (neu, optional):** Haken unter
-  *Konfigurieren → Webinterface*. Home Assistant rechnet die Heizkurve HK1 in
-  0,1-K-Schritten über die gemittelte Außentemperatur und schreibt das Ergebnis
-  als Festwert. Dazu 9 Stützpunkte, eine feine Parallelverschiebung, ein
-  Zuschlag für Automationen (z. B. Nachtabsenkung), eine Sofort-Anhebung
-  (z. B. Anlaufhilfe nach Warmwasser), der Sensor „Berechneter Festwert“ und
-  der Schalter „Feine Heizkurve aktiv“. Sanfte Rampe, kein Schreiben während
-  Warmwasser/Abtauen, beim Ausschalten zurück auf die Bösch-Kurve. Grenzen und
-  Rampe unter *Konfigurieren → Feine Heizkurve*. Die Parallelverschiebung am
-  Gerät wirkt dabei nicht – dafür die feine Parallelverschiebung nutzen.
-  Ändert jemand anderes den Festwert (Webinterface, zweite
-  Home-Assistant-Instanz) oder den Heizmodus, schaltet sich die feine Kurve ab
-  statt gegenzusteuern – mit Hinweis unter *Einstellungen → Reparaturen*.
-- **Dashboard-Karte „Heizkurve“ (neu):** zeigt die Heizkurve als Diagramm mit
-  Betriebspunkt, Stützpunkte per Ziehen änderbar. Wird automatisch geladen
-  (keine Ressource nötig), Vorbelegung mit der feinen Heizkurve.
+## [2026.11.4] – Feine Heizkurve & Heizkurven-Karte
+
+Die Bösch-Heizkurve lässt sich nur in ganzen Grad einstellen – Stützpunkte
+wie Parallelverschiebung. Für eine Fußbodenheizung ist 1 K Vorlauf ein großer
+Schritt. Mit dieser Version kann Home Assistant die Heizkurve HK1 selbst in
+**0,1-K-Schritten** rechnen und ans Gerät schreiben. Dazu kommt eine
+Dashboard-Karte, mit der sich die Kurve direkt im Diagramm einstellen lässt.
+
+Alles Neue ist optional und braucht das Web-Passwort (*Konfigurieren →
+Webinterface*). Wer nichts einschaltet, merkt von dem Update nur die feineren
+Festwerte.
+
+### ✨ Feine Heizkurve HK1
+
+**Einschalten**
+
+1. *Geräte & Dienste → Bösch → Konfigurieren → Webinterface* → Haken bei
+   **„Feine Heizkurve aus Home Assistant verwenden“**.
+2. Am Gerät *Bösch Hydrobox* den Schalter **„Feine Heizkurve aktiv“**
+   einschalten.
+
+Beim ersten Einschalten übernimmt die feine Kurve die aktuelle Bösch-Kurve
+samt Parallelverschiebung, und der erste geschriebene Wert ist genau der Soll,
+den das Gerät gerade selbst rechnet – es springt nichts. Ab dann lässt sich die
+Kurve in Zehntelgrad verfeinern. Ausschalten stellt den Heizmodus zurück auf
+„Außentemperaturkurve“; die Bösch-Kurve am Gerät bleibt dabei unverändert.
+
+**Wie es arbeitet**
+
+Home Assistant interpoliert die Kurve über die **gemittelte Außentemperatur**
+(wie das Gerät selbst), addiert feine Parallelverschiebung und Zuschlag und
+schreibt das Ergebnis als *Festwert HK1*; der Heizmodus HK1 steht dabei auf
+„Festwert“. Das Gerät übernimmt den Wert exakt als Soll für Heizkreis und
+Heizspeicher.
+
+**Neue Entities**
+
+| Entity | Bereich | Wofür |
+|---|---|---|
+| HK1 Feinkurve bei −20 … +20 °C (`number.boesch_hb_hk1_feinkurve_m20` … `_p20`) | 10–65 °C, 0,1 K | die 9 Stützpunkte |
+| HK1 feine Parallelverschiebung (`number.boesch_hb_hk1_fein_parallel`) | −5 … +5 K | ganze Kurve verschieben, bleibt gespeichert |
+| HK1 Zuschlag (`number.boesch_hb_hk1_zuschlag`) | −5 … +5 K | für Automationen, z. B. Nachtabsenkung; fährt über die Rampe |
+| HK1 Sofort-Anhebung (`number.boesch_hb_hk1_sofort_anhebung`) | 0 … 12 K | z. B. Anlaufhilfe nach Warmwasser; wirkt sofort |
+| HK1 berechneter Festwert (`sensor.boesch_hb_hk1_fein_festwert`) | | was geschrieben wird; Attribute zeigen Basiskurve, Ziel, zuletzt geschriebenen Wert und warum gerade gehalten wird |
+| Feine Heizkurve aktiv (`switch.boesch_hb_hk1_feinkurve_aktiv`) | | ein/aus |
+
+Zuschlag und Sofort-Anhebung stehen nach einem Neustart von Home Assistant
+wieder auf 0 – eine Automation, die sie setzt, bleibt so nie hängen.
+
+Beispiel Nachtabsenkung:
+
+```yaml
+triggers:
+  - trigger: time
+    at: "22:00:00"
+    id: nacht
+  - trigger: time
+    at: "05:00:00"
+    id: tag
+actions:
+  - action: number.set_value
+    target:
+      entity_id: number.boesch_hb_hk1_zuschlag
+    data:
+      value: "{{ -2 if trigger.id == 'nacht' else 0 }}"
+```
+
+**Schonend für Gerät und Heizung**
+
+- **Rampe:** Änderungen werden langsam angefahren – standardmäßig 0,1 K senken
+  bzw. 0,2 K heben je 10 Minuten. Die Sofort-Anhebung geht als einzige an der
+  Rampe vorbei.
+- **Wenig Schreibzugriffe:** höchstens alle 10 Minuten und nur bei mindestens
+  0,1 K Unterschied.
+- **Grenzen:** Vorlauf standardmäßig 20–40 °C, mit Sofort-Anhebung bis 45 °C.
+- Grenzen, Rampe und Schreibabstand lassen sich unter *Konfigurieren →
+  Feine Heizkurve (Grenzen, Rampe)* anpassen.
+- **Halten:** Während Warmwasser und Abtauen sowie ohne Außentemperatur oder
+  Webinterface wird nichts geschrieben, die Rampe pausiert.
+- **Neustart:** Beim Beenden von Home Assistant wird der Festwert ohne Zuschlag
+  und Sofort-Anhebung geschrieben, damit keine Anhebung stehen bleibt, solange
+  HA nicht läuft. Danach macht die Kurve von selbst weiter.
+
+**Zieht sich zurück statt gegenzusteuern**
+
+Wird der Heizmodus HK1 umgestellt (auch zurück auf „Außentemperaturkurve“ –
+am Gerät, im Webinterface oder in HA) oder der Festwert von außen geändert –
+im Webinterface, über die Entity „HK1 Festwert Heizen“ oder durch eine zweite
+Home-Assistant-Instanz mit feiner Heizkurve –, schaltet sich die feine
+Heizkurve ab und meldet das unter **Einstellungen → System → Reparaturen**.
+Das Gerät heizt dann mit festem Wert **ohne Außentemperatur-Führung** weiter.
+Abhilfe: den Schalter wieder einschalten oder den Heizmodus auf
+„Außentemperaturkurve“ stellen; der Hinweis verschwindet dann von selbst.
+Die feine Heizkurve deshalb immer nur in einer Instanz einschalten.
+
+**Gut zu wissen**
+
+- ⚠️ Solange die feine Heizkurve aktiv ist, **wirkt die Parallelverschiebung am
+  Gerät (`number.boesch_hb_hk1_parallel`) nicht** – das Gerät übernimmt den
+  Festwert unverändert. Stattdessen die feine Parallelverschiebung oder den
+  Zuschlag verwenden.
+- Änderungen an der Bösch-Kurve (`number.boesch_hb_hk1_heizkurve_*`) haben bei
+  aktiver feiner Heizkurve keine Wirkung; sie gelten erst wieder nach dem
+  Ausschalten.
+- Home Assistant muss laufen, damit die Kurve der Außentemperatur folgt. Fällt
+  HA länger aus, heizt das Gerät mit dem zuletzt geschriebenen Festwert weiter.
+  **Notfall-Rückweg:** Im Bösch-Webinterface (oder am Gerät) den Heizmodus HK1
+  auf „Kurve“ stellen – dann regelt das Gerät wieder selbst nach seiner
+  eigenen Heizkurve. Läuft HA wieder, erkennt es die Umstellung, lässt die
+  feine Heizkurve aus und meldet das unter Reparaturen; bei Bedarf einfach
+  wieder einschalten.
+
+### 📈 Dashboard-Karte „Heizkurve“
+
+- Zeigt eine Heizkurve als Diagramm mit dem aktuellen Betriebspunkt
+  (Außentemperatur, optional Ist-Vorlauf als zweiter Punkt).
+- Stützpunkte per Maus oder Finger ziehen, Feinschritte mit den Pfeiltasten.
+- Kommt mit der Integration und wird automatisch geladen – **keine
+  Dashboard-Ressource nötig**. Nach dem Update einmal den Browser neu laden,
+  dann steht sie unter *Karte hinzufügen → Heizkurve*.
+- Vorbelegt mit der feinen Heizkurve (sonst der Bösch-Kurve) und der
+  gemittelten Außentemperatur; funktioniert aber mit beliebigen
+  `number`-Entities.
+
+```yaml
+type: custom:heizkurve-card
+title: Feine Heizkurve
+outdoor_entity: sensor.boesch_hb_aussentemperatur_gemittelt
+flow_entity: sensor.boesch_hb_hk1_ist
+points:
+  - { x: -20, entity: number.boesch_hb_hk1_feinkurve_m20 }
+  - { x: -15, entity: number.boesch_hb_hk1_feinkurve_m15 }
+  - { x: -10, entity: number.boesch_hb_hk1_feinkurve_m10 }
+  - { x: -5, entity: number.boesch_hb_hk1_feinkurve_m5 }
+  - { x: 0, entity: number.boesch_hb_hk1_feinkurve_0 }
+  - { x: 5, entity: number.boesch_hb_hk1_feinkurve_p5 }
+  - { x: 10, entity: number.boesch_hb_hk1_feinkurve_p10 }
+  - { x: 15, entity: number.boesch_hb_hk1_feinkurve_p15 }
+  - { x: 20, entity: number.boesch_hb_hk1_feinkurve_p20 }
+```
+
+Weitere Optionen: `y_min`, `y_max`, `step`.
+
+### Weitere Änderungen
+
+- **Festwert Heizen und Kühlen HK1** (`number.boesch_hb_hk1_festwert`,
+  `number.boesch_hb_hk1_festwert_kuehlen`) jetzt in 0,1-K-Schritten statt 0,5 K.
 
 ## [2026.11.3] – Softwareupdate & Firmware-Versionen
 

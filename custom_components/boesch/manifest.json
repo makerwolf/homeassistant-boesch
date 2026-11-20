@@ -14,5 +14,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/makerwolf/homeassistant-boesch/issues",
   "requirements": ["pymodbus>=3.6.0"],
-  "version": "2026.11.3"
+  "version": "2026.11.4"
 }
