@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .card import async_register_card
 from .const import (
     CONF_ENABLE_HK2,
     CONF_ENABLE_WEZ,
@@ -67,6 +68,7 @@ class BoeschRuntimeData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoeschConfigEntry) -> bool:
     """Config-Entry einrichten."""
+    await async_register_card(hass)
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
 
