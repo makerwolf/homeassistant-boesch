@@ -1,13 +1,22 @@
-# Bösch – Home Assistant Integration
+# Bösch WANDA Wärmepumpe – Home Assistant Integration (Modbus TCP + Webinterface)
 
 [![marketplace](https://img.shields.io/badge/Home%20Assistant-Marketplace-41BDF5.svg)](https://hacs.xyz/docs/marketplace/)
 [![version](https://img.shields.io/github/v/release/makerwolf/homeassistant-boesch)](https://github.com/makerwolf/homeassistant-boesch/releases)
 ![license](https://img.shields.io/badge/license-MIT-green.svg)
 
-Eine eigenständige, per UI konfigurierbare Home-Assistant-Integration für
-Wärmepumpen von **[Bösch](https://www.boesch.at/)** (Heizbösch), angebunden über
-**Modbus TCP**. Sie kapselt die gesamte Modbus-Kommunikation in einer einzigen
-TCP-Verbindung und einem zentralen, datengetriebenen Registermodell.
+Eine eigenständige, per UI konfigurierbare Home-Assistant-Integration für die
+Luft-Wasser-Wärmepumpe **Bösch WANDA 10** mit **Hydrobox** von
+**[Bösch](https://www.boesch.at/)** (Heizbösch, Österreich), angebunden über
+**Modbus TCP** und optional über das Webinterface (**Kermi x-center**,
+Wärmepumpenmanager RW60). Installierbar über HACS bzw. den Marketplace. Sie
+kapselt die gesamte Modbus-Kommunikation in einer einzigen TCP-Verbindung und
+einem zentralen, datengetriebenen Registermodell.
+
+> **English:** Home Assistant custom integration (HACS) for the **Boesch WANDA 10**
+> air-to-water heat pump with **Hydrobox** (Bösch / Heizbösch, Austria) via
+> **Modbus TCP** and the **Kermi x-center** web interface: temperatures, COP,
+> power and energy meters for the Energy Dashboard, heating curve, domestic hot
+> water (`water_heater`) and operating modes. UI in German and English.
 
 > **Unterstützte Geräte:** ausschließlich Bösch **WANDA 10** mit **Hydrobox**.
 > Andere Wärmepumpen werden nicht unterstützt, und das ist auch nicht geplant.
