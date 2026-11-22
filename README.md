@@ -23,6 +23,7 @@ einem zentralen, datengetriebenen Registermodell.
 
 > ⚠️ Inoffizielles Community-Projekt, **nicht** mit der Bösch Heizsysteme GmbH
 > verbunden oder von ihr unterstützt. Nutzung auf eigene Verantwortung.
+> Mit KI-Unterstützung entwickelt, siehe [Entstehung mit KI](#entstehung-mit-ki).
 
 ## Funktionen
 
@@ -463,6 +464,25 @@ Zwei weitere per Verlauf verifizierte Abweichungen von der Doku:
 
 Selbst angelegte Helfer (z. B. `utility_meter` für die JAZ) und Automationen
 bleiben bestehen und müssen bei Bedarf von Hand gelöscht werden.
+
+## Entstehung mit KI
+
+Diese Integration ist mit **KI-Unterstützung** entstanden: Ein Großteil des
+Codes, der Tests und der Doku wurde mit [Claude Code](https://claude.com/claude-code)
+(Anthropic) geschrieben, unter meiner Anleitung und auf Grundlage meiner
+Messungen.
+
+Von mir kommen die Anforderungen, die Entscheidungen, das Lesen des Codes und
+das Testen an der eigenen WANDA 10 mit Hydrobox. Jedes Register und jeder Web-Datenpunkt wurde
+am echten Gerät geprüft, Befunde wie der Datentyp-Fehler in der Bösch-Doku oder
+die abgeschnittenen Leistungswerte stammen aus eigenen Messungen. Automatische
+Tests (> 95 % Abdeckung) und `mypy --strict` laufen bei jeder Änderung in CI.
+
+Ehrlich gesagt: Ohne KI gäbe es dieses Repo nicht in diesem Umfang, Detailgrad
+und dieser Code-Qualität. Allein hätte ich höchstens die Grundfunktionen
+geschafft, und die erst nach dem Winter. Fehler sind trotzdem möglich, es
+gibt keine Garantie (siehe Hinweis oben). Fehler bitte als
+[Issue](https://github.com/makerwolf/homeassistant-boesch/issues) melden.
 
 ## Credits
 
